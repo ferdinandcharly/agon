@@ -1,4 +1,4 @@
-// Agon — fil vertical de fiches et de jeux, contenus dans data/contenus.json.
+// Facettes (ex-Agon) — fil vertical de fiches et de jeux, contenus dans data/contenus.json.
 // Pas encore de compte ni de Supabase : résultats et réglages restent dans ce navigateur (localStorage).
 "use strict";
 
@@ -12,6 +12,7 @@ const NOMS_FORMATS = {
   chrono: "Prise d'otage",
 };
 const JEUX_PAR_FICHE = 2;   // rythme du fil : une fiche, puis deux jeux, etc.
+// Clés gardées depuis l'ancien nom Agon : la progression déjà enregistrée n'est pas perdue
 const CLE_RESULTATS = "agon.resultats";
 const CLE_REGLAGES = "agon.reglages";
 
@@ -891,7 +892,7 @@ if ("serviceWorker" in navigator) {
       "Nouvelle version : toucher pour recharger"));
   });
   navigator.serviceWorker.addEventListener("message", (e) => {
-    if (e.data?.version) document.getElementById("version").textContent = `Version ${e.data.version.replace("agon-", "")}`;
+    if (e.data?.version) document.getElementById("version").textContent = `Version ${e.data.version.replace(/^[a-z]+-/, "")}`;
   });
 }
 demarrer();

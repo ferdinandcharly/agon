@@ -1,4 +1,6 @@
-# Agon
+# Facettes
+
+Anciennement Agon.
 
 Fil de révision du BUT informatique, à la manière d'un fil TikTok : on glisse d'une carte à l'autre,
 fiches de lecture et petits jeux alternent (vrai ou faux, texte à trous, associer, remettre dans l'ordre,
