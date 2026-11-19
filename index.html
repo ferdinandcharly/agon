@@ -19,6 +19,15 @@
 </head>
 <body>
 
+<!-- Écran de lancement : les tuiles forment la boule, la facette saute, puis le rideau se lève.
+     Tout est en CSS : même si le JavaScript plante, l'écran se retire seul. Toucher pour passer. -->
+<div class="f-lancement" id="lancement" aria-hidden="true">
+  <div class="f-lancement-centre">
+    <svg class="f-lancement-logo" viewBox="0 0 256 256" aria-hidden="true"><g transform="translate(-8 8)"><rect class="tuile" style="--i:0;--dx:-100px;--dy:-100px" x="77" y="41" width="30" height="30" rx="7" fill="#FF6B3D"/><rect class="tuile" style="--i:1;--dx:-27px;--dy:-59px" x="113" y="41" width="30" height="30" rx="7" fill="#FFC21A"/><rect class="tuile" style="--i:2;--dx:46px;--dy:-18px" x="41" y="77" width="30" height="30" rx="7" fill="#FF6B3D"/><rect class="tuile" style="--i:3;--dx:-81px;--dy:23px" x="77" y="77" width="30" height="30" rx="7" fill="#FFC21A"/><rect class="tuile" style="--i:4;--dx:-8px;--dy:64px" x="113" y="77" width="30" height="30" rx="7" fill="#00C08B"/><rect class="tuile" style="--i:5;--dx:65px;--dy:-95px" x="149" y="77" width="30" height="30" rx="7" fill="#3D5AFE"/><rect class="tuile" style="--i:6;--dx:-62px;--dy:-54px" x="185" y="77" width="30" height="30" rx="7" fill="#7B4DFF"/><rect class="tuile" style="--i:7;--dx:11px;--dy:-13px" x="41" y="113" width="30" height="30" rx="7" fill="#FFC21A"/><rect class="tuile" style="--i:8;--dx:84px;--dy:28px" x="77" y="113" width="30" height="30" rx="7" fill="#00C08B"/><rect class="tuile" style="--i:9;--dx:-43px;--dy:69px" x="113" y="113" width="30" height="30" rx="7" fill="#3D5AFE"/><rect class="tuile" style="--i:10;--dx:30px;--dy:-90px" x="149" y="113" width="30" height="30" rx="7" fill="#7B4DFF"/><rect class="tuile" style="--i:11;--dx:-97px;--dy:-49px" x="185" y="113" width="30" height="30" rx="7" fill="#FF5FA2"/><rect class="tuile" style="--i:12;--dx:-24px;--dy:-8px" x="41" y="149" width="30" height="30" rx="7" fill="#00C08B"/><rect class="tuile" style="--i:13;--dx:49px;--dy:33px" x="77" y="149" width="30" height="30" rx="7" fill="#3D5AFE"/><rect class="tuile" style="--i:14;--dx:-78px;--dy:74px" x="113" y="149" width="30" height="30" rx="7" fill="#7B4DFF"/><rect class="tuile" style="--i:15;--dx:-5px;--dy:-85px" x="149" y="149" width="30" height="30" rx="7" fill="#FF5FA2"/><rect class="tuile" style="--i:16;--dx:68px;--dy:-44px" x="185" y="149" width="30" height="30" rx="7" fill="#FF6B3D"/><rect class="tuile" style="--i:17;--dx:-59px;--dy:-3px" x="77" y="185" width="30" height="30" rx="7" fill="#7B4DFF"/><rect class="tuile" style="--i:18;--dx:14px;--dy:38px" x="113" y="185" width="30" height="30" rx="7" fill="#FF5FA2"/><rect class="tuile" style="--i:19;--dx:87px;--dy:79px" x="149" y="185" width="30" height="30" rx="7" fill="#FF6B3D"/><g transform="translate(20 -20) rotate(15 164 56)"><g class="saut"><rect x="149" y="41" width="30" height="30" rx="7" fill="#16112B"/></g></g></g></svg>
+    <p class="f-lancement-nom">Facettes</p>
+  </div>
+</div>
+
 <header class="f-entete">
   <span class="f-marque"><svg class="f-symbole" viewBox="0 0 256 256" aria-hidden="true"><g transform="translate(-10 12)"><rect x="82" y="32" width="42" height="42" rx="10" fill="#7B4DFF"/><rect x="32" y="82" width="42" height="42" rx="10" fill="#7B4DFF"/><rect x="82" y="82" width="42" height="42" rx="10" fill="#FF5FA2"/><rect x="132" y="82" width="42" height="42" rx="10" fill="#FF6B3D"/><rect x="182" y="82" width="42" height="42" rx="10" fill="#FFC21A"/><rect x="32" y="132" width="42" height="42" rx="10" fill="#FF5FA2"/><rect x="82" y="132" width="42" height="42" rx="10" fill="#FF6B3D"/><rect x="132" y="132" width="42" height="42" rx="10" fill="#FFC21A"/><rect x="182" y="132" width="42" height="42" rx="10" fill="#00C08B"/><rect x="82" y="182" width="42" height="42" rx="10" fill="#FFC21A"/><rect x="132" y="182" width="42" height="42" rx="10" fill="#00C08B"/><rect x="132" y="32" width="42" height="42" rx="10" fill="#16112B" transform="translate(24 -24) rotate(15 153 53)"/></g></svg>Facettes</span>
   <span class="f-score cache" id="score" aria-live="polite"></span>
@@ -50,8 +59,13 @@
     <div class="f-progression" id="progression"></div>
   </section>
   <section>
+    <h3>Ta collection</h3>
+    <p class="f-discret">Chaque jour, le Tube du jour ouvre le fil. Réussis-le pour gagner un vinyle : 7 vinyles font un disque d'or.</p>
+    <div id="collection"></div>
+  </section>
+  <section>
     <h3>Remettre à zéro</h3>
-    <p class="f-discret">Efface tes résultats sur cet appareil. Les réglages sont gardés.</p>
+    <p class="f-discret">Efface tes résultats sur cet appareil. Les réglages et ta collection de vinyles sont gardés.</p>
     <button class="f-option f-danger" id="btn-zero" type="button">Effacer ma progression</button>
   </section>
   <p class="f-version" id="version">Version inconnue (hors ligne ou premier lancement)</p>
