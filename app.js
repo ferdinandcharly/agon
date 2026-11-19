@@ -811,55 +811,118 @@ function montrerFil(mode) {
   afficherScore();
 }
 
-// Stats globales : jeux réussis au dernier essai, ratés à revoir, taux sur les jeux joués
-function statsGlobales() {
+// L'accueil tourne autour de la boule à facettes : une facette par notion, allumée quand elle est maîtrisée.
+// Le titre dit quelque chose de vrai sur tes révisions ; un seul gros bouton, sous le pouce.
+function notionsParEtat() {
   const resultats = lireResultats();
-  const jeux = donnees.contenus.filter((c) => c.format !== "fiche" && contenuValide(c));
-  const reussis = jeux.filter((c) => resultats[c.id]?.derniereOk === true).length;
-  const aRevoir = jeux.filter((c) => resultats[c.id]?.derniereOk === false).length;
-  const joues = reussis + aRevoir;
-  return { reussis, aRevoir, taux: joues ? Math.round((reussis / joues) * 100) : null };
+  const cartes = donnees.contenus.filter((c) => contenuValide(c));
+  const notions = [];
+  for (const m of donnees.matieres) {
+    const cartesMatiere = cartes.filter((c) => c.matiere === m.id);
+    for (const nom of new Set(cartesMatiere.map((c) => c.notion))) {
+      notions.push({ matiere: m, nom, etat: etatNotion(cartesMatiere.filter((c) => c.notion === nom), resultats) });
+    }
+  }
+  return notions;
+}
+
+function titreAccueil(notions) {
+  const aRevoir = notions.filter((n) => n.etat === "a_revoir");
+  if (aRevoir.length) {
+    const parMatiere = {};
+    for (const n of aRevoir) parMatiere[n.matiere.nom] = (parMatiere[n.matiere.nom] || 0) + 1;
+    const pire = Object.entries(parMatiere).sort((a, b) => b[1] - a[1])[0][0];
+    return aRevoir.length === 1 ? `1 notion à revoir, en ${pire}.` : `${aRevoir.length} notions à revoir, surtout en ${pire}.`;
+  }
+  if (notions.every((n) => n.etat === "pas_vue")) return "Ta boule est encore éteinte.";
+  const restantes = notions.filter((n) => n.etat === "pas_vue").length;
+  return restantes ? `Rien à revoir. ${restantes} notions à découvrir.` : "Tout est allumé. Bravo.";
+}
+
+// Cases d'une grille carrée dont le centre tombe dans le cercle, rangées par angle :
+// chaque matière occupe ainsi un quartier de la boule, comme les reflets d'une vraie boule à facettes.
+function casesDeLaBoule(nombre) {
+  for (let n = 5; n < 40; n++) {
+    const cases = [];
+    const r = n / 2;
+    for (let l = 0; l < n; l++) for (let c = 0; c < n; c++) {
+      const dx = c + 0.5 - r, dy = l + 0.5 - r;
+      if (Math.hypot(dx, dy) <= r - 0.15) cases.push({ c, l, angle: Math.atan2(dy, dx) });
+    }
+    if (cases.length >= nombre) {
+      cases.sort((a, b) => a.angle - b.angle);
+      return { n, cases };   // toutes les cases : la boule reste ronde, les notions y sont réparties
+    }
+  }
+  return { n: 1, cases: [] };
+}
+
+function dessinerBoule(notions) {
+  const SVG = "http://www.w3.org/2000/svg";
+  const { n, cases } = casesDeLaBoule(notions.length);
+  const svg = document.createElementNS(SVG, "svg");
+  svg.setAttribute("viewBox", `0 0 ${n * 10} ${n * 10}`);
+  svg.setAttribute("aria-hidden", "true");
+  svg.classList.add("f-boule-svg");
+  // Notion i sur la case n° i × (cases / notions) : réparties sur tout le tour, les autres cases restent décor
+  const notionDeCase = new Map(notions.map((notion, i) => [Math.floor((i * cases.length) / notions.length), notion]));
+  cases.forEach((cel, i) => {
+    const notion = notionDeCase.get(i);
+    const r = document.createElementNS(SVG, "rect");
+    r.setAttribute("x", cel.c * 10 + 1);
+    r.setAttribute("y", cel.l * 10 + 1);
+    r.setAttribute("width", 8);
+    r.setAttribute("height", 8);
+    r.setAttribute("rx", 2);
+    r.setAttribute("class", `f-facette-boule ${notion ? notion.etat : "decor"}`);
+    if (notion) r.setAttribute("data-matiere", notion.matiere.id);
+    r.style.setProperty("--i", i);
+    svg.append(r);
+  });
+  return svg;
 }
 
 function remplirAccueil() {
   const retenus = contenusRetenus();
   const nbMatieres = new Set(retenus.map((c) => c.matiere)).size;
   const tube = tubeDuJour();
-  const stats = statsGlobales();
+  const notions = notionsParEtat();
+  const allumees = notions.filter((n) => n.etat === "maitrisee").length;
+  const collection = lireCollection();
   const pluriel = (n, mot) => `${n} ${mot}${n > 1 ? "s" : ""}`;
+  const jour = new Date().toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" });
 
-  const lancer = el("button", { class: "f-tuile f-tuile-lancer", type: "button", onclick: () => montrerFil("session") },
-    el("span", { class: "f-tuile-rond", "aria-hidden": "true" }, icone("M7 4.5v15a1 1 0 0 0 1.5.86l12-7.5a1 1 0 0 0 0-1.72l-12-7.5A1 1 0 0 0 7 4.5Z")),
-    el("span", { class: "f-tuile-bas" },
-      el("span", { class: "f-tuile-titre" }, "Lancer la session"),
-      el("span", { class: "f-tuile-detail" }, `${pluriel(retenus.length, "carte")}, ${pluriel(nbMatieres, "matière")}`)));
+  const boule = el("button", { class: "f-boule", type: "button", onclick: ouvrirArbre,
+    "aria-label": `Ta boule : ${allumees} notions maîtrisées sur ${notions.length}. Ouvrir ton arbre.` },
+    dessinerBoule(notions));
 
-  const tuileTube = el("button", { class: "f-tuile f-tuile-tube", type: "button", onclick: () => montrerFil("tube") },
-    el("span", { class: "f-tuile-vinyle", "aria-hidden": "true" }),
-    el("span", { class: "f-tuile-badge" }, tube ? "À jouer" : "Joué"),
-    el("span", { class: "f-tuile-bas" },
-      el("span", { class: "f-tuile-titre petit" }, "Tube du jour"),
-      el("span", { class: "f-tuile-detail" }, tube ? "Une chance, un vinyle" : "Retour demain")));
-  if (!tube) tuileTube.disabled = true;
+  // Le tube du jour prend la place de la facette qui saute, sur le bord de la boule
+  const bulle = el("button", { class: "f-bulle-tube" + (tube ? "" : " jouee"), type: "button",
+    "aria-label": tube ? "Jouer le tube du jour" : "Tube du jour déjà joué, nouveau tube demain" },
+    el("span", { class: "f-bulle-vinyle", "aria-hidden": "true" }),
+    el("span", { class: "f-bulle-texte" }, tube ? "Tube du jour" : "Tube joué"));
+  if (tube) bulle.addEventListener("click", () => montrerFil("tube"));
+  else bulle.disabled = true;
 
-  const reussite = el("button", { class: "f-tuile f-tuile-reussite", type: "button", onclick: ouvrirArbre },
-    el("span", { class: "f-tuile-detail fort" }, "Réussite"),
-    el("span", { class: "f-tuile-bas" },
-      el("span", { class: "f-tuile-chiffre" }, stats.taux === null ? "–" : `${stats.taux}\u00a0%`),
-      el("span", { class: "f-tuile-detail" }, stats.taux === null
-        ? "Joue une session pour voir tes stats"
-        : `${pluriel(stats.reussis, "réussie")}, ${stats.aRevoir} à revoir`),
-      el("span", { class: "f-tuile-lien" }, "Voir ton arbre")));
+  const vinyles = el("span", { class: "f-mini-vinyles", "aria-hidden": "true" },
+    ...Array.from({ length: VINYLES_PAR_DISQUE }, (_, i) => el("i", { class: i < collection.vinyles ? "plein" : "" })));
 
-  const collection = el("div", { class: "f-tuile f-tuile-collection" },
-    el("span", { class: "f-tuile-titre petit" }, "Ta collection"), vitrine(lireCollection()));
-
-  const bientot = el("div", { class: "f-bientot" }, ...["Survie", "Top scores", "Défis"].map((nom) =>
-    el("div", { class: "f-bientot-case" }, el("b", {}, nom), el("span", {}, "Bientôt"))));
-
-  accueil.replaceChildren(el("div", { class: "f-accueil-col" },
-    el("h1", { class: "f-accueil-titre" }, "On révise\u00a0?"),
-    el("div", { class: "f-mosaique" }, lancer, tuileTube, reussite, collection, bientot)));
+  accueil.replaceChildren(el("div", { class: "f-accueil-col f-accueil-boule" },
+    el("p", { class: "f-accueil-date" }, jour),
+    el("h1", { class: "f-accueil-titre" }, titreAccueil(notions)),
+    el("div", { class: "f-scene" }, boule, bulle),
+    el("p", { class: "f-boule-legende" },
+      el("b", {}, `${allumees} notion${allumees > 1 ? "s" : ""} allumée${allumees > 1 ? "s" : ""} sur ${notions.length}`),
+      " Touche la boule pour voir ton arbre."),
+    el("div", { class: "f-accueil-bas" },
+      el("button", { class: "f-lancer-session", type: "button", onclick: () => montrerFil("session") },
+        el("span", { class: "f-tuile-rond", "aria-hidden": "true" }, icone("M7 4.5v15a1 1 0 0 0 1.5.86l12-7.5a1 1 0 0 0 0-1.72l-12-7.5A1 1 0 0 0 7 4.5Z")),
+        el("span", { class: "f-lancer-texte" },
+          el("b", {}, "Lancer la session"),
+          el("span", {}, `${pluriel(retenus.length, "carte")}, ${pluriel(nbMatieres, "matière")}`))),
+      el("p", { class: "f-ligne-info" }, vinyles,
+        `${collection.vinyles}/${VINYLES_PAR_DISQUE} vinyles` + (collection.disquesOr ? `, ${pluriel(collection.disquesOr, "disque")} d'or` : "")),
+      el("p", { class: "f-ligne-info discret" }, "Bientôt : Survie, Top scores, Défis"))));
 }
 
 // ---------- Ton arbre : ce qu'on a vu, matière par matière ----------
