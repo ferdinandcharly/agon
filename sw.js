@@ -2,16 +2,23 @@
 // Coquille (HTML/CSS/JS/police) : cache d'abord. Données (data/*.json) : réseau d'abord avec un délai
 // maximal, cache en secours, sinon les nouvelles cartes n'apparaîtraient jamais. Seules les réponses OK
 // sont mises en cache. Changer VERSION à chaque livraison de la coquille pour invalider l'ancien cache.
-const VERSION = "agon-v9";
+const VERSION = "agon-v10";
 const COQUILLE = [".", "index.html", "theme.css", "fil.css", "app.js", "manifest.webmanifest",
   "icone.svg", "icone-180.png", "polices/bricolage-grotesque.woff2", "data/contenus.json"];
 const DELAI_RESEAU = 4000;   // ms : au-delà, on sert les cartes en cache
 
 // cache: "reload" contourne le cache HTTP du navigateur, sinon une ancienne version d'app.js
-// pourrait être figée dans le nouveau cache. Pas de skipWaiting : la nouvelle version s'installe
-// au prochain lancement, pour ne jamais mélanger deux versions dans un onglet ouvert.
+// pourrait être figée dans le nouveau cache. skipWaiting : la nouvelle version prend la main tout de
+// suite, et app.js recharge la page (ou propose de le faire) pour ne pas mélanger deux versions.
 self.addEventListener("install", (evt) => {
-  evt.waitUntil(caches.open(VERSION).then((c) => c.addAll(COQUILLE.map((u) => new Request(u, { cache: "reload" })))));
+  evt.waitUntil(caches.open(VERSION)
+    .then((c) => c.addAll(COQUILLE.map((u) => new Request(u, { cache: "reload" }))))
+    .then(() => self.skipWaiting()));
+});
+
+// La page demande le numéro de version (affiché dans les réglages)
+self.addEventListener("message", (evt) => {
+  if (evt.data === "version") evt.source?.postMessage({ version: VERSION });
 });
 
 self.addEventListener("activate", (evt) => {
