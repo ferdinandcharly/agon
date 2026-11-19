@@ -787,10 +787,13 @@ function carteRetourMenu() {
 const accueil = document.getElementById("accueil");
 const COULEUR_NUIT = "#16112B";
 
+const arbre = document.getElementById("arbre");
+
 function afficherAccueil() {
   if (fil.classList.contains("verrouille")) return;   // pas de fuite pendant une Prise d'otage
   observateurEcrans.disconnect();
   fil.classList.add("cache");
+  arbre.classList.add("cache");
   accueil.classList.remove("cache");
   zoneScore.classList.add("cache");
   metaTheme.setAttribute("content", COULEUR_NUIT);
@@ -802,6 +805,7 @@ function afficherAccueil() {
 function montrerFil(mode) {
   modeFil = mode;
   accueil.classList.add("cache");
+  arbre.classList.add("cache");
   fil.classList.remove("cache");
   construireFil();
   afficherScore();
@@ -838,13 +842,14 @@ function remplirAccueil() {
       el("span", { class: "f-tuile-detail" }, tube ? "Une chance, un vinyle" : "Retour demain")));
   if (!tube) tuileTube.disabled = true;
 
-  const reussite = el("div", { class: "f-tuile f-tuile-reussite" },
+  const reussite = el("button", { class: "f-tuile f-tuile-reussite", type: "button", onclick: ouvrirArbre },
     el("span", { class: "f-tuile-detail fort" }, "Réussite"),
     el("span", { class: "f-tuile-bas" },
       el("span", { class: "f-tuile-chiffre" }, stats.taux === null ? "–" : `${stats.taux}\u00a0%`),
       el("span", { class: "f-tuile-detail" }, stats.taux === null
         ? "Joue une session pour voir tes stats"
-        : `${pluriel(stats.reussis, "réussie")}, ${stats.aRevoir} à revoir`)));
+        : `${pluriel(stats.reussis, "réussie")}, ${stats.aRevoir} à revoir`),
+      el("span", { class: "f-tuile-lien" }, "Voir ton arbre")));
 
   const collection = el("div", { class: "f-tuile f-tuile-collection" },
     el("span", { class: "f-tuile-titre petit" }, "Ta collection"), vitrine(lireCollection()));
@@ -855,6 +860,80 @@ function remplirAccueil() {
   accueil.replaceChildren(el("div", { class: "f-accueil-col" },
     el("h1", { class: "f-accueil-titre" }, "On révise\u00a0?"),
     el("div", { class: "f-mosaique" }, lancer, tuileTube, reussite, collection, bientot)));
+}
+
+// ---------- Ton arbre : ce qu'on a vu, matière par matière ----------
+// Chaque matière est une branche, chaque notion une feuille-facette colorée selon son état.
+const ETATS_NOTION = {
+  maitrisee: "Maîtrisée",
+  en_cours: "En cours",
+  a_revoir: "À revoir",
+  pas_vue: "Pas encore vue",
+};
+
+// État d'une notion à partir de ses cartes : un jeu raté → à revoir ; tous les jeux réussis → maîtrisée
+function etatNotion(cartes, resultats) {
+  const jeux = cartes.filter((c) => c.format !== "fiche");
+  if (jeux.some((c) => resultats[c.id]?.derniereOk === false)) return "a_revoir";
+  if (jeux.length && jeux.every((c) => resultats[c.id]?.derniereOk === true)) return "maitrisee";
+  if (cartes.some((c) => resultats[c.id]?.vu > 0)) return "en_cours";
+  return "pas_vue";
+}
+
+function ouvrirArbre() {
+  accueil.classList.add("cache");
+  arbre.classList.remove("cache");
+  remplirArbre();
+  arbre.scrollTo({ top: 0 });
+}
+
+function remplirArbre() {
+  const resultats = lireResultats();
+  const cartes = donnees.contenus.filter((c) => contenuValide(c));
+  const totaux = { maitrisee: 0, en_cours: 0, a_revoir: 0, pas_vue: 0 };
+
+  const branches = donnees.matieres.map((m) => {
+    const cartesMatiere = cartes.filter((c) => c.matiere === m.id);
+    if (!cartesMatiere.length) return null;
+    // Notions dans l'ordre où elles apparaissent dans le fichier
+    const notions = [...new Set(cartesMatiere.map((c) => c.notion))].map((nom) => {
+      const cartesNotion = cartesMatiere.filter((c) => c.notion === nom);
+      const etat = etatNotion(cartesNotion, resultats);
+      totaux[etat]++;
+      const vues = cartesNotion.filter((c) => resultats[c.id]?.vu > 0).length;
+      return { nom, etat, vues, total: cartesNotion.length };
+    });
+    const maitrisees = notions.filter((n) => n.etat === "maitrisee").length;
+    const touchees = notions.filter((n) => n.etat !== "pas_vue").length;
+
+    const feuilles = el("ul", { class: "f-feuilles" }, ...notions.map((n) =>
+      el("li", { class: `f-feuille ${n.etat}` },
+        el("span", { class: "f-facette", "aria-hidden": "true" }),
+        el("span", { class: "f-feuille-nom" }, n.nom),
+        el("span", { class: "f-feuille-detail" }, n.etat === "pas_vue"
+          ? `${n.total} carte${n.total > 1 ? "s" : ""} à découvrir`
+          : `${ETATS_NOTION[n.etat]}, ${n.vues} carte${n.vues > 1 ? "s" : ""} vue${n.vues > 1 ? "s" : ""} sur ${n.total}`))));
+
+    const branche = el("details", { class: "f-branche", "data-matiere": m.id },
+      el("summary", {},
+        el("span", { class: "f-branche-nom" }, m.nom),
+        el("span", { class: "f-branche-detail" }, `${maitrisees}/${notions.length} maîtrisée${maitrisees > 1 ? "s" : ""}`),
+        el("span", { class: "f-branche-barre", "aria-hidden": "true" }, el("i"))),
+      feuilles);
+    branche.querySelector(".f-branche-barre i").style.width = `${(maitrisees / notions.length) * 100}%`;
+    if (touchees) branche.open = true;   // les matières déjà travaillées s'ouvrent d'elles-mêmes
+    return branche;
+  }).filter(Boolean);
+
+  const legende = el("div", { class: "f-legende" }, ...Object.entries(ETATS_NOTION).map(([etat, nom]) =>
+    el("span", { class: `f-feuille ${etat}` }, el("span", { class: "f-facette", "aria-hidden": "true" }), `${nom} (${totaux[etat]})`)));
+
+  arbre.replaceChildren(el("div", { class: "f-accueil-col" },
+    el("button", { class: "f-retour-menu", type: "button", onclick: afficherAccueil }, "← Retour au menu"),
+    el("h1", { class: "f-accueil-titre" }, "Ton arbre"),
+    el("p", { class: "f-arbre-intro" }, "Ce que tu as déjà vu, matière par matière. Touche une matière pour l'ouvrir ou la fermer."),
+    legende,
+    el("div", { class: "f-tronc" }, ...branches)));
 }
 
 // Petite icône pleine (un seul tracé), pour les tuiles
@@ -948,6 +1027,7 @@ function ouvrirReglages() {
 }
 dialogue.addEventListener("close", () => {
   if (!accueil.classList.contains("cache")) remplirAccueil();   // stats et compte de cartes à jour
+  else if (!arbre.classList.contains("cache")) remplirArbre();
   else if (reglagesModifies) construireFil();
 });
 document.getElementById("btn-reglages").addEventListener("click", ouvrirReglages);
