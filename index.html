@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Agon</title>
+  <meta name="description" content="Agon : un fil de révision du BUT informatique, fiches et petits jeux qui alternent.">
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="theme-color" content="#16112B">
+  <link rel="icon" href="icone.svg" type="image/svg+xml">
+  <!-- iPhone : l'écran d'accueil n'accepte pas le SVG, il lui faut un PNG 180×180 -->
+  <link rel="apple-touch-icon" href="icone-180.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Agon">
+  <link rel="preload" href="polices/bricolage-grotesque.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="theme.css">
+  <link rel="stylesheet" href="fil.css">
+</head>
+<body>
+
+<header class="f-entete">
+  <span class="f-marque" aria-label="Agon">Agon</span>
+  <span class="f-score cache" id="score" aria-live="polite"></span>
+</header>
+
+<!-- Le fil : un écran par carte, on fait défiler verticalement (scroll-snap) -->
+<main class="f-fil" id="fil" aria-label="Fil de révision">
+  <section class="f-ecran"><div class="f-carte"><p>Chargement des cartes…</p></div></section>
+</main>
+
+<script src="app.js"></script>
+</body>
+</html>

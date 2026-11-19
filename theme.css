@@ -1,0 +1,252 @@
+/* ==========================================================
+   Base commune à tous les styles.
+   Chaque style (theme/<id>.css) redéfinit les variables de :root.
+   ========================================================== */
+
+/* Valeurs par défaut des variables optionnelles */
+:root {
+  --police-titre: var(--police);
+  --poids-titre: 700;
+  --serrage-titre: -0.025em;
+  --etirement-titre: 100%;
+  --style-titre: normal;
+  --bordure: 1px;
+  --btn-rayon: var(--r-md);
+  --ombre-btn: none;
+  --trait-fort: #C9D0DA;
+  --accent-texte: var(--accent);
+  --ok: #1D6A3A;            /* succès, « fonctionne » */
+  --sur-ok: #FFFFFF;        /* texte posé sur --ok */
+  --alerte: #C93C3C;        /* suppression, erreur */
+  --sur-alerte: #FFFFFF;    /* texte posé sur --alerte */
+  --coeur: #E0446A;         /* « j'aime », favori */
+  --code-fond: #172131;
+  --code-texte: #E6EBF2;
+  --tel: var(--encre);
+  /* Mouvement : chaque style peut avoir son caractère */
+  --duree: .28s;
+  --courbe: cubic-bezier(.2, .7, .2, 1);
+  interpolate-size: allow-keywords;
+}
+
+/* Les questions (<details>) s'ouvrent en douceur */
+details::details-content { height: 0; overflow: clip; transition: height var(--duree) var(--courbe), content-visibility var(--duree) allow-discrete; }
+details[open]::details-content { height: auto; }
+
+h1, h2, h3, h4, .logo { font-family: var(--police-titre); font-stretch: var(--etirement-titre); font-style: var(--style-titre); }
+
+/* ---------- Base ---------- */
+*, *::before, *::after { box-sizing: border-box; }
+* { margin: 0; padding: 0; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  background: var(--fond);
+  color: var(--encre);
+  font-family: var(--police);
+  font-size: var(--t-base);
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+img, svg { display: block; max-width: 100%; }
+a { color: inherit; }
+ul, ol { list-style: none; }
+/* Un lien vers #section ne passe pas sous une navigation fixe */
+[id] { scroll-margin-top: 80px; }
+
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+
+/* ---------- Mise en page ---------- */
+.conteneur { width: 100%; max-width: var(--largeur); margin-inline: auto; padding-inline: var(--gouttiere); }
+@media (max-width: 600px) { :root { --gouttiere: 16px; } }
+
+.titre-section { font-size: var(--t-xl); line-height: 1.15; letter-spacing: var(--serrage-titre); font-weight: var(--poids-titre); }
+.texte-gris { color: var(--gris); }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* ---------- Boutons ---------- */
+.btn {
+  display: inline-block;
+  padding: 12px 20px;
+  border-radius: var(--btn-rayon);
+  font: 500 var(--t-base)/1.2 var(--police);
+  text-decoration: none;
+  border: var(--bordure) solid transparent;
+  cursor: pointer;
+  transition: background-color .15s, border-color .15s;
+}
+.btn-principal { background: var(--accent); color: var(--sur-accent); box-shadow: var(--ombre-btn); }
+.btn-principal:hover { background: color-mix(in srgb, var(--accent) 88%, black); }
+.btn-secondaire { border-color: var(--trait-fort); color: var(--encre); background: transparent; }
+.btn-secondaire:hover { border-color: var(--gris); }
+
+/* ---------- Image à remplacer ----------
+   Bloc de couleur qui tient la place d'une vraie photo. Toujours remplacer par <img>. */
+.visuel-vide {
+  display: flex; align-items: flex-end;
+  padding: 14px;
+  min-height: 120px;
+  background: color-mix(in srgb, var(--accent) 12%, var(--trait-doux));
+  border-radius: var(--r-lg);
+  color: color-mix(in srgb, var(--encre) 60%, transparent);
+  font-size: var(--t-sm);
+}
+.visuel-vide.ton-2 { background: color-mix(in srgb, var(--accent) 24%, var(--trait-doux)); }
+.visuel-vide.ton-3 { background: color-mix(in srgb, var(--encre) 14%, var(--trait-doux)); }
+
+/* ---------- Étiquette ---------- */
+.etiquette { display: inline-block; padding: 2px 9px; border-radius: 999px; background: var(--accent-doux); color: var(--accent-texte); font-size: 13px; font-weight: 500; }
+
+/* ---------- Maquette d'app (visuel produit en HTML) ----------
+   Remplacer par une vraie capture si le projet en a une. */
+.maquette {
+  display: grid;
+  grid-template-columns: 150px 1fr;
+  grid-template-rows: auto 1fr;
+  min-height: 330px;
+  overflow: hidden;
+  background: var(--surface);
+  border: var(--bordure) solid var(--trait);
+  border-radius: var(--r-lg);
+  box-shadow: var(--ombre);
+  font-size: var(--t-sm);
+}
+.maquette-barre { grid-column: 1 / -1; display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-bottom: 1px solid var(--trait-doux); color: var(--gris); font-size: 13px; }
+.maquette-barre i { width: 10px; height: 10px; border-radius: 50%; background: var(--trait); }
+.maquette-menu { padding: 12px 8px; border-right: 1px solid var(--trait-doux); color: var(--gris); font-size: 13px; }
+.maquette-menu li { padding: 7px 10px; border-radius: var(--r-sm); }
+.maquette-menu .actif { background: var(--accent-doux); color: var(--accent-texte); font-weight: 500; }
+.maquette-corps { padding: 18px; display: flex; flex-direction: column; gap: 8px; }
+.maquette-corps h4 { font-size: 15px; margin-bottom: 6px; }
+.maquette-ligne { display: flex; justify-content: space-between; gap: 12px; padding: 11px 13px; border: 1px solid var(--trait-doux); border-radius: var(--r-md); }
+.maquette-ligne span:last-child { color: var(--gris); }
+.maquette-pied { margin-top: auto; display: flex; justify-content: space-between; align-items: center; padding-top: 12px; font-size: 13px; color: var(--gris); }
+.maquette-pied b { background: var(--accent); color: var(--sur-accent); font-weight: 500; padding: 8px 14px; border-radius: var(--r-sm); }
+
+/* Seul mouvement automatique de la page : les lignes arrivent une à une */
+.maquette-ligne { animation: arrivee .5s ease-out both; }
+.maquette-ligne:nth-child(3) { animation-delay: .15s; }
+.maquette-ligne:nth-child(4) { animation-delay: .3s; }
+@keyframes arrivee { from { opacity: 0; transform: translateY(6px); } }
+
+@media (max-width: 760px) {
+  .maquette { grid-template-columns: 1fr; min-height: 0; }
+  .maquette-menu { display: none; }
+}
+
+/* ---------- Téléphone : comportements d'app ---------- */
+@media (max-width: 600px) {
+  /* Espacements plus serrés (html:root pour passer devant les styles) */
+  html:root { --section-y: 3rem; }
+
+  /* Liste qui défile au doigt : la carte suivante dépasse pour inviter au geste */
+  .defile-mobile.defile-mobile.defile-mobile {
+    display: grid; grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: 84%;
+    gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none;
+    margin-inline: calc(-1 * var(--gouttiere)); padding-inline: var(--gouttiere); scroll-padding-inline: var(--gouttiere);
+  }
+  .defile-mobile::-webkit-scrollbar { display: none; }
+  .defile-mobile.defile-mobile.defile-mobile > * { scroll-snap-align: start; grid-row: auto; grid-column: auto; }
+}
+
+/* ==========================================================
+   Briques des écrans d'app (rayon « Écrans d'app »)
+   ========================================================== */
+/* Colonne d'app : pleine largeur sur téléphone, centrée sur ordinateur */
+.app-col { width: 100%; max-width: 480px; margin-inline: auto; padding-inline: 16px; }
+.app-ecran { padding-block: 16px; }
+
+/* Bouton rond avec seulement une icône */
+.btn-icone { display: inline-grid; place-items: center; width: 40px; height: 40px; flex: none; border: 0; border-radius: 50%; background: var(--surface); color: var(--encre); cursor: pointer; }
+.btn-icone:hover { background: var(--trait-doux); }
+.btn-icone svg, .icone { width: 20px; height: 20px; flex: none; }
+
+/* Pastille de couleur devant une catégorie */
+.pastille { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); flex: none; }
+.pastille.neutre { background: var(--trait-fort); }
+
+/* Badge court (état, nouveauté) */
+.badge { display: inline-block; padding: 2px 8px; border-radius: 6px; font-size: 12px; font-weight: 600; background: var(--accent); color: var(--sur-accent); }
+.badge.doux { background: var(--accent-doux); color: var(--accent-texte); }
+.badge.contour { background: none; color: var(--accent-texte); box-shadow: inset 0 0 0 1px currentColor; }
+
+/* Ligne d'infos secondaires : source, heure… */
+.meta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; font-size: 13px; color: var(--gris); }
+.meta b { color: var(--encre); font-weight: 600; }
+
+/* Interrupteur (case à cocher stylée) */
+.interrupteur { position: relative; display: inline-block; width: 44px; height: 26px; flex: none; }
+.interrupteur input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; }
+.interrupteur span { position: absolute; inset: 0; border-radius: 999px; background: var(--trait-fort); transition: background .2s; pointer-events: none; }
+.interrupteur span::after { content: ""; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,.25); transition: transform .2s; }
+.interrupteur input:checked + span { background: var(--accent); }
+.interrupteur input:checked + span::after { transform: translateX(18px); }
+.interrupteur input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* Champ de formulaire (16 px pour éviter le zoom automatique sur iPhone) */
+.champ { display: grid; gap: 6px; }
+.champ label { font-size: var(--t-sm); font-weight: 500; }
+.champ input { width: 100%; padding: 12px 14px; border: var(--bordure) solid var(--trait-fort); border-radius: var(--r-md); background: var(--surface); color: var(--encre); font: 16px var(--police); }
+.champ input:focus { outline: 2px solid var(--accent); outline-offset: 0; border-color: transparent; }
+
+/* Ligne de liste cliquable : icône, texte, valeur, chevron */
+.ligne-app { display: flex; align-items: center; gap: 14px; padding: 14px 16px; text-decoration: none; color: inherit; }
+.ligne-app + .ligne-app { border-top: var(--bordure) solid var(--trait-doux); }
+.ligne-app .texte { flex: 1; min-width: 0; }
+.ligne-app .texte small { display: block; font-size: 13px; color: var(--gris); }
+.ligne-app .valeur { font-size: 14px; color: var(--gris); }
+.ligne-app .chevron-d { width: 16px; height: 16px; color: var(--gris); flex: none; }
+.groupe-app { background: var(--surface); border-radius: var(--r-lg); overflow: hidden; }
+/*
+id: acier
+nom: Acier
+statut: valide
+description: Clair, froid et net. Bleu cobalt, une seule police sans fioritures.
+pour: Logiciel, outil pro, finance, startup
+police: https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;700&display=swap
+palette-cobalt: Cobalt
+palette-sapin: Vert sapin | --accent: #1F6B4A; --accent-doux: #E0EEE6
+palette-brique: Rouge brique | --accent: #A63A2B; --accent-doux: #F5E3E0
+palette-graphite: Graphite | --accent: #2B3442; --accent-doux: #E3E6EB
+palette-violet: Violet | --accent: #5B3FA0; --accent-doux: #ECE6F6
+*/
+
+:root {
+  /* Mouvement */
+  --duree: .25s; --courbe: cubic-bezier(.2, .7, .2, 1);
+  /* Couleurs */
+  --fond: #F2F4F7;          /* fond de page */
+  --surface: #FFFFFF;       /* blocs posés sur le fond */
+  --encre: #172131;         /* texte principal */
+  --gris: #5A6577;          /* texte secondaire */
+  --trait: #D8DDE5;         /* bordures visibles */
+  --trait-doux: #E6E9EE;    /* séparateurs discrets */
+  --accent: #1F45B8;        /* boutons, liens, élément actif */
+  --accent-doux: #E8EDFA;   /* fond d'un élément actif */
+  --sur-accent: #FFFFFF;    /* texte posé sur l'accent */
+
+  /* Typo : une seule famille */
+  --police: "Schibsted Grotesk", system-ui, sans-serif;
+  --t-sm: 0.875rem;   /* 14px */
+  --t-base: 1.0625rem;/* 17px */
+  --t-md: 1.3125rem;  /* 21px */
+  --t-lg: 1.625rem;   /* 26px */
+  --t-xl: clamp(1.75rem, 3vw, 2.125rem);
+  --t-2xl: clamp(2.25rem, 4.4vw, 3.375rem);
+
+  /* Rayons : plus l'objet est grand, plus le rayon est grand */
+  --r-sm: 6px;
+  --r-md: 8px;
+  --r-lg: 12px;
+
+  /* Espacements */
+  --section-y: clamp(4rem, 9vw, 7rem);
+  --largeur: 1120px;
+  --gouttiere: 24px;
+
+  /* Ombre unique, réservée aux objets « posés » (maquettes) */
+  --ombre: 0 1px 1px rgba(23,33,49,.04), 0 12px 32px -8px rgba(23,33,49,.16);
+}
