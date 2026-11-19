@@ -232,13 +232,14 @@ const formats = {
     const zone = el("div", { class: "f-chrono" });
     const intro = el("div", { class: "f-chrono-intro" },
       el("p", { class: "f-consigne" }, `Libère l'otage : réponds aux ${d.questions.length} questions avant la fin du chrono.`),
-      el("p", { class: "f-discret" }, `Tu as ${DUREE_CHRONO / 1000} secondes. Chaque erreur en retire ${PENALITE_CHRONO / 1000}.`),
+      el("p", { class: "f-discret" }, `Tu as ${DUREE_CHRONO / 1000} secondes. Chaque erreur en retire ${PENALITE_CHRONO / 1000}. Pas de fuite possible : le fil reste bloqué jusqu'à la fin.`),
       el("button", { class: "f-option f-lancer", type: "button", onclick: lancer }, "Lancer le chrono"));
     zone.append(intro);
 
     const jauge = el("i");
     const temps = el("b", { class: "f-chrono-temps" });
-    const compteur = el("span", { class: "f-chrono-compteur" });
+    // Une pastille par question : elle se remplit en vert ou en rouge à chaque réponse
+    const pastilles = el("div", { class: "f-pips", role: "img" }, ...d.questions.map(() => el("i")));
     const question = el("div", { class: "f-chrono-question", "aria-live": "polite" });
     const reponses = [];   // { contenu, ok }
     let restant = DUREE_CHRONO;
@@ -249,7 +250,17 @@ const formats = {
     function afficherTemps() {
       temps.textContent = `${Math.max(0, restant / 1000).toFixed(1).replace(".", ",")} s`;
       jauge.style.width = `${Math.max(0, restant / DUREE_CHRONO) * 100}%`;
-      temps.classList.toggle("urgent", restant < 8000);
+      const urgent = !fini && restant < 8000;
+      temps.classList.toggle("urgent", urgent);
+      // Dernières secondes : tout l'écran rouge se met à battre
+      zone.closest(".f-ecran")?.classList.toggle("alerte", urgent);
+    }
+
+    function majPastilles() {
+      [...pastilles.children].forEach((p, i) => {
+        p.className = i < reponses.length ? (reponses[i].ok ? "ok" : "ko") : i === indice && !fini ? "courant" : "";
+      });
+      pastilles.setAttribute("aria-label", `Question ${Math.min(indice + 1, d.questions.length)} sur ${d.questions.length}`);
     }
 
     // Le chrono ne tourne que si son écran est celui affiché (on peut faire défiler sans perdre de temps)
@@ -263,13 +274,22 @@ const formats = {
       requestAnimationFrame(tic);
     }
 
+    // Lancement : compte à rebours 3, 2, 1, puis la première question et le chrono
     function lancer() {
+      afficherTemps();
+      majPastilles();
+      const decompte = el("div", { class: "f-decompte", "aria-live": "assertive" });
       zone.replaceChildren(
-        el("div", { class: "f-chrono-barre" }, temps, compteur),
+        el("div", { class: "f-chrono-barre" }, temps, pastilles),
         el("div", { class: "f-chrono-jauge" }, jauge),
         question);
-      poserQuestion();
-      requestAnimationFrame(tic);
+      question.replaceChildren(decompte);
+      const etapes = ["3", "2", "1", "Go !"];
+      etapes.forEach((t, i) => setTimeout(() => {
+        decompte.textContent = t;
+        decompte.classList.remove("tape"); void decompte.offsetWidth; decompte.classList.add("tape");
+      }, i * 650));
+      setTimeout(() => { poserQuestion(); requestAnimationFrame(tic); }, etapes.length * 650);
     }
 
     function repondre(ok) {
@@ -277,17 +297,24 @@ const formats = {
       const contenu = d.questions[indice];
       reponses.push({ contenu, ok });
       enregistrerResultat(contenu.id, ok);
-      if (!ok) restant -= PENALITE_CHRONO;
+      if (!ok) {
+        restant -= PENALITE_CHRONO;
+        // « −3 s » qui s'envole depuis le chrono
+        const penalite = el("span", { class: "f-penalite", "aria-hidden": "true" }, `−${PENALITE_CHRONO / 1000} s`);
+        temps.parentElement.append(penalite);
+        setTimeout(() => penalite.remove(), 900);
+      }
       question.classList.remove("eclair-ok", "eclair-ko");
       void question.offsetWidth;   // relance l'éclair même s'il vient de jouer
       question.classList.add(ok ? "eclair-ok" : "eclair-ko");
       indice++;
+      majPastilles();
       if (restant <= 0 || indice === d.questions.length) return finir();
       poserQuestion();
     }
 
     function poserQuestion() {
-      compteur.textContent = `${indice + 1}/${d.questions.length}`;
+      majPastilles();
       const q = d.questions[indice];
       if (q.format === "vrai_faux") {
         const carte = el("div", { class: "f-affirmation" }, q.donnees.affirmation);
@@ -302,12 +329,14 @@ const formats = {
           el("div", { class: "f-choix deux" }, ...melanger(q.donnees.choix).map((mot) =>
             el("button", { class: "f-option", type: "button", onclick: () => repondre(mot === q.donnees.reponse) }, mot))));
       }
+      question.classList.remove("entre"); void question.offsetWidth; question.classList.add("entre");
     }
 
     function finir() {
       fini = true;
       restant = Math.max(0, restant);
       afficherTemps();
+      majPastilles();
       const bonnes = reponses.filter((r) => r.ok).length;
       const libere = reponses.length === d.questions.length && restant > 0;
       // Récap : ce qui a été raté ou pas atteint, avec la bonne réponse
@@ -315,7 +344,27 @@ const formats = {
         q.format === "vrai_faux"
           ? `${q.donnees.affirmation} C'est ${q.donnees.reponse ? "vrai" : "faux"}.`
           : q.donnees.texte.replace("___", `« ${q.donnees.reponse} »`)));
-      question.replaceChildren(aRevoir.length ? el("div", { class: "f-recap" }, el("b", {}, "À revoir"), el("ul", {}, ...aRevoir)) : "");
+      // Tampon de fin, avec des confettis si l'otage est libéré
+      const tampon = el("div", { class: `f-tampon ${libere ? "ok" : "ko"}` }, libere ? "Libéré !" : "Trop tard");
+      if (libere) {
+        const couleurs = ["#3D5AFE", "#FF6B3D", "#00C08B", "#7B4DFF", "#FFC21A", "#FF5FA2"];
+        const confettis = el("div", { class: "f-confettis", "aria-hidden": "true" });
+        for (let k = 0; k < 18; k++) {
+          const c = el("i");
+          const angle = (k / 18) * Math.PI * 2 + Math.random() * 0.3;
+          const distance = 90 + Math.random() * 70;
+          c.style.setProperty("--x", `${Math.cos(angle) * distance}px`);
+          c.style.setProperty("--y", `${Math.sin(angle) * distance - 30}px`);
+          c.style.setProperty("--r", `${Math.round(Math.random() * 540 - 270)}deg`);
+          c.style.background = couleurs[k % couleurs.length];
+          confettis.append(c);
+        }
+        tampon.append(confettis);
+      }
+      question.classList.remove("entre");
+      question.replaceChildren(tampon,
+        aRevoir.length ? el("div", { class: "f-recap" }, el("b", {}, "À revoir"), el("ul", {}, ...aRevoir)) : "");
+      liberer(zone.closest(".f-ecran"), libere);
       terminer(libere,
         libere ? "Otage libéré !" : "Trop tard, l'otage n'a pas pu être libéré.",
         `${bonnes} bonne${bonnes > 1 ? "s" : ""} réponse${bonnes > 1 ? "s" : ""} sur ${d.questions.length}` +
@@ -450,13 +499,31 @@ const formats = {
 
 // ---------- Construction du fil ----------
 
+// Titre façon lettre de rançon : chaque lettre découpée dans un « journal » différent, posée de travers
+function lettreDeRancon(texte) {
+  const styles = ["papier", "encre", "jaune", "papier", "rose", "encre", "papier", "bleu"];
+  const titre = el("p", { class: "f-matiere f-rancon", "aria-label": texte });
+  let mot = null;   // les lettres d'un même mot restent ensemble à la coupure de ligne
+  [...texte].forEach((lettre, i) => {
+    if (lettre === " ") { mot = null; return; }
+    if (!mot) { mot = el("span", { class: "f-mot" }); titre.append(mot); }
+    const morceau = el("span", { class: `f-lettre ${styles[(i * 5) % styles.length]}`, "aria-hidden": "true" }, lettre);
+    morceau.style.setProperty("--tourne", `${((i * 37) % 13) - 6}deg`);
+    morceau.style.setProperty("--monte", `${((i * 23) % 9) - 4}px`);
+    if (i % 3 === 1) morceau.classList.add("serre");
+    mot.append(morceau);
+  });
+  return titre;
+}
+
 function creerCarte(contenu) {
   // Sur le fond de couleur de la matière : son nom en grand, le format, puis l'autocollant du contenu
   const carte = el("div", { class: `f-carte f-${contenu.format === "fiche" ? "fiche" : "jeu"}` });
   const matiere = donnees.matieres.find((m) => m.id === contenu.matiere);
   const haut = contenu.format === "chrono"
-    ? [el("p", { class: "f-matiere" }, "Prise d'otage"),
-       el("p", { class: "f-format" }, el("b", {}, `${contenu.donnees.questions.length} questions`), ` en ${DUREE_CHRONO / 1000} secondes, toutes matières`)]
+    ? [lettreDeRancon("Prise d'otage"),
+       el("p", { class: "f-format" }, el("b", {}, "Ton cerveau est retenu."),
+         ` ${contenu.donnees.questions.length} bonnes réponses en ${DUREE_CHRONO / 1000} secondes pour le libérer.`)]
     : [el("p", { class: "f-matiere" }, matiere ? matiere.nom : contenu.matiere),
        el("p", { class: "f-format" }, el("b", {}, NOMS_FORMATS[contenu.format]), ` sur ${contenu.notion}`)];
   const pile = el("div", { class: "f-pile" }, el("div", { class: "f-haut" }, ...haut), carte);
@@ -493,6 +560,10 @@ function creerCarte(contenu) {
     }
   }
   const ecran = el("section", { class: "f-ecran", "data-matiere": contenu.matiere }, pile);
+  if (contenu.format === "chrono") {
+    ecran.classList.add("f-otage");
+    ecran.prepend(el("div", { class: "f-barreaux", "aria-hidden": "true" }));
+  }
   if (contenu.format === "fiche") ecran.dataset.fiche = contenu.id;
   return ecran;
 }
@@ -509,11 +580,14 @@ const observateurEcrans = new IntersectionObserver((entrees) => {
     if (!e.isIntersecting) continue;
     const ecran = e.target;
     ecranActif = ecran;
-    metaTheme.setAttribute("content", getComputedStyle(ecran).backgroundColor);
+    const couleur = getComputedStyle(ecran).backgroundColor;
+    metaTheme.setAttribute("content", couleur);
+    document.documentElement.style.setProperty("--fond-actif", couleur);
     if (ecran.dataset.fiche) {
       enregistrerResultat(ecran.dataset.fiche, null);
       delete ecran.dataset.fiche;   // une seule fois par fil
     }
+    if (ecran.classList.contains("f-otage") && !ecran.classList.contains("termine")) capturer(ecran);
     const aTirer = ecran.querySelector(".f-affirmation:not(.vers-vrai):not(.vers-faux)");
     if (aTirer && !indiceGlisseMontre) {
       indiceGlisseMontre = true;
@@ -521,6 +595,19 @@ const observateurEcrans = new IntersectionObserver((entrees) => {
     }
   }
 }, { root: fil, threshold: 0.6 });
+
+// Prise d'otage : impossible de faire défiler le fil tant que la partie n'est pas finie
+function capturer(ecran) {
+  if (fil.classList.contains("verrouille")) return;
+  fil.scrollTo({ top: ecran.offsetTop, behavior: "instant" });
+  fil.classList.add("verrouille");
+  ecran.classList.add("capture");
+}
+function liberer(ecran, libere) {
+  ecran.classList.add("termine", libere ? "libere" : "perdu");
+  // On laisse le tampon se poser avant de rendre la main
+  setTimeout(() => fil.classList.remove("verrouille"), 1200);
+}
 
 // Contenus retenus par les réglages (matières et formats cochés)
 function contenusRetenus() {
@@ -547,6 +634,7 @@ function ajouterChronos(liste) {
 
 function construireFil() {
   observateurEcrans.disconnect();
+  fil.classList.remove("verrouille");
   const retenus = contenusRetenus();
   const ecrans = retenus.length
     ? [...ajouterChronos(ordonner(retenus)).map(creerCarte), carteFin()]
@@ -679,7 +767,7 @@ btnZero.addEventListener("click", () => {
 let indexCible = null;
 let minuteurCible = null;
 document.addEventListener("keydown", (e) => {
-  if (e.ctrlKey || e.altKey || e.metaKey || dialogue.open) return;
+  if (e.ctrlKey || e.altKey || e.metaKey || dialogue.open || fil.classList.contains("verrouille")) return;
   if (e.target.closest("button") && e.key === " ") return;
   let sens = { ArrowDown: 1, PageDown: 1, " ": 1, ArrowUp: -1, PageUp: -1 }[e.key];
   if (!sens) return;
