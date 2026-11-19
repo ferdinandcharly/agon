@@ -362,13 +362,13 @@ const formats = {
         tampon.append(confettis);
       }
       question.classList.remove("entre");
-      question.replaceChildren(tampon,
+      zone.querySelector(".f-chrono-jauge")?.remove();
+      const bilan = `${bonnes} bonne${bonnes > 1 ? "s" : ""} réponse${bonnes > 1 ? "s" : ""} sur ${d.questions.length}` +
+        (libere ? `, ${(restant / 1000).toFixed(1).replace(".", ",")} s d'avance.` : ".");
+      question.replaceChildren(tampon, el("p", { class: "f-bilan" }, bilan),
         aRevoir.length ? el("div", { class: "f-recap" }, el("b", {}, "À revoir"), el("ul", {}, ...aRevoir)) : "");
       liberer(zone.closest(".f-ecran"), libere);
-      terminer(libere,
-        libere ? "Otage libéré !" : "Trop tard, l'otage n'a pas pu être libéré.",
-        `${bonnes} bonne${bonnes > 1 ? "s" : ""} réponse${bonnes > 1 ? "s" : ""} sur ${d.questions.length}` +
-          (libere ? `, avec ${(restant / 1000).toFixed(1).replace(".", ",")} s d'avance.` : "."));
+      terminer(libere, null);
     }
 
     return [zone];
@@ -509,6 +509,7 @@ function lettreDeRancon(texte) {
     if (!mot) { mot = el("span", { class: "f-mot" }); titre.append(mot); }
     const morceau = el("span", { class: `f-lettre ${styles[(i * 5) % styles.length]}`, "aria-hidden": "true" }, lettre);
     morceau.style.setProperty("--tourne", `${((i * 37) % 13) - 6}deg`);
+    morceau.style.setProperty("--i", titre.querySelectorAll(".f-lettre").length);
     morceau.style.setProperty("--monte", `${((i * 23) % 9) - 4}px`);
     if (i % 3 === 1) morceau.classList.add("serre");
     mot.append(morceau);
@@ -535,7 +536,8 @@ function creerCarte(contenu) {
       session.joues++;
       if (reussi) session.reussis++;
       afficherScore();
-      carte.append(el("div", { class: `f-retour ${reussi ? "ok" : "ko"}` }, el("b", {}, titre), texte, enPlus));
+      // titre null : le jeu affiche lui-même son résultat (Prise d'otage)
+      if (titre !== null) carte.append(el("div", { class: `f-retour ${reussi ? "ok" : "ko"}` }, el("b", {}, titre), texte, enPlus));
       // Carte plus haute que l'écran : on descend jusqu'au retour pour qu'il soit lu
       requestAnimationFrame(() => carte.scrollTo({ top: carte.scrollHeight, behavior: "smooth" }));
     }
@@ -587,7 +589,7 @@ const observateurEcrans = new IntersectionObserver((entrees) => {
       enregistrerResultat(ecran.dataset.fiche, null);
       delete ecran.dataset.fiche;   // une seule fois par fil
     }
-    if (ecran.classList.contains("f-otage") && !ecran.classList.contains("termine")) capturer(ecran);
+    if (ecran.classList.contains("f-otage") && !ecran.classList.contains("termine")) quandArrete(ecran, () => capturer(ecran));
     const aTirer = ecran.querySelector(".f-affirmation:not(.vers-vrai):not(.vers-faux)");
     if (aTirer && !indiceGlisseMontre) {
       indiceGlisseMontre = true;
@@ -598,10 +600,18 @@ const observateurEcrans = new IntersectionObserver((entrees) => {
 
 // Prise d'otage : impossible de faire défiler le fil tant que la partie n'est pas finie
 function capturer(ecran) {
-  if (fil.classList.contains("verrouille")) return;
-  fil.scrollTo({ top: ecran.offsetTop, behavior: "instant" });
+  if (fil.classList.contains("verrouille") || ecranActif !== ecran) return;
+  if (Math.abs(fil.scrollTop - ecran.offsetTop) > 2) fil.scrollTo({ top: ecran.offsetTop, behavior: "instant" });
   fil.classList.add("verrouille");
   ecran.classList.add("capture");
+}
+
+// Appelle faire() quand le fil ne bouge plus depuis 150 ms (fin du calage sur l'écran)
+function quandArrete(ecran, faire) {
+  let minuteur = setTimeout(fin, 150);
+  function bouge() { clearTimeout(minuteur); minuteur = setTimeout(fin, 150); }
+  function fin() { fil.removeEventListener("scroll", bouge); faire(); }
+  fil.addEventListener("scroll", bouge);
 }
 function liberer(ecran, libere) {
   ecran.classList.add("termine", libere ? "libere" : "perdu");
