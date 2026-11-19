@@ -737,6 +737,7 @@ function remplirReglages() {
 function ouvrirReglages() {
   if (!donnees) return;
   reglagesModifies = false;
+  navigator.serviceWorker?.controller?.postMessage("version");
   btnZero.classList.remove("confirmer");
   btnZero.textContent = "Effacer ma progression";
   remplirReglages();
@@ -875,5 +876,22 @@ async function demarrer() {
   }
 }
 
-if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
+// ---------- Mises à jour ----------
+// Quand une nouvelle version prend la main : rechargement direct au démarrage, sinon une étiquette
+// « Nouvelle version » propose de recharger (pour ne pas couper une partie en cours).
+const DEBUT = Date.now();
+if ("serviceWorker" in navigator) {
+  const avaitUneVersion = Boolean(navigator.serviceWorker.controller);
+  navigator.serviceWorker.register("sw.js").then((r) => r.update()).catch(() => {});
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    if (!avaitUneVersion) return;   // première installation : rien à recharger
+    if (Date.now() - DEBUT < 10000 && !fil.classList.contains("verrouille")) return location.reload();
+    if (document.querySelector(".f-maj")) return;
+    document.body.append(el("button", { class: "f-maj", type: "button", onclick: () => location.reload() },
+      "Nouvelle version : toucher pour recharger"));
+  });
+  navigator.serviceWorker.addEventListener("message", (e) => {
+    if (e.data?.version) document.getElementById("version").textContent = `Version ${e.data.version.replace("agon-", "")}`;
+  });
+}
 demarrer();

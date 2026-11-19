@@ -405,3 +405,14 @@ h1, h2, h3 { font-family: var(--police); }
 @keyframes f-lettre-colle { from { transform: scale(1.8); opacity: 0; } }
 /* Avant la capture, le titre reste caché : il apparaîtra collé lettre par lettre (pas de clignotement) */
 .f-otage:not(.capture):not(.termine) .f-lettre { opacity: 0; }
+
+/* Numéro de version, en bas des réglages */
+.f-version { padding: 0 18px 18px; font-size: 13px; color: var(--gris); text-align: center; }
+
+/* Étiquette « Nouvelle version » posée en bas de l'écran */
+.f-maj {
+  position: fixed; left: 50%; bottom: max(18px, env(safe-area-inset-bottom)); z-index: 20; translate: -50% 0;
+  padding: 10px 18px 12px; border: var(--trait); border-radius: 999px; background: #FFC21A; color: var(--encre);
+  box-shadow: var(--ombre-petite); font: 700 16px var(--police); cursor: pointer; white-space: nowrap;
+  animation: f-pose .35s var(--ressort);
+}
