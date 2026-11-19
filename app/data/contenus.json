@@ -1,0 +1,265 @@
+{
+  "version": 1,
+  "matieres": [
+    { "id": "bd", "nom": "Bases de données" },
+    { "id": "dev", "nom": "Développement" },
+    { "id": "sys", "nom": "Systèmes" },
+    { "id": "reseau", "nom": "Réseaux" },
+    { "id": "maths", "nom": "Maths discrètes" },
+    { "id": "web", "nom": "Web" },
+    { "id": "lsf", "nom": "Langue des signes", "hors_cours": true }
+  ],
+  "contenus": [
+    {
+      "id": "bd-cle-primaire-fiche", "matiere": "bd", "notion": "Clé primaire", "format": "fiche",
+      "donnees": {
+        "titre": "La clé primaire",
+        "paragraphes": [
+          "La clé primaire identifie chaque ligne d'une table de façon unique : deux lignes ne peuvent pas avoir la même.",
+          "Elle ne peut jamais être NULL. Une table n'a qu'une seule clé primaire, mais elle peut être composée de plusieurs colonnes (clé composite)."
+        ],
+        "a_retenir": "Clé primaire = unique + non nulle + une seule par table."
+      }
+    },
+    {
+      "id": "bd-cle-primaire-vf", "matiere": "bd", "notion": "Clé primaire", "format": "vrai_faux",
+      "donnees": {
+        "affirmation": "Une clé primaire peut contenir la valeur NULL.",
+        "reponse": false,
+        "explication": "Une clé primaire doit toujours avoir une valeur : sinon la ligne ne serait plus identifiable."
+      }
+    },
+    {
+      "id": "bd-cle-etrangere-trous", "matiere": "bd", "notion": "Clé étrangère", "format": "trous",
+      "donnees": {
+        "texte": "Une clé ___ fait référence à la clé primaire d'une autre table.",
+        "reponse": "étrangère",
+        "choix": ["étrangère", "primaire", "candidate", "composite"],
+        "explication": "C'est elle qui crée le lien entre deux tables, par exemple etudiant.id_groupe → groupe.id."
+      }
+    },
+    {
+      "id": "bd-commandes-sql-associer", "matiere": "bd", "notion": "Commandes SQL", "format": "associer",
+      "donnees": {
+        "consigne": "Relie chaque commande SQL à son rôle.",
+        "paires": [
+          ["SELECT", "Lire des données"],
+          ["INSERT", "Ajouter des lignes"],
+          ["UPDATE", "Modifier des lignes existantes"],
+          ["DELETE", "Supprimer des lignes"],
+          ["CREATE TABLE", "Créer une table"]
+        ]
+      }
+    },
+    {
+      "id": "bd-having-erreur", "matiere": "bd", "notion": "GROUP BY et HAVING", "format": "erreur",
+      "donnees": {
+        "consigne": "On veut les noms portés par plus de 2 étudiants. Quelle ligne est fausse ?",
+        "lignes": ["SELECT nom, COUNT(*)", "FROM etudiant", "WHERE COUNT(*) > 2", "GROUP BY nom;"],
+        "ligne_fausse": 2,
+        "correction": "supprimer la ligne WHERE et finir par GROUP BY nom HAVING COUNT(*) > 2;",
+        "explication": "WHERE filtre les lignes avant le regroupement : il ne peut pas utiliser COUNT. Pour filtrer les groupes, on utilise HAVING après GROUP BY."
+      }
+    },
+    {
+      "id": "bd-clauses-ordre", "matiere": "bd", "notion": "Requête SELECT", "format": "ordre",
+      "donnees": {
+        "consigne": "Remets les clauses d'une requête SELECT dans l'ordre où on les écrit.",
+        "etapes": ["SELECT", "FROM", "WHERE", "GROUP BY", "HAVING", "ORDER BY"]
+      }
+    },
+    {
+      "id": "dev-boucles-fiche", "matiere": "dev", "notion": "Boucles", "format": "fiche",
+      "donnees": {
+        "titre": "for ou while ?",
+        "paragraphes": [
+          "La boucle for parcourt une suite connue à l'avance : les éléments d'une liste, ou les nombres de range(n).",
+          "La boucle while répète tant qu'une condition est vraie : on l'utilise quand on ne sait pas combien de tours il faudra. Attention à faire évoluer la condition, sinon la boucle ne s'arrête jamais."
+        ],
+        "a_retenir": "Nombre de tours connu → for. Condition d'arrêt → while."
+      }
+    },
+    {
+      "id": "dev-range-vf", "matiere": "dev", "notion": "Boucles", "format": "vrai_faux",
+      "donnees": {
+        "affirmation": "En Python, range(5) donne les nombres de 1 à 5.",
+        "reponse": false,
+        "explication": "range(5) donne 0, 1, 2, 3, 4 : on part de 0 et la borne de fin est exclue."
+      }
+    },
+    {
+      "id": "dev-moyenne-erreur", "matiere": "dev", "notion": "Parcours de liste", "format": "erreur",
+      "donnees": {
+        "consigne": "Cette fonction doit calculer la moyenne des notes. Où est l'erreur ?",
+        "lignes": [
+          "def moyenne(notes):",
+          "    total = 0",
+          "    for i in range(1, len(notes)):",
+          "        total = total + notes[i]",
+          "    return total / len(notes)"
+        ],
+        "ligne_fausse": 2,
+        "correction": "for i in range(len(notes)):",
+        "explication": "range(1, …) commence à l'indice 1 : la première note (indice 0) est oubliée dans le total."
+      }
+    },
+    {
+      "id": "dev-tri-selection-ordre", "matiere": "dev", "notion": "Tri par sélection", "format": "ordre",
+      "donnees": {
+        "consigne": "Remets dans l'ordre les étapes du tri par sélection.",
+        "etapes": [
+          "Chercher le plus petit élément de la partie non triée",
+          "L'échanger avec le premier élément de la partie non triée",
+          "Agrandir la partie triée d'une case",
+          "Recommencer jusqu'à ce que tout le tableau soit trié"
+        ]
+      }
+    },
+    {
+      "id": "dev-recursivite-trous", "matiere": "dev", "notion": "Récursivité", "format": "trous",
+      "donnees": {
+        "texte": "Une fonction qui s'appelle elle-même est dite ___.",
+        "reponse": "récursive",
+        "choix": ["récursive", "itérative", "booléenne", "statique"],
+        "explication": "Une fonction récursive a toujours besoin d'un cas de base, sinon elle s'appelle à l'infini."
+      }
+    },
+    {
+      "id": "sys-droits-fiche", "matiere": "sys", "notion": "Droits Linux", "format": "fiche",
+      "donnees": {
+        "titre": "Les droits rwx",
+        "paragraphes": [
+          "Chaque fichier a trois catégories d'utilisateurs : le propriétaire, le groupe, puis les autres. Pour chacun : r (lire), w (écrire), x (exécuter).",
+          "En chiffres, r = 4, w = 2, x = 1, et on additionne : rwx = 7, r-x = 5, r-- = 4."
+        ],
+        "a_retenir": "chmod 640 fichier → propriétaire rw-, groupe r--, autres ---."
+      }
+    },
+    {
+      "id": "sys-chmod-vf", "matiere": "sys", "notion": "Droits Linux", "format": "vrai_faux",
+      "donnees": {
+        "affirmation": "chmod 755 donne au propriétaire les droits de lecture, d'écriture et d'exécution.",
+        "reponse": true,
+        "explication": "Le premier chiffre concerne le propriétaire : 7 = 4 + 2 + 1 = rwx. Le groupe et les autres ont 5 = r-x."
+      }
+    },
+    {
+      "id": "sys-commandes-associer", "matiere": "sys", "notion": "Commandes shell", "format": "associer",
+      "donnees": {
+        "consigne": "Relie chaque commande à ce qu'elle fait.",
+        "paires": [
+          ["ls", "Lister le contenu d'un dossier"],
+          ["cd", "Changer de dossier"],
+          ["pwd", "Afficher le dossier courant"],
+          ["mkdir", "Créer un dossier"],
+          ["rm", "Supprimer un fichier"]
+        ]
+      }
+    },
+    {
+      "id": "reseau-ipv4-fiche", "matiere": "reseau", "notion": "Adressage IPv4", "format": "fiche",
+      "donnees": {
+        "titre": "Une adresse IPv4",
+        "paragraphes": [
+          "Une adresse IPv4 fait 32 bits, écrits en 4 octets séparés par des points : 192.168.1.10.",
+          "Le masque indique quelle partie désigne le réseau. /24 veut dire que les 24 premiers bits sont le réseau, soit 255.255.255.0 : il reste 8 bits pour les machines."
+        ],
+        "a_retenir": "En /24, 256 adresses dont 254 utilisables (on retire l'adresse du réseau et celle de diffusion)."
+      }
+    },
+    {
+      "id": "reseau-osi-ordre", "matiere": "reseau", "notion": "Modèle OSI", "format": "ordre",
+      "donnees": {
+        "consigne": "Range les couches du modèle OSI, de la plus basse (1) à la plus haute (7).",
+        "etapes": ["Physique", "Liaison de données", "Réseau", "Transport", "Session", "Présentation", "Application"]
+      }
+    },
+    {
+      "id": "reseau-ports-vf", "matiere": "reseau", "notion": "Ports", "format": "vrai_faux",
+      "donnees": {
+        "affirmation": "Le protocole HTTP utilise par défaut le port 443.",
+        "reponse": false,
+        "explication": "HTTP utilise le port 80. Le port 443 est celui de HTTPS, la version chiffrée."
+      }
+    },
+    {
+      "id": "maths-binaire-trous", "matiere": "maths", "notion": "Binaire", "format": "trous",
+      "donnees": {
+        "texte": "En binaire, le nombre décimal 13 s'écrit ___.",
+        "reponse": "1101",
+        "choix": ["1101", "1011", "1110", "1001"],
+        "explication": "13 = 8 + 4 + 1, soit 1×8 + 1×4 + 0×2 + 1×1 → 1101."
+      }
+    },
+    {
+      "id": "maths-de-morgan-fiche", "matiere": "maths", "notion": "Lois de De Morgan", "format": "fiche",
+      "donnees": {
+        "titre": "Les lois de De Morgan",
+        "paragraphes": [
+          "Pour nier une expression, on nie chaque morceau et on échange ET et OU.",
+          "non (A ET B) = (non A) OU (non B), et non (A OU B) = (non A) ET (non B)."
+        ],
+        "a_retenir": "En code : not (a and b) équivaut à (not a) or (not b)."
+      }
+    },
+    {
+      "id": "maths-de-morgan-vf", "matiere": "maths", "notion": "Lois de De Morgan", "format": "vrai_faux",
+      "donnees": {
+        "affirmation": "non (A ET B) est équivalent à (non A) ET (non B).",
+        "reponse": false,
+        "explication": "Il faut aussi échanger ET et OU : non (A ET B) = (non A) OU (non B)."
+      }
+    },
+    {
+      "id": "web-balises-associer", "matiere": "web", "notion": "Balises HTML", "format": "associer",
+      "donnees": {
+        "consigne": "Relie chaque balise HTML à son rôle.",
+        "paires": [
+          ["<a>", "Un lien"],
+          ["<img>", "Une image"],
+          ["<ul>", "Une liste à puces"],
+          ["<p>", "Un paragraphe"],
+          ["<h1>", "Le titre principal"]
+        ]
+      }
+    },
+    {
+      "id": "web-unite-css-erreur", "matiere": "web", "notion": "CSS", "format": "erreur",
+      "donnees": {
+        "consigne": "Ce CSS ne fait pas ce qu'on veut. Quelle ligne est fausse ?",
+        "lignes": [".titre {", "  color: #5B3FA0;", "  font-size: 24;", "  margin: 0 auto;", "}"],
+        "ligne_fausse": 2,
+        "correction": "font-size: 24px;",
+        "explication": "Une longueur CSS a besoin d'une unité (px, rem, em…). Sans unité, la déclaration est ignorée. Seul 0 peut s'écrire sans unité."
+      }
+    },
+    {
+      "id": "lsf-presentation-fiche", "matiere": "lsf", "notion": "La LSF", "format": "fiche",
+      "donnees": {
+        "titre": "La langue des signes française",
+        "paragraphes": [
+          "La LSF est une langue à part entière, avec sa propre grammaire : elle utilise les mains, mais aussi l'espace autour du corps et les expressions du visage.",
+          "Interdite dans l'enseignement après le congrès de Milan de 1880, elle a été reconnue comme langue à part entière en France par la loi du 11 février 2005."
+        ],
+        "a_retenir": "Le visage fait partie de la grammaire : il peut marquer une question ou une négation."
+      }
+    },
+    {
+      "id": "lsf-universelle-vf", "matiere": "lsf", "notion": "La LSF", "format": "vrai_faux",
+      "donnees": {
+        "affirmation": "La langue des signes est la même dans tous les pays.",
+        "reponse": false,
+        "explication": "Il en existe des centaines : LSF en France, ASL aux États-Unis, BSL au Royaume-Uni… L'ASL est d'ailleurs plus proche de la LSF que de la BSL."
+      }
+    },
+    {
+      "id": "lsf-dactylologie-trous", "matiere": "lsf", "notion": "Dactylologie", "format": "trous",
+      "donnees": {
+        "texte": "L'alphabet manuel, qui sert à épeler un mot lettre par lettre, s'appelle la ___.",
+        "reponse": "dactylologie",
+        "choix": ["dactylologie", "calligraphie", "sténographie", "phonologie"],
+        "explication": "On l'utilise surtout pour les noms propres ou les mots qui n'ont pas encore de signe."
+      }
+    }
+  ]
+}

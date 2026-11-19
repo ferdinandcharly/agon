@@ -1,0 +1,221 @@
+/* ==========================================================
+   Agon — style « autocollant » par-dessus theme.css
+   Chaque matière a sa couleur plein écran ; le contenu est posé dessus comme un sticker
+   (contour d'encre épais + ombre dure décalée). Une seule police : Bricolage Grotesque.
+   ========================================================== */
+
+/* Police auto-hébergée (brique RGPD du wiki) : variable en graisse, largeur et taille optique */
+@font-face {
+  font-family: "Bricolage Grotesque";
+  src: url("polices/bricolage-grotesque.woff2") format("woff2");
+  font-weight: 400 800;
+  font-stretch: 75% 100%;
+  font-display: swap;
+}
+
+:root {
+  --encre: #16112B;          /* contours, texte, ombres */
+  --papier: #FFFFFF;         /* fond des autocollants */
+  --fond: #16112B;
+  --gris: #5B5675;           /* texte secondaire sur papier */
+  --bon: #B9F6CA;            /* réponse juste */
+  --rate: #FFC9D2;           /* réponse fausse */
+  --police: "Bricolage Grotesque", system-ui, sans-serif;
+  --mono: ui-monospace, "Cascadia Code", Consolas, monospace;
+  --trait: 2.5px solid var(--encre);
+  --ombre: 6px 6px 0 var(--encre);
+  --ombre-petite: 3px 3px 0 var(--encre);
+  --ressort: cubic-bezier(.3, 1.4, .5, 1);
+
+  /* Couleur de l'écran courant (redéfinie par matière) et couleur du texte posé dessus */
+  --c: #E9E4FF;
+  --sur: var(--encre);
+}
+
+/* Une couleur par matière. Texte blanc seulement là où le contraste le permet. */
+[data-matiere="bd"]     { --c: #3D5AFE; --sur: #FFFFFF; }
+[data-matiere="dev"]    { --c: #FF6B3D; }
+[data-matiere="sys"]    { --c: #00C08B; }
+[data-matiere="reseau"] { --c: #7B4DFF; --sur: #FFFFFF; }
+[data-matiere="maths"]  { --c: #FFC21A; }
+[data-matiere="web"]    { --c: #FF5FA2; }
+[data-matiere="lsf"]    { --c: #2FD3E0; }
+
+/* !important : sans lui, une règle display:flex/grid gagne à spécificité égale (piège [hidden]) */
+.cache { display: none !important; }
+
+html, body { height: 100%; overflow: hidden; }
+body { font-family: var(--police); color: var(--encre); background: var(--encre); }
+h1, h2, h3 { font-family: var(--police); }
+
+/* ---------- En-tête : deux petits autocollants posés sur l'écran ---------- */
+.f-entete {
+  position: fixed; inset: 0 0 auto; z-index: 10;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: max(12px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) 0 max(16px, env(safe-area-inset-left));
+  pointer-events: none;
+}
+.f-marque, .f-score {
+  padding: 4px 14px 6px; border: var(--trait); border-radius: 999px;
+  background: var(--papier); box-shadow: var(--ombre-petite);
+}
+.f-marque { font-size: 22px; font-weight: 800; font-stretch: 80%; letter-spacing: -0.03em; line-height: 1.1; }
+.f-score { font-size: 16px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.3; }
+
+/* ---------- Le fil ----------
+   Un écran = une carte. scroll-snap-stop: always empêche de sauter plusieurs cartes d'un coup de pouce. */
+.f-fil {
+  position: fixed; inset: 0;
+  overflow-y: auto; overscroll-behavior: contain;
+  scroll-snap-type: y mandatory; scrollbar-width: none;
+}
+.f-fil::-webkit-scrollbar { display: none; }
+.f-ecran {
+  height: 100%; scroll-snap-align: start; scroll-snap-stop: always;
+  display: grid; grid-template-columns: minmax(0, 1fr); place-items: center;
+  padding: calc(max(12px, env(safe-area-inset-top)) + 58px) 18px max(18px, env(safe-area-inset-bottom));
+  background: var(--c); color: var(--sur);
+}
+.f-pile { width: 100%; max-width: 480px; max-height: 100%; display: flex; flex-direction: column; gap: 16px; min-height: 0; }
+
+/* Le nom de la matière, en grand, directement sur la couleur : c'est lui qui annonce le changement de sujet */
+.f-haut { padding-inline: 4px; }
+.f-matiere {
+  font-size: clamp(2.5rem, 12vw, 3.75rem); font-weight: 800; font-stretch: 75%;
+  line-height: .92; letter-spacing: -0.035em; text-wrap: balance;
+}
+.f-format { margin-top: 8px; font-size: 16px; line-height: 1.3; }
+.f-format b { font-weight: 700; }
+
+/* ---------- L'autocollant ---------- */
+.f-carte {
+  position: relative; min-height: 0; overflow-y: auto;
+  display: flex; flex-direction: column; gap: 14px;
+  padding: 20px 18px; background: var(--papier); color: var(--encre);
+  border: var(--trait); border-radius: 22px; box-shadow: var(--ombre);
+  font-size: 17px; line-height: 1.5;
+  scrollbar-width: none;
+}
+.f-carte::-webkit-scrollbar { display: none; }
+/* Sans ça, un enfant avec overflow (le bloc de code) se tasse et coupe sa dernière ligne */
+.f-carte > * { flex-shrink: 0; }
+.f-carte h2 { font-size: 30px; font-weight: 800; font-stretch: 85%; line-height: 1.05; letter-spacing: -0.03em; }
+.f-consigne { font-size: 21px; font-weight: 700; font-stretch: 90%; line-height: 1.2; letter-spacing: -0.015em; }
+.f-discret { color: var(--gris); }
+
+.f-suite { text-align: center; font-size: 15px; font-weight: 600; }
+
+/* Retour après une réponse */
+.f-retour { padding: 12px 14px; border: var(--trait); border-radius: 14px; font-size: 15px; line-height: 1.45; }
+.f-retour b { display: block; font-size: 18px; font-weight: 800; letter-spacing: -0.01em; }
+.f-retour.ok { background: var(--bon); }
+.f-retour.ko { background: var(--rate); }
+.f-retour { animation: f-pose .35s var(--ressort); }
+@keyframes f-pose { from { transform: scale(.92) rotate(-1.5deg); opacity: 0; } }
+
+/* ---------- Boutons-autocollants (communs aux jeux) ----------
+   Appuyer enfonce l'autocollant dans son ombre. */
+.f-choix { display: grid; gap: 10px; }
+.f-choix.deux { grid-template-columns: 1fr 1fr; }
+.f-option {
+  padding: 12px 14px; text-align: left;
+  background: var(--papier); border: var(--trait); border-radius: 14px; box-shadow: var(--ombre-petite);
+  font: 500 17px/1.3 var(--police); color: var(--encre); cursor: pointer;
+  transition: transform .1s, box-shadow .1s, background-color .2s;
+}
+.f-option:active:not(:disabled) { transform: translate(3px, 3px); box-shadow: 0 0 0 var(--encre); }
+.f-option:disabled { cursor: default; }
+.f-option.choisi { background: color-mix(in srgb, var(--c) 30%, var(--papier)); transform: translate(-1px, -2px); box-shadow: 4px 5px 0 var(--encre); }
+.f-option.bon { background: var(--bon); }
+.f-option.faux { background: var(--rate); }
+.f-option.secoue { animation: f-secoue .3s; background: var(--rate); }
+@keyframes f-secoue { 25% { translate: -6px 0; } 75% { translate: 6px 0; } }
+.f-choix.deux .f-option { text-align: center; font-weight: 700; font-size: 18px; }
+
+/* ---------- Fiche info ---------- */
+.f-fiche p + p { margin-top: -4px; }
+.f-retenir { padding: 12px 14px; border: var(--trait); border-radius: 14px; background: color-mix(in srgb, var(--c) 22%, var(--papier)); font-size: 15px; }
+.f-retenir b { display: block; font-size: 16px; font-weight: 800; }
+
+/* ---------- Vrai ou faux : l'autocollant se tire à gauche ou à droite ----------
+   touch-action: pan-y laisse le défilement vertical au navigateur et nous donne le glissé horizontal. */
+.f-affirmation {
+  position: relative; padding: 30px 18px; text-align: center;
+  background: color-mix(in srgb, var(--c) 18%, var(--papier));
+  border: var(--trait); border-radius: 18px; box-shadow: var(--ombre-petite);
+  font-size: 23px; font-weight: 700; font-stretch: 90%; line-height: 1.2; letter-spacing: -0.015em;
+  touch-action: pan-y; user-select: none; cursor: grab;
+  transition: transform .35s var(--ressort), background-color .2s;
+}
+.f-affirmation.tire { transition: none; cursor: grabbing; }
+.f-affirmation.vers-vrai { background: var(--bon); }
+.f-affirmation.vers-faux { background: var(--rate); }
+/* Tampon qui apparaît en tirant la carte */
+.f-affirmation::after {
+  position: absolute; top: -14px; padding: 2px 12px 4px; border: var(--trait); border-radius: 10px;
+  background: var(--papier); font-size: 18px; font-weight: 800; opacity: 0; transition: opacity .15s;
+}
+.f-affirmation.vers-vrai::after { content: "Vrai"; right: 14px; rotate: 6deg; opacity: 1; }
+.f-affirmation.vers-faux::after { content: "Faux"; left: 14px; rotate: -6deg; opacity: 1; }
+.f-aide-swipe { display: flex; justify-content: space-between; margin-top: -4px; font-size: 14px; color: var(--gris); }
+
+/* ---------- Texte à trous ---------- */
+.f-phrase { font-size: 21px; font-weight: 600; line-height: 1.45; letter-spacing: -0.01em; }
+.f-trou {
+  display: inline-block; min-width: 4.5em; padding: 0 8px; margin-inline: 2px;
+  border: var(--trait); border-radius: 10px; text-align: center; line-height: 1.3;
+  background: color-mix(in srgb, var(--c) 22%, var(--papier)); font-weight: 800;
+}
+.f-trou.bon { background: var(--bon); }
+.f-trou.faux { background: var(--rate); }
+
+/* ---------- Associer ---------- */
+.f-paires { display: grid; grid-template-columns: 1fr 1.45fr; gap: 10px; align-items: start; }
+.f-paires .f-colonne { display: grid; gap: 10px; }
+.f-paires .f-option { font-size: 15px; padding: 10px 11px; }
+.f-paires .f-gauche { font-family: var(--mono); font-weight: 700; font-size: 14px; }
+/* Paires trouvées : une bande verte par paire, qui se pose au-dessus des boutons restants */
+.f-faites { display: grid; gap: 8px; }
+.f-faites:empty { display: none; }
+.f-paire-faite {
+  display: grid; grid-template-columns: 1fr 1.45fr; gap: 10px; align-items: center;
+  padding: 8px 12px; border: var(--trait); border-radius: 12px; background: var(--bon);
+  font-size: 15px; line-height: 1.3; animation: f-pose .35s var(--ressort);
+}
+.f-paire-faite code { font: 700 14px var(--mono); }
+
+/* ---------- Remettre dans l'ordre ---------- */
+.f-rang {
+  display: inline-grid; place-items: center; width: 26px; height: 26px; margin-right: 10px; vertical-align: 1px;
+  border-radius: 50%; background: var(--encre); color: var(--papier); font-size: 14px; font-weight: 800;
+}
+
+/* ---------- Trouve l'erreur : chaque ligne de code est un bouton ---------- */
+.f-code { display: grid; padding: 10px 0; scrollbar-width: thin; border: var(--trait); border-radius: 14px; background: var(--encre); overflow-x: auto; }
+.f-ligne {
+  display: flex; gap: 8px; padding: 4px 6px 4px 4px; border: 0; background: none; text-align: left; cursor: pointer;
+  font: 13px/1.5 var(--mono); color: #EDEAF7; white-space: pre;
+}
+.f-ligne i { font-style: normal; min-width: 1.2em; text-align: right; opacity: .4; user-select: none; }
+.f-ligne:hover:not(:disabled) { background: rgb(255 255 255 / .1); }
+.f-ligne:disabled { cursor: default; }
+.f-ligne.bon { background: var(--bon); color: var(--encre); }
+.f-ligne.faux { background: var(--rate); color: var(--encre); text-decoration: line-through; }
+.f-correction { margin-top: 6px; font-family: var(--mono); font-size: 13px; }
+
+/* ---------- Fin du fil ---------- */
+.f-fin { align-items: stretch; text-align: center; }
+.f-fin .btn {
+  margin-top: 6px; padding: 14px 18px; border: var(--trait); border-radius: 14px; box-shadow: var(--ombre-petite);
+  background: #7B4DFF; color: #FFFFFF; font: 700 18px var(--police);
+}
+.f-fin .btn:active { transform: translate(3px, 3px); box-shadow: none; }
+
+:focus-visible { outline: 3px dashed var(--encre); outline-offset: 4px; }
+.f-ligne:focus-visible { outline-color: #FFFFFF; outline-offset: -3px; }
+
+/* Écrans bas (petit téléphone en paysage, fenêtre réduite) : la matière se fait plus discrète */
+@media (max-height: 640px) {
+  .f-matiere { font-size: 2rem; }
+  .f-pile { gap: 10px; }
+}

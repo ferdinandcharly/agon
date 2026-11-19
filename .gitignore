@@ -1,0 +1,10 @@
+# Cours perso (photos, PDF, exports Notion) : jamais dans le dépôt public
+sources/
+a-relire/
+
+# Outils
+node_modules/
+__pycache__/
+*.pyc
+.env
+*.local.*
