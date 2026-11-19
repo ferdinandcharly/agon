@@ -29,7 +29,7 @@
 </div>
 
 <header class="f-entete">
-  <span class="f-marque"><svg class="f-symbole" viewBox="0 0 256 256" aria-hidden="true"><g transform="translate(-10 12)"><rect x="82" y="32" width="42" height="42" rx="10" fill="#7B4DFF"/><rect x="32" y="82" width="42" height="42" rx="10" fill="#7B4DFF"/><rect x="82" y="82" width="42" height="42" rx="10" fill="#FF5FA2"/><rect x="132" y="82" width="42" height="42" rx="10" fill="#FF6B3D"/><rect x="182" y="82" width="42" height="42" rx="10" fill="#FFC21A"/><rect x="32" y="132" width="42" height="42" rx="10" fill="#FF5FA2"/><rect x="82" y="132" width="42" height="42" rx="10" fill="#FF6B3D"/><rect x="132" y="132" width="42" height="42" rx="10" fill="#FFC21A"/><rect x="182" y="132" width="42" height="42" rx="10" fill="#00C08B"/><rect x="82" y="182" width="42" height="42" rx="10" fill="#FFC21A"/><rect x="132" y="182" width="42" height="42" rx="10" fill="#00C08B"/><rect x="132" y="32" width="42" height="42" rx="10" fill="#16112B" transform="translate(24 -24) rotate(15 153 53)"/></g></svg>Facettes</span>
+  <button class="f-marque" id="btn-accueil" type="button" aria-label="Facettes, retour à l'accueil"><svg class="f-symbole" viewBox="0 0 256 256" aria-hidden="true"><g transform="translate(-10 12)"><rect x="82" y="32" width="42" height="42" rx="10" fill="#7B4DFF"/><rect x="32" y="82" width="42" height="42" rx="10" fill="#7B4DFF"/><rect x="82" y="82" width="42" height="42" rx="10" fill="#FF5FA2"/><rect x="132" y="82" width="42" height="42" rx="10" fill="#FF6B3D"/><rect x="182" y="82" width="42" height="42" rx="10" fill="#FFC21A"/><rect x="32" y="132" width="42" height="42" rx="10" fill="#FF5FA2"/><rect x="82" y="132" width="42" height="42" rx="10" fill="#FF6B3D"/><rect x="132" y="132" width="42" height="42" rx="10" fill="#FFC21A"/><rect x="182" y="132" width="42" height="42" rx="10" fill="#00C08B"/><rect x="82" y="182" width="42" height="42" rx="10" fill="#FFC21A"/><rect x="132" y="182" width="42" height="42" rx="10" fill="#00C08B"/><rect x="132" y="32" width="42" height="42" rx="10" fill="#16112B" transform="translate(24 -24) rotate(15 153 53)"/></g></svg>Facettes</button>
   <span class="f-score cache" id="score" aria-live="polite"></span>
   <button class="f-menu" id="btn-reglages" type="button" aria-label="Réglages et progression">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true">
@@ -72,7 +72,10 @@
 </dialog>
 
 <!-- Le fil : un écran par carte, on fait défiler verticalement (scroll-snap) -->
-<main class="f-fil" id="fil" aria-label="Fil de révision">
+<!-- Accueil (mosaïque) : rempli par app.js -->
+<section class="f-accueil" id="accueil" aria-label="Accueil"></section>
+
+<main class="f-fil cache" id="fil" aria-label="Fil de révision">
   <section class="f-ecran"><div class="f-carte"><p>Chargement des cartes…</p></div></section>
 </main>
 
