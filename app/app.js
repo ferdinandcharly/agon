@@ -772,10 +772,79 @@ btnZero.addEventListener("click", () => {
   remplirProgression();
 });
 
-// Clavier sur ordinateur : flèches et espace passent d'une carte à l'autre.
-// indexCible retient la carte visée pendant l'animation, pour que des appuis rapides s'additionnent.
+// ---------- Navigation : une carte à la fois ----------
+// Le défilement natif part trop loin avec l'élan (doigt, trackpad, molette). Le fil n'accepte donc
+// aucun défilement libre (overflow: hidden) : chaque geste fait avancer ou reculer d'exactement une carte.
+
+function indexCourant() { return Math.round(fil.scrollTop / fil.clientHeight); }
+
+// indexCible retient la carte visée pendant l'animation, pour que deux flèches rapides fassent deux cartes
 let indexCible = null;
 let minuteurCible = null;
+function allerDe(sens) {
+  if (fil.classList.contains("verrouille") || dialogue.open) return;
+  const dernier = fil.children.length - 1;
+  const depart = indexCible ?? indexCourant();
+  const cible = Math.min(dernier, Math.max(0, depart + sens));
+  if (cible === depart) return;
+  indexCible = cible;
+  // Le focus resterait sur un bouton de la carte quittée : Espace l'activerait hors écran
+  document.activeElement?.blur();
+  fil.scrollTo({ top: cible * fil.clientHeight, behavior: "smooth" });
+  clearTimeout(minuteurCible);
+  minuteurCible = setTimeout(() => { indexCible = null; }, 650);
+}
+
+// Une carte trop haute défile d'abord à l'intérieur ; on ne change de carte qu'une fois au bout
+function peutDefilerDedans(cible, sens) {
+  const boite = cible.closest?.(".f-carte");
+  if (!boite || boite.scrollHeight <= boite.clientHeight + 1) return false;
+  return sens > 0 ? boite.scrollTop + boite.clientHeight < boite.scrollHeight - 1 : boite.scrollTop > 0;
+}
+
+// Doigt : un glissé vertical = une carte, quelle que soit sa vitesse
+let toucher = null;
+fil.addEventListener("touchstart", (e) => {
+  if (e.touches.length !== 1) { toucher = null; return; }
+  const t = e.touches[0];
+  const boite = e.target.closest(".f-carte");
+  toucher = { x: t.clientX, y: t.clientY, cible: e.target, defilement: boite ? boite.scrollTop : 0, boite };
+}, { passive: true });
+fil.addEventListener("touchend", (e) => {
+  if (!toucher) return;
+  const t = e.changedTouches[0];
+  const dx = t.clientX - toucher.x;
+  const dy = toucher.y - t.clientY;   // positif = le doigt monte = carte suivante
+  const { cible, boite, defilement } = toucher;
+  toucher = null;
+  if (Math.abs(dy) < 40 || Math.abs(dx) > Math.abs(dy)) return;   // petit geste ou glissé horizontal (vrai/faux)
+  const sens = Math.sign(dy);
+  // La carte a défilé pendant le geste, ou peut encore défiler : le geste lui appartenait
+  if (boite && Math.abs(boite.scrollTop - defilement) > 2) return;
+  if (peutDefilerDedans(cible, sens)) return;
+  allerDe(sens);
+}, { passive: true });
+
+// Molette et trackpad : un geste = une carte. L'élan qui suit est ignoré jusqu'à une pause de 200 ms.
+let roulementCumule = 0;
+let roulementBloque = false;
+let minuteurRoulement = null;
+fil.addEventListener("wheel", (e) => {
+  if (e.ctrlKey) return;   // zoom au trackpad
+  const sens = Math.sign(e.deltaY);
+  if (!sens || peutDefilerDedans(e.target, sens)) return;
+  e.preventDefault();
+  clearTimeout(minuteurRoulement);
+  minuteurRoulement = setTimeout(() => { roulementBloque = false; roulementCumule = 0; }, 200);
+  if (roulementBloque) return;
+  roulementCumule += e.deltaMode === 1 ? e.deltaY * 40 : e.deltaY;
+  if (Math.abs(roulementCumule) < 30) return;
+  roulementBloque = true;
+  roulementCumule = 0;
+  allerDe(sens);
+}, { passive: false });
+
+// Clavier sur ordinateur : flèches, Page suivante/précédente et espace
 document.addEventListener("keydown", (e) => {
   if (e.ctrlKey || e.altKey || e.metaKey || dialogue.open || fil.classList.contains("verrouille")) return;
   if (e.target.closest("button") && e.key === " ") return;
@@ -783,15 +852,13 @@ document.addEventListener("keydown", (e) => {
   if (!sens) return;
   if (e.key === " " && e.shiftKey) sens = -1;
   e.preventDefault();
-  // Le focus resterait sur un bouton de la carte quittée : Espace l'activerait hors écran
-  document.activeElement?.blur();
-  const h = fil.clientHeight;
-  const dernier = fil.children.length - 1;
-  indexCible = Math.min(dernier, Math.max(0, (indexCible ?? Math.round(fil.scrollTop / h)) + sens));
-  fil.scrollTo({ top: indexCible * h, behavior: "smooth" });
-  clearTimeout(minuteurCible);
-  minuteurCible = setTimeout(() => { indexCible = null; }, 700);
+  allerDe(sens);
 });
+
+// Fenêtre redimensionnée (rotation du téléphone) : on reste calé sur la même carte
+let indexAvantRedim = 0;
+fil.addEventListener("scroll", () => { indexAvantRedim = indexCourant(); }, { passive: true });
+addEventListener("resize", () => fil.scrollTo({ top: indexAvantRedim * fil.clientHeight, behavior: "instant" }));
 
 async function demarrer() {
   try {
