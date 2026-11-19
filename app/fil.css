@@ -39,6 +39,9 @@
 [data-matiere="reseau"] { --c: #7B4DFF; --sur: #FFFFFF; }
 [data-matiere="maths"]  { --c: #FFC21A; }
 [data-matiere="web"]    { --c: #FF5FA2; }
+[data-matiere="eco"]    { --c: #2FD3E0; }
+[data-matiere="archi"]  { --c: #A3E635; }
+[data-matiere="com"]    { --c: #F0A6FF; }
 /* Prise d'otage : rouge alarme, toutes matières confondues */
 [data-matiere="chrono"] { --c: #D61F3B; --sur: #FFFFFF; }
 /* Tube du jour : piste de danse de nuit */
@@ -507,4 +510,63 @@ h1, h2, h3 { font-family: var(--police); }
   display: inline-block; margin-left: 8px; padding: 1px 9px 3px; vertical-align: 1px;
   border: 2px solid var(--encre); border-radius: 999px; background: #FFC9D2; color: var(--encre);
   font-size: 13px; font-weight: 800;
+}
+
+/* ---------- Accueil en mosaïque ----------
+   Piste de nuit, tuiles-autocollants aux couleurs du logo : la plus grande lance la session. */
+.f-marque { pointer-events: auto; cursor: pointer; font-family: var(--police); color: var(--encre); }
+.f-marque:active { transform: translate(3px, 3px); box-shadow: none; }
+.f-accueil {
+  position: fixed; inset: 0; overflow-y: auto; overscroll-behavior: contain;
+  background: var(--encre); color: #FFFFFF;
+  padding: calc(max(12px, env(safe-area-inset-top)) + 64px) 18px max(20px, env(safe-area-inset-bottom));
+}
+.f-accueil-col { max-width: 480px; margin-inline: auto; display: flex; flex-direction: column; gap: 14px; }
+.f-accueil-titre { font-size: 46px; font-weight: 800; font-stretch: 75%; line-height: .95; letter-spacing: -0.04em; }
+.f-mosaique { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+
+.f-tuile {
+  position: relative; display: flex; flex-direction: column; justify-content: space-between; align-items: flex-start; gap: 10px;
+  min-height: 150px; padding: 14px; border: var(--trait); border-radius: 22px; box-shadow: 5px 5px 0 #FFFFFF;
+  color: var(--encre); font-family: var(--police); text-align: left;
+}
+button.f-tuile { cursor: pointer; transition: transform .1s, box-shadow .1s; }
+button.f-tuile:active:not(:disabled) { transform: translate(4px, 4px); box-shadow: 1px 1px 0 #FFFFFF; }
+.f-tuile-bas { display: flex; flex-direction: column; gap: 2px; }
+.f-tuile-titre { font-size: 34px; font-weight: 800; font-stretch: 75%; line-height: 1; letter-spacing: -0.03em; }
+.f-tuile-titre.petit { font-size: 22px; font-stretch: 80%; letter-spacing: -0.02em; }
+.f-tuile-detail { font-size: 14px; font-weight: 600; line-height: 1.25; }
+.f-tuile-detail.fort { font-size: 15px; font-weight: 700; }
+.f-tuile-chiffre { font-size: 46px; font-weight: 800; font-stretch: 75%; line-height: .9; }
+
+.f-tuile-lancer { grid-column: span 2; background: #FFC21A; }
+.f-tuile-rond { display: grid; place-items: center; width: 48px; height: 48px; border: var(--trait); border-radius: 50%; background: #FFFFFF; }
+.f-tuile-rond svg { width: 20px; height: 20px; margin-left: 3px; }
+
+.f-tuile-tube { background: #FF5FA2; }
+.f-tuile-vinyle {
+  width: 58px; height: 58px; border: var(--trait); border-radius: 50%;
+  background: radial-gradient(circle, #FFFFFF 0 7%, #FFC21A 8% 30%, transparent 31%), repeating-radial-gradient(circle, #16112B 0 2px, #3A3260 2px 3px);
+  animation: f-tourne 6s linear infinite;
+}
+@keyframes f-tourne { to { transform: rotate(360deg); } }
+.f-tuile-badge { position: absolute; top: 12px; right: 12px; padding: 1px 8px 3px; border: 2px solid var(--encre); border-radius: 999px; background: #FFFFFF; font-size: 12px; font-weight: 800; }
+.f-tuile-tube:disabled { background: #2A2347; color: #CFC9E8; border-color: #6F6896; box-shadow: none; cursor: default; }
+.f-tuile-tube:disabled .f-tuile-vinyle { animation: none; opacity: .5; border-color: #6F6896; }
+.f-tuile-tube:disabled .f-tuile-badge { background: #B9F6CA; color: var(--encre); }
+
+.f-tuile-reussite { background: #00C08B; }
+
+.f-tuile-collection { grid-column: span 2; min-height: 0; background: #FFFFFF; box-shadow: 5px 5px 0 #7B4DFF; }
+.f-tuile-collection .f-vitrine { justify-items: start; align-self: stretch; }
+.f-tuile-collection .f-vinyles { justify-content: flex-start; }
+
+.f-bientot { grid-column: span 2; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.f-bientot-case { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 10px 6px; border: 2px dashed #6F6896; border-radius: 14px; color: #CFC9E8; font-size: 12px; text-align: center; }
+.f-bientot-case b { font-size: 15px; color: #FFFFFF; }
+
+/* Fin du fil : deux boutons */
+.f-fin .btn-secondaire {
+  margin-top: 6px; padding: 12px 18px; border: var(--trait); border-radius: 14px; box-shadow: var(--ombre-petite);
+  background: #FFFFFF; color: var(--encre); font: 700 17px var(--police);
 }

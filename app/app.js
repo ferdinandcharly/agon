@@ -300,6 +300,7 @@ const formats = {
     const q = d.question;
     let zoneVitrine = vitrine(lireCollection());
     const blocs = formats[q.format](q.donnees, (reussi, titre, texte, enPlus) => {
+      enregistrerResultat(q.id, reussi);   // la question compte aussi dans les stats et la répétition espacée
       const c = lireCollection();
       c.dernierJour = jourDuJour();
       let gagne = null;
@@ -741,13 +742,20 @@ function ajouterChronos(liste) {
   return resultat;
 }
 
+// Le fil a deux modes : « session » (toutes les cartes) ou « tube » (le tube du jour, seul)
+let modeFil = "session";
+
 function construireFil() {
   observateurEcrans.disconnect();
   fil.classList.remove("verrouille");
   const retenus = contenusRetenus();
-  const ecrans = retenus.length
-    ? [...[tubeDuJour(), ...ajouterChronos(ordonner(retenus))].filter(Boolean).map(creerCarte), carteFin()]
-    : [carteVide()];
+  let ecrans;
+  if (modeFil === "tube") {
+    const tube = tubeDuJour();
+    ecrans = [...(tube ? [creerCarte(tube)] : []), carteRetourMenu()];
+  } else {
+    ecrans = retenus.length ? [...ajouterChronos(ordonner(retenus)).map(creerCarte), carteFin()] : [carteVide()];
+  }
   fil.replaceChildren(...ecrans);
   for (const ecran of ecrans) observateurEcrans.observe(ecran);
   fil.scrollTo({ top: 0 });
@@ -763,9 +771,104 @@ function carteVide() {
 function carteFin() {
   return el("section", { class: "f-ecran" }, el("div", { class: "f-carte f-fin" },
     el("h2", {}, "Tu as fait le tour"),
-    el("p", { class: "f-discret" }, "Toutes les cartes du moment sont passées. Un nouveau mélange ?"),
-    el("button", { class: "btn btn-principal", type: "button", onclick: construireFil }, "Remélanger le fil")));
+    el("p", { class: "f-discret" }, "Toutes les cartes du moment sont passées."),
+    el("button", { class: "btn btn-principal", type: "button", onclick: afficherAccueil }, "Retour au menu"),
+    el("button", { class: "btn btn-secondaire", type: "button", onclick: construireFil }, "Remélanger et continuer")));
 }
+
+function carteRetourMenu() {
+  return el("section", { class: "f-ecran" }, el("div", { class: "f-carte f-fin" },
+    el("h2", {}, "À demain"),
+    el("p", { class: "f-discret" }, "Un nouveau tube t'attendra demain dans le menu."),
+    el("button", { class: "btn btn-principal", type: "button", onclick: afficherAccueil }, "Retour au menu")));
+}
+
+// ---------- Accueil (mosaïque) ----------
+const accueil = document.getElementById("accueil");
+const COULEUR_NUIT = "#16112B";
+
+function afficherAccueil() {
+  if (fil.classList.contains("verrouille")) return;   // pas de fuite pendant une Prise d'otage
+  observateurEcrans.disconnect();
+  fil.classList.add("cache");
+  accueil.classList.remove("cache");
+  zoneScore.classList.add("cache");
+  metaTheme.setAttribute("content", COULEUR_NUIT);
+  document.documentElement.style.setProperty("--fond-actif", COULEUR_NUIT);
+  remplirAccueil();
+  accueil.scrollTo({ top: 0 });
+}
+
+function montrerFil(mode) {
+  modeFil = mode;
+  accueil.classList.add("cache");
+  fil.classList.remove("cache");
+  construireFil();
+  afficherScore();
+}
+
+// Stats globales : jeux réussis au dernier essai, ratés à revoir, taux sur les jeux joués
+function statsGlobales() {
+  const resultats = lireResultats();
+  const jeux = donnees.contenus.filter((c) => c.format !== "fiche" && contenuValide(c));
+  const reussis = jeux.filter((c) => resultats[c.id]?.derniereOk === true).length;
+  const aRevoir = jeux.filter((c) => resultats[c.id]?.derniereOk === false).length;
+  const joues = reussis + aRevoir;
+  return { reussis, aRevoir, taux: joues ? Math.round((reussis / joues) * 100) : null };
+}
+
+function remplirAccueil() {
+  const retenus = contenusRetenus();
+  const nbMatieres = new Set(retenus.map((c) => c.matiere)).size;
+  const tube = tubeDuJour();
+  const stats = statsGlobales();
+  const pluriel = (n, mot) => `${n} ${mot}${n > 1 ? "s" : ""}`;
+
+  const lancer = el("button", { class: "f-tuile f-tuile-lancer", type: "button", onclick: () => montrerFil("session") },
+    el("span", { class: "f-tuile-rond", "aria-hidden": "true" }, icone("M7 4.5v15a1 1 0 0 0 1.5.86l12-7.5a1 1 0 0 0 0-1.72l-12-7.5A1 1 0 0 0 7 4.5Z")),
+    el("span", { class: "f-tuile-bas" },
+      el("span", { class: "f-tuile-titre" }, "Lancer la session"),
+      el("span", { class: "f-tuile-detail" }, `${pluriel(retenus.length, "carte")}, ${pluriel(nbMatieres, "matière")}`)));
+
+  const tuileTube = el("button", { class: "f-tuile f-tuile-tube", type: "button", onclick: () => montrerFil("tube") },
+    el("span", { class: "f-tuile-vinyle", "aria-hidden": "true" }),
+    el("span", { class: "f-tuile-badge" }, tube ? "À jouer" : "Joué"),
+    el("span", { class: "f-tuile-bas" },
+      el("span", { class: "f-tuile-titre petit" }, "Tube du jour"),
+      el("span", { class: "f-tuile-detail" }, tube ? "Une chance, un vinyle" : "Retour demain")));
+  if (!tube) tuileTube.disabled = true;
+
+  const reussite = el("div", { class: "f-tuile f-tuile-reussite" },
+    el("span", { class: "f-tuile-detail fort" }, "Réussite"),
+    el("span", { class: "f-tuile-bas" },
+      el("span", { class: "f-tuile-chiffre" }, stats.taux === null ? "–" : `${stats.taux}\u00a0%`),
+      el("span", { class: "f-tuile-detail" }, stats.taux === null
+        ? "Joue une session pour voir tes stats"
+        : `${pluriel(stats.reussis, "réussie")}, ${stats.aRevoir} à revoir`)));
+
+  const collection = el("div", { class: "f-tuile f-tuile-collection" },
+    el("span", { class: "f-tuile-titre petit" }, "Ta collection"), vitrine(lireCollection()));
+
+  const bientot = el("div", { class: "f-bientot" }, ...["Survie", "Top scores", "Défis"].map((nom) =>
+    el("div", { class: "f-bientot-case" }, el("b", {}, nom), el("span", {}, "Bientôt"))));
+
+  accueil.replaceChildren(el("div", { class: "f-accueil-col" },
+    el("h1", { class: "f-accueil-titre" }, "On révise\u00a0?"),
+    el("div", { class: "f-mosaique" }, lancer, tuileTube, reussite, collection, bientot)));
+}
+
+// Petite icône pleine (un seul tracé), pour les tuiles
+function icone(d) {
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("viewBox", "0 0 24 24");
+  const p = document.createElementNS("http://www.w3.org/2000/svg", "path");
+  p.setAttribute("d", d);
+  p.setAttribute("fill", "currentColor");
+  svg.append(p);
+  return svg;
+}
+
+document.getElementById("btn-accueil").addEventListener("click", afficherAccueil);
 
 // ---------- Réglages et progression ----------
 const dialogue = document.getElementById("reglages");
@@ -844,7 +947,8 @@ function ouvrirReglages() {
   dialogue.showModal();
 }
 dialogue.addEventListener("close", () => {
-  if (reglagesModifies) construireFil();
+  if (!accueil.classList.contains("cache")) remplirAccueil();   // stats et compte de cartes à jour
+  else if (reglagesModifies) construireFil();
 });
 document.getElementById("btn-reglages").addEventListener("click", ouvrirReglages);
 document.getElementById("btn-fermer-reglages").addEventListener("click", () => dialogue.close());
@@ -883,7 +987,7 @@ function indexCourant() { return Math.round(fil.scrollTop / fil.clientHeight); }
 let indexCible = null;
 let minuteurCible = null;
 function allerDe(sens) {
-  if (fil.classList.contains("verrouille") || dialogue.open) return;
+  if (fil.classList.contains("verrouille") || fil.classList.contains("cache") || dialogue.open) return;
   const dernier = fil.children.length - 1;
   const depart = indexCible ?? indexCourant();
   const cible = Math.min(dernier, Math.max(0, depart + sens));
@@ -966,8 +1070,10 @@ async function demarrer() {
     const reponse = await fetch("data/contenus.json");
     if (!reponse.ok) throw new Error(`HTTP ${reponse.status}`);
     donnees = await reponse.json();
-    construireFil();
+    afficherAccueil();
   } catch (err) {
+    accueil.classList.add("cache");
+    fil.classList.remove("cache");
     fil.replaceChildren(el("section", { class: "f-ecran" }, el("div", { class: "f-carte" },
       el("h2", {}, "Impossible de charger les cartes"),
       el("p", { class: "f-discret" }, navigator.onLine === false

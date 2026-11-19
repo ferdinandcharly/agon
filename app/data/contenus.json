@@ -6,7 +6,10 @@
     {"id": "sys", "nom": "Systèmes"},
     {"id": "reseau", "nom": "Réseaux"},
     {"id": "maths", "nom": "Maths discrètes"},
-    {"id": "web", "nom": "Web"}
+    {"id": "web", "nom": "Web"},
+    {"id": "eco", "nom": "Économie"},
+    {"id": "archi", "nom": "Architecture"},
+    {"id": "com", "nom": "Communication"}
   ],
   "contenus": [
     {
@@ -316,6 +319,1002 @@
         "ligne_fausse": 2,
         "correction": "font-size: 24px;",
         "explication": "Une longueur CSS a besoin d'une unité (px, rem, em…). Sans unité, la déclaration est ignorée. Seul 0 peut s'écrire sans unité."
+      }
+    },
+    {
+      "id": "dev-pointeurs-fiche", "matiere": "dev", "notion": "Pointeurs en C", "format": "fiche",
+      "donnees": {
+        "titre": "Les pointeurs",
+        "paragraphes": [
+          "Un pointeur est une variable qui contient l'adresse d'une autre variable. On le déclare avec une étoile \u0001 int *p;",
+          "&x donne l'adresse de la variable x. *p donne la valeur rangée à l'adresse contenue dans p \u0001 c'est le déréférencement."
+        ],
+        "a_retenir": "&x \u0001 l'adresse de x. *p \u0001 la valeur pointée par p."
+      }
+    },
+    {
+      "id": "dev-pointeurs-trous", "matiere": "dev", "notion": "Pointeurs en C", "format": "trous",
+      "donnees": {
+        "texte": "Pour récupérer l'adresse de la variable x en C, on écrit ___.",
+        "reponse": "&x",
+        "choix": [
+          "&x",
+          "*x",
+          "x*",
+          "@x"
+        ],
+        "explication": "L'opérateur & donne l'adresse d'une variable. L'étoile sert à déclarer un pointeur et à lire la valeur pointée."
+      }
+    },
+    {
+      "id": "dev-dereferencement-vf", "matiere": "dev", "notion": "Déréférencement", "format": "vrai_faux",
+      "donnees": {
+        "affirmation": "Après int x = 5; int *p = &x; *p = 8; la variable x vaut 8.",
+        "reponse": true,
+        "explication": "p contient l'adresse de x, donc *p = 8 écrit 8 directement dans x."
+      }
+    },
+    {
+      "id": "dev-dereferencement-vf-2", "matiere": "dev", "notion": "Déréférencement", "format": "vrai_faux",
+      "donnees": {
+        "affirmation": "Écrire p = &y; modifie la valeur de la variable sur laquelle p pointait.",
+        "reponse": false,
+        "explication": "p = &y change le pointeur lui-même \u0001 il pointe maintenant sur y. L'ancienne variable pointée ne change pas. Pour modifier le contenu pointé, il faut écrire *p = …"
+      }
+    },
+    {
+      "id": "dev-dereferencement-erreur", "matiere": "dev", "notion": "Déréférencement", "format": "erreur",
+      "donnees": {
+        "consigne": "Cette fonction doit mettre à 0 l'entier dont on lui donne l'adresse. Quelle ligne est fausse \u0001",
+        "lignes": [
+          "void raz(int *a) {",
+          "    a = 0;",
+          "}"
+        ],
+        "ligne_fausse": 1,
+        "correction": "    *a = 0;",
+        "explication": "a = 0 change seulement le pointeur local (il ne pointe plus sur rien). Pour modifier l'entier pointé, il faut déréférencer \u0001 *a = 0."
+      }
+    },
+    {
+      "id": "dev-structures-fiche", "matiere": "dev", "notion": "Structures", "format": "fiche",
+      "donnees": {
+        "titre": "Les structures",
+        "paragraphes": [
+          "typedef struct permet de créer son propre type qui regroupe plusieurs champs \u0001 typedef struct { int heure; int minute; } Horaire;",
+          "Sur une variable h de ce type, on accède aux champs avec l'opérateur point \u0001 h.heure, h.minute."
+        ],
+        "a_retenir": "Une structure regroupe des champs \u0001 on les lit et on les modifie avec le point."
+      }
+    },
+    {
+      "id": "dev-structures-trous", "matiere": "dev", "notion": "Structures", "format": "trous",
+      "donnees": {
+        "texte": "Si h est une variable de type Horaire (pas un pointeur), on lit son champ heure avec ___.",
+        "reponse": "h.heure",
+        "choix": [
+          "h.heure",
+          "h->heure",
+          "*h.heure",
+          "h[heure]"
+        ],
+        "explication": "Sur une variable de type structure, on utilise le point. La flèche -> sert quand on a un pointeur vers une structure."
+      }
+    },
+    {
+      "id": "dev-structures-erreur", "matiere": "dev", "notion": "Structures", "format": "erreur",
+      "donnees": {
+        "consigne": "Cette fonction doit dire si un horaire est valide (de 00:00 à 23:59). Quelle ligne est fausse \u0001",
+        "lignes": [
+          "int est_valide(Horaire h) {",
+          "  return h.heure >= 0",
+          "      && h.heure <= 24",
+          "      && h.minute >= 0",
+          "      && h.minute < 60;",
+          "}"
+        ],
+        "ligne_fausse": 2,
+        "correction": "      && h.heure < 24",
+        "explication": "Les heures vont de 0 à 23. Avec <= 24, l'horaire 24:00 serait accepté à tort."
+      }
+    },
+    {
+      "id": "dev-formatage-trous", "matiere": "dev", "notion": "Affichage formaté", "format": "trous",
+      "donnees": {
+        "texte": "Pour qu'un printf affiche 7 minutes sous la forme 07, on utilise le format ___.",
+        "reponse": "%02d",
+        "choix": [
+          "%02d",
+          "%2d",
+          "%d2",
+          "%.2f"
+        ],
+        "explication": "%02d affiche l'entier sur 2 caractères en complétant avec des zéros. %2d complète avec un espace et afficherait « 7 » précédé d'un espace."
+      }
+    },
+    {
+      "id": "dev-recherche-erreur", "matiere": "dev", "notion": "Recherche dans un tableau", "format": "erreur",
+      "donnees": {
+        "consigne": "est_present doit dire si x est dans le tableau t de taille n, avec un seul return. Quelle ligne est fausse \u0001",
+        "lignes": [
+          "int est_present(int t[], int n,",
+          "                int x) {",
+          "  int trouve = 0;",
+          "  for (int i = 0; i <= n; i++) {",
+          "    if (t[i] == x) trouve = 1;",
+          "  }",
+          "  return trouve;",
+          "}"
+        ],
+        "ligne_fausse": 3,
+        "correction": "  for (int i = 0; i < n; i++) {",
+        "explication": "Les cases vont de 0 à n - 1. Avec i <= n, la boucle lit t[n], une case après la fin du tableau."
+      }
+    },
+    {
+      "id": "dev-symetrie-vf", "matiere": "dev", "notion": "Tableau symétrique", "format": "vrai_faux",
+      "donnees": {
+        "affirmation": "Un tableau t de taille n est symétrique si t[i] == t[n - 1 - i] pour tout i.",
+        "reponse": true,
+        "explication": "On compare chaque case à celle qui lui fait face. Il suffit d'aller jusqu'à la moitié du tableau."
+      }
+    },
+    {
+      "id": "dev-tri-insertion-ordre", "matiere": "dev", "notion": "Tri par insertion", "format": "ordre",
+      "donnees": {
+        "consigne": "Remets dans l'ordre les étapes du tri par insertion, pour chaque nouvel élément.",
+        "etapes": [
+          "Prendre le premier élément de la partie non triée",
+          "Le comparer aux éléments triés, de droite à gauche",
+          "Décaler d'une case vers la droite les éléments plus grands",
+          "Placer l'élément dans la case libérée"
+        ],
+        "explication": "La partie gauche du tableau reste toujours triée \u0001 on y insère les éléments un par un, à leur place."
+      }
+    },
+    {
+      "id": "eco-smith-fiche", "matiere": "eco", "notion": "Adam Smith", "format": "fiche",
+      "donnees": {
+        "titre": "Adam Smith, le père des classiques",
+        "paragraphes": [
+          "Dans La Richesse des nations (1776), Adam Smith montre que la division du travail, où chacun se spécialise dans une tâche, augmente fortement la production.",
+          "Avec la main invisible, il explique qu'en cherchant chacun son propre intérêt sur le marché, les individus servent sans le vouloir l'intérêt général."
+        ],
+        "a_retenir": "Division du travail = plus de productivité. Main invisible = le marché coordonne les intérêts individuels."
+      }
+    },
+    {
+      "id": "eco-smith-trous", "matiere": "eco", "notion": "Adam Smith", "format": "trous",
+      "donnees": {
+        "texte": "Pour illustrer la division du travail, Adam Smith prend l'exemple d'une manufacture qui fabrique des ___.",
+        "reponse": "épingles",
+        "choix": [
+          "épingles",
+          "voitures",
+          "montres",
+          "chaussures"
+        ],
+        "explication": "Dans la manufacture d'épingles, en découpant la fabrication en une dizaine d'opérations, chaque ouvrier produit bien plus que s'il faisait tout seul."
+      }
+    },
+    {
+      "id": "eco-main-invisible-vf", "matiere": "eco", "notion": "Adam Smith", "format": "vrai_faux",
+      "donnees": {
+        "affirmation": "Pour Adam Smith, la « main invisible » désigne l'intervention de l'État qui guide le marché.",
+        "reponse": false,
+        "explication": "C'est l'inverse \u0001 la main invisible est le mécanisme du marché lui-même, qui oriente les intérêts individuels vers l'intérêt général sans intervention."
+      }
+    },
+    {
+      "id": "eco-cpp-fiche", "matiere": "eco", "notion": "Walras et la CPP", "format": "fiche",
+      "donnees": {
+        "titre": "Walras et la concurrence pure et parfaite",
+        "paragraphes": [
+          "Léon Walras, économiste néoclassique, modélise l'équilibre général \u0001 tous les marchés s'équilibrent en même temps grâce aux prix.",
+          "Ce modèle suppose la concurrence pure et parfaite (CPP), qui repose sur cinq conditions \u0001 atomicité, homogénéité des produits, libre entrée et sortie, transparence de l'information, mobilité des facteurs de production."
+        ],
+        "a_retenir": "CPP \u0001 atomicité, homogénéité, libre entrée, transparence, mobilité."
+      }
+    },
+    {
+      "id": "eco-cpp-associer", "matiere": "eco", "notion": "Walras et la CPP", "format": "associer",
+      "donnees": {
+        "consigne": "Relie chaque condition de la CPP à sa définition.",
+        "paires": [
+          [
+            "Atomicité",
+            "Beaucoup d'acheteurs et de vendeurs, aucun ne fixe le prix"
+          ],
+          [
+            "Homogénéité",
+            "Les produits sont identiques, quel que soit le vendeur"
+          ],
+          [
+            "Transparence",
+            "Tout le monde connaît les prix et la qualité"
+          ],
+          [
+            "Libre entrée",
+            "Toute entreprise peut entrer sur le marché ou en sortir"
+          ],
+          [
+            "Mobilité",
+            "Le travail et le capital vont là où ils rapportent le plus"
+          ]
+        ],
+        "explication": "Si une seule de ces conditions manque, on n'est plus en concurrence pure et parfaite."
+      }
+    },
+    {
+      "id": "eco-pib-fiche", "matiere": "eco", "notion": "PIB", "format": "fiche",
+      "donnees": {
+        "titre": "Le PIB et ses limites",
+        "paragraphes": [
+          "Le PIB mesure la richesse produite sur un territoire en un an \u0001 c'est la somme des valeurs ajoutées des unités résidentes (plus les impôts sur les produits, moins les subventions).",
+          "Il a des limites \u0001 il ne compte pas le travail domestique ni le bénévolat, ne dit rien des inégalités et ne retire pas les dégâts faits à l'environnement."
+        ],
+        "a_retenir": "PIB = somme des valeurs ajoutées. Il mesure une production, pas le bien-être."
+      }
+    },
+    {
+      "id": "eco-pib-trous", "matiere": "eco", "notion": "PIB", "format": "trous",
+      "donnees": {
+        "texte": "Le PIB est la somme des ___ produites par les unités résidentes pendant une année.",
+        "reponse": "valeurs ajoutées",
+        "choix": [
+          "valeurs ajoutées",
+          "chiffres d'affaires",
+          "exportations",
+          "consommations intermédiaires"
+        ],
+        "explication": "On additionne les valeurs ajoutées (production moins consommations intermédiaires) pour ne pas compter deux fois ce qu'une entreprise achète à une autre."
+      }
+    },
+    {
+      "id": "eco-pib-vf", "matiere": "eco", "notion": "PIB", "format": "vrai_faux",
+      "donnees": {
+        "affirmation": "Le travail domestique non rémunéré (ménage, cuisine à la maison) est compté dans le PIB.",
+        "reponse": false,
+        "explication": "Le PIB ne compte que la production déclarée, marchande ou payée par les administrations. Le travail domestique et le bénévolat n'y sont pas \u0001 c'est une de ses limites."
+      }
+    },
+    {
+      "id": "eco-circuit-associer", "matiere": "eco", "notion": "Circuit économique", "format": "associer",
+      "donnees": {
+        "consigne": "Relie chaque agent économique à son rôle principal dans le circuit.",
+        "paires": [
+          [
+            "Ménages",
+            "Fournissent leur travail et consomment"
+          ],
+          [
+            "Entreprises",
+            "Produisent des biens et des services marchands"
+          ],
+          [
+            "Administrations",
+            "Prélèvent des impôts et rendent des services non marchands"
+          ],
+          [
+            "Banques",
+            "Collectent l'épargne et accordent des crédits"
+          ],
+          [
+            "Reste du monde",
+            "Achète nos exportations et nous vend des importations"
+          ]
+        ],
+        "explication": "Le circuit économique représente les échanges entre ces agents \u0001 chaque flux réel a son flux monétaire en sens inverse."
+      }
+    },
+    {
+      "id": "eco-circuit-vf", "matiere": "eco", "notion": "Circuit économique", "format": "vrai_faux",
+      "donnees": {
+        "affirmation": "Dans le circuit économique, à chaque flux réel (biens, travail) correspond un flux monétaire en sens inverse.",
+        "reponse": true,
+        "explication": "Par exemple, les ménages fournissent leur travail aux entreprises (flux réel) et reçoivent un salaire en retour (flux monétaire)."
+      }
+    },
+    {
+      "id": "eco-politiques-vf", "matiere": "eco", "notion": "Politiques économiques", "format": "vrai_faux",
+      "donnees": {
+        "affirmation": "Baisser les impôts pour relancer l'activité relève de la politique monétaire.",
+        "reponse": false,
+        "explication": "Les impôts et les dépenses publiques relèvent de la politique budgétaire, décidée par l'État. La politique monétaire agit sur les taux d'intérêt et la quantité de monnaie."
+      }
+    },
+    {
+      "id": "eco-politiques-trous", "matiere": "eco", "notion": "Politiques économiques", "format": "trous",
+      "donnees": {
+        "texte": "Dans la zone euro, la politique monétaire est menée par ___.",
+        "reponse": "la Banque centrale européenne",
+        "choix": [
+          "la Banque centrale européenne",
+          "chaque gouvernement",
+          "le Parlement européen",
+          "la Commission européenne"
+        ],
+        "explication": "La BCE fixe les taux directeurs pour tous les pays de la zone euro. Chaque gouvernement garde sa politique budgétaire."
+      }
+    },
+    {
+      "id": "eco-slowbalisation-fiche", "matiere": "eco", "notion": "Slowbalisation", "format": "fiche",
+      "donnees": {
+        "titre": "La slowbalisation",
+        "paragraphes": [
+          "La mondialisation est l'intégration croissante des économies par le commerce, les capitaux et les chaînes de production mondiales.",
+          "Depuis la fin des années 2010, elle ralentit : le ratio commerce international / PIB ne progresse plus. C'est la slowbalisation (de slow, lent, et globalisation)."
+        ],
+        "a_retenir": "Slowbalisation = arrêt de la progression du ratio commerce / PIB, pas une baisse du commerce."
+      }
+    },
+    {
+      "id": "eco-slowbalisation-vf", "matiere": "eco", "notion": "Slowbalisation", "format": "vrai_faux",
+      "donnees": {
+        "affirmation": "La slowbalisation désigne la fin du commerce international.",
+        "reponse": false,
+        "explication": "Le commerce mondial continue d'augmenter : c'est le ratio commerce international / PIB qui a cessé de progresser."
+      }
+    },
+    {
+      "id": "archi-cpu-ram-fiche", "matiere": "archi", "notion": "CPU et RAM", "format": "fiche",
+      "donnees": {
+        "titre": "Le CPU, la RAM et le cache",
+        "paragraphes": [
+          "Le CPU et la RAM communiquent par le bus. La RAM stocke les variables et les instructions du programme \u0001 les registres, dans le CPU, sont de toutes petites mémoires ultra-rapides.",
+          "Le cache est une mémoire tampon rapide dans le CPU qui garde des copies de blocs de la RAM. Si la donnée n'y est pas, c'est un défaut de cache \u0001 il faut aller la chercher en RAM, plus lentement."
+        ],
+        "a_retenir": "Registre < cache < RAM \u0001 plus c'est loin du CPU, plus c'est gros et lent."
+      }
+    },
+    {
+      "id": "archi-cycle-ordre", "matiere": "archi", "notion": "Cycle d'exécution", "format": "ordre",
+      "donnees": {
+        "consigne": "Remets dans l'ordre le cycle d'exécution de l'instruction a = b + c.",
+        "etapes": [
+          "Le CPU demande l'instruction à la RAM et la range dans un registre",
+          "Le CPU examine l'instruction",
+          "Il va chercher b et c dans la RAM",
+          "Le calcul est fait dans le CPU",
+          "Le résultat est stocké dans un registre",
+          "Le résultat est renvoyé vers la RAM"
+        ],
+        "explication": "Puis le cycle recommence avec l'instruction suivante."
+      }
+    },
+    {
+      "id": "archi-cache-trous", "matiere": "archi", "notion": "Cache", "format": "trous",
+      "donnees": {
+        "texte": "Quand la donnée demandée par le CPU n'est pas dans le cache, on parle de ___.",
+        "reponse": "défaut de cache",
+        "choix": [
+          "défaut de cache",
+          "dépassement de pile",
+          "défaut de page",
+          "erreur de bus"
+        ],
+        "explication": "En anglais cache miss \u0001 le CPU doit alors interroger la RAM, ce qui coûte du temps."
+      }
+    },
+    {
+      "id": "archi-threads-vf", "matiere": "archi", "notion": "Cœurs et threads", "format": "vrai_faux",
+      "donnees": {
+        "affirmation": "Un CPU de 8 cœurs avec hyper-threading peut gérer 16 threads.",
+        "reponse": true,
+        "explication": "Chaque cœur peut gérer 2 threads grâce à l'hyper-threading \u0001 8 × 2 = 16."
+      }
+    },
+    {
+      "id": "archi-threads-vf-2", "matiere": "archi", "notion": "Cœurs et threads", "format": "vrai_faux",
+      "donnees": {
+        "affirmation": "Deux threads sur un même cœur sont aussi performants que deux cœurs physiques.",
+        "reponse": false,
+        "explication": "Le cœur est une unité physique de calcul, le thread une unité logique \u0001 deux threads se partagent le même cœur."
+      }
+    },
+    {
+      "id": "archi-gpu-trous", "matiere": "archi", "notion": "GPU", "format": "trous",
+      "donnees": {
+        "texte": "Le GPU fonctionne en ___ \u0001 la même instruction est exécutée sur des données différentes.",
+        "reponse": "SIMD",
+        "choix": [
+          "SIMD",
+          "MIMD",
+          "SISD",
+          "RISC"
+        ],
+        "explication": "SIMD = Single Instruction, Multiple Data. Le CPU, lui, est MIMD \u0001 ses cœurs sont indépendants."
+      }
+    },
+    {
+      "id": "archi-gpu-ordre", "matiere": "archi", "notion": "GPU", "format": "ordre",
+      "donnees": {
+        "consigne": "Range dans l'ordre les marchés successivement conquis par le GPU.",
+        "etapes": [
+          "Le jeu vidéo",
+          "Le minage de cryptomonnaies",
+          "L'intelligence artificielle"
+        ],
+        "explication": "Conçu pour les calculs 3D, le GPU s'est révélé idéal pour le minage puis pour le calcul matriciel de l'IA, son marché dominant aujourd'hui."
+      }
+    },
+    {
+      "id": "archi-raid-fiche", "matiere": "archi", "notion": "RAID", "format": "fiche",
+      "donnees": {
+        "titre": "Le RAID",
+        "paragraphes": [
+          "Un système RAID répartit les données sur plusieurs disques pour gagner en débit et en fiabilité.",
+          "Dans le RAID étudié, un disque est réservé aux codes de contrôle (parité) \u0001 si un disque tombe en panne, ses données sont reconstituées à partir des autres. Le hot-swap permet de changer le disque sans arrêter le système."
+        ],
+        "a_retenir": "N disques dont 1 de parité \u0001 (N − 1) disques d'espace utile."
+      }
+    },
+    {
+      "id": "archi-raid-trous", "matiere": "archi", "notion": "RAID", "format": "trous",
+      "donnees": {
+        "texte": "Un RAID de 5 disques de 1 To, dont un disque de parité, offre ___ d'espace utile.",
+        "reponse": "4 To",
+        "choix": [
+          "4 To",
+          "5 To",
+          "1 To",
+          "2,5 To"
+        ],
+        "explication": "Le 5e disque sert aux codes de contrôle \u0001 il reste 4 disques de 1 To pour les données."
+      }
+    },
+    {
+      "id": "archi-hotswap-vf", "matiere": "archi", "notion": "RAID", "format": "vrai_faux",
+      "donnees": {
+        "affirmation": "Le hot-swap permet de remplacer un disque en panne sans arrêter le système.",
+        "reponse": true,
+        "explication": "C'est essentiel pour les systèmes critiques comme les banques. Il faut un matériel et un système compatibles."
+      }
+    },
+    {
+      "id": "archi-vm-associer", "matiere": "archi", "notion": "Machines virtuelles", "format": "associer",
+      "donnees": {
+        "consigne": "Relie chaque notion à sa définition.",
+        "paires": [
+          [
+            "Machine virtuelle",
+            "Environnement isolé avec son propre OS"
+          ],
+          [
+            "Hyperviseur de type 1",
+            "Installé directement sur le matériel (ex. VMware ESXi)"
+          ],
+          [
+            "Hyperviseur de type 2",
+            "Tourne sur un OS existant (ex. VirtualBox)"
+          ],
+          [
+            "Migration à chaud",
+            "Déplacer une VM d'un serveur à un autre sans coupure"
+          ]
+        ],
+        "explication": "« Windows dans Windows » sur un PC perso, c'est un hyperviseur de type 2 \u0001 les datacenters utilisent surtout le type 1."
+      }
+    },
+    {
+      "id": "archi-numerique-vf", "matiere": "archi", "notion": "Numérisation", "format": "vrai_faux",
+      "donnees": {
+        "affirmation": "Comme une copie analogique, une copie numérique perd un peu de qualité à chaque copie.",
+        "reponse": false,
+        "explication": "Le signal numérique (0 et 1) se recopie à l'identique \u0001 c'est son grand avantage sur l'analogique."
+      }
+    },
+    {
+      "id": "archi-compression-trous", "matiere": "archi", "notion": "Compression", "format": "trous",
+      "donnees": {
+        "texte": "MP3, JPEG et le MPEG de la TNT sont des compressions ___.",
+        "reponse": "avec perte",
+        "choix": [
+          "avec perte",
+          "sans perte",
+          "analogiques",
+          "chiffrées"
+        ],
+        "explication": "Elles suppriment des informations peu perceptibles pour réduire la taille. FLAC ou ZIP sont, eux, sans perte."
+      }
+    },
+    {
+      "id": "archi-controleurs-associer", "matiere": "archi", "notion": "Contrôleurs de périphériques", "format": "associer",
+      "donnees": {
+        "consigne": "Relie chaque contrôleur à son rôle.",
+        "paires": [
+          [
+            "USB",
+            "Brancher de nombreux périphériques, via des hubs"
+          ],
+          [
+            "Ethernet / Wi-Fi",
+            "Gérer la connexion réseau"
+          ],
+          [
+            "HDMI / DisplayPort",
+            "Sortie vidéo numérique"
+          ],
+          [
+            "VGA",
+            "Ancienne sortie vidéo analogique"
+          ],
+          [
+            "Son",
+            "Numériser l'audio entrant et le reconvertir en sortie"
+          ]
+        ],
+        "explication": "Le son peut aussi passer par HDMI \u0001 audio et vidéo dans un seul câble numérique."
+      }
+    },
+    {
+      "id": "archi-cloud-vf", "matiere": "archi", "notion": "Cloud souverain", "format": "vrai_faux",
+      "donnees": {
+        "affirmation": "Héberger ses données en Europe chez un fournisseur américain suffit à les mettre à l'abri du CLOUD Act.",
+        "reponse": false,
+        "explication": "Le CLOUD Act permet aux autorités américaines d'accéder aux données d'une entreprise américaine même si ses serveurs sont en Europe. Localisation ≠ souveraineté."
+      }
+    },
+    {
+      "id": "archi-vram-vf", "matiere": "archi", "notion": "IA et calcul", "format": "vrai_faux",
+      "donnees": {
+        "affirmation": "Plus un GPU a de VRAM, plus on peut y charger de gros modèles d'IA.",
+        "reponse": true,
+        "explication": "Pour les très grands modèles, il faut combiner plusieurs GPU, jusqu'à des milliers."
+      }
+    },
+    {
+      "id": "com-territoires-fiche", "matiere": "com", "notion": "Territoires de la communication", "format": "fiche",
+      "donnees": {
+        "titre": "Les territoires de la communication",
+        "paragraphes": [
+          "La communication est vitale et se décline en territoires reliés entre eux \u0001 intra-personnelle, inter-personnelle, de groupe, des organisations, sociale et de masse.",
+          "Watzlawick (école de Palo Alto) le résume ainsi \u0001 « L'être humain ne peut pas ne pas communiquer »."
+        ],
+        "a_retenir": "Communication sociale = faire changer les comportements. De masse = toucher le plus de monde possible."
+      }
+    },
+    {
+      "id": "com-territoires-associer", "matiere": "com", "notion": "Territoires de la communication", "format": "associer",
+      "donnees": {
+        "consigne": "Relie chaque territoire de la communication à sa définition.",
+        "paires": [
+          [
+            "Intra-personnelle",
+            "Se parler à soi-même"
+          ],
+          [
+            "Inter-personnelle",
+            "Entre personnes, avec mimiques et posture"
+          ],
+          [
+            "De groupe",
+            "Orientée vers un but commun"
+          ],
+          [
+            "Sociale",
+            "Faire changer comportements et opinions"
+          ],
+          [
+            "De masse",
+            "Toucher un maximum de personnes, sans cibler"
+          ]
+        ],
+        "explication": "Ne pas confondre sociale (changer les comportements) et de masse (toucher large)."
+      }
+    },
+    {
+      "id": "com-watzlawick-trous", "matiere": "com", "notion": "Territoires de la communication", "format": "trous",
+      "donnees": {
+        "texte": "Selon Watzlawick, « l'être humain ne peut pas ne pas ___ ».",
+        "reponse": "communiquer",
+        "choix": [
+          "communiquer",
+          "penser",
+          "agir",
+          "mentir"
+        ],
+        "explication": "C'est le premier des 5 axiomes de la communication de l'école de Palo Alto \u0001 même un silence communique."
+      }
+    },
+    {
+      "id": "com-visuelle-ordre", "matiere": "com", "notion": "Communication visuelle", "format": "ordre",
+      "donnees": {
+        "consigne": "Remets dans l'ordre les 4 étapes de la communication visuelle.",
+        "etapes": [
+          "Attirer l'attention",
+          "Reconnaître la charte graphique",
+          "Donner envie",
+          "Faire agir"
+        ],
+        "explication": "Une affiche ou une publicité réussie fait passer le public par ces 4 étapes."
+      }
+    },
+    {
+      "id": "com-qqoqccp-ordre", "matiere": "com", "notion": "QQOQCCP", "format": "ordre",
+      "donnees": {
+        "consigne": "Remets les questions de la méthode QQOQCCP dans l'ordre du sigle.",
+        "etapes": [
+          "Qui \u0001",
+          "Quoi \u0001",
+          "Où \u0001",
+          "Quand \u0001",
+          "Comment \u0001",
+          "Combien \u0001",
+          "Pourquoi \u0001"
+        ],
+        "explication": "Le « Pourquoi » vient en dernier, mais c'est lui qui justifie tous les autres points."
+      }
+    },
+    {
+      "id": "com-strategie-ordre", "matiere": "com", "notion": "Stratégie de communication", "format": "ordre",
+      "donnees": {
+        "consigne": "Remets dans l'ordre les étapes de construction d'une stratégie de communication.",
+        "etapes": [
+          "Définir l'objectif",
+          "Préciser l'émetteur",
+          "Définir le récepteur",
+          "Analyser le contexte",
+          "Choisir le support",
+          "Construire le message"
+        ],
+        "explication": "L'objectif d'abord (informer, notoriété, image, émotion, faire agir, fidéliser) \u0001 ne pas le confondre avec le support, qui n'est que le moyen."
+      }
+    },
+    {
+      "id": "sys-chemins-fiche", "matiere": "sys", "notion": "Chemins", "format": "fiche",
+      "donnees": {
+        "titre": "Chemins absolus et relatifs",
+        "paragraphes": [
+          "Un chemin absolu part de la racine, donc commence par / \u0001 /home/sam/cours/systeme/td2.txt. Il marche quel que soit le répertoire courant.",
+          "Un chemin relatif part du répertoire courant \u0001 . = ici, .. = le parent. Le répertoire d'accueil de sam s'écrit /home/sam ou ~."
+        ],
+        "a_retenir": "Un / au début = la racine. Pour un fichier du répertoire courant, juste son nom."
+      }
+    },
+    {
+      "id": "sys-chemins-trous", "matiere": "sys", "notion": "Chemins", "format": "trous",
+      "donnees": {
+        "texte": "Depuis /home/sam/cours/maths, le chemin relatif vers /home/sam/cours/systeme/td2.txt est ___.",
+        "reponse": "../systeme/td2.txt",
+        "choix": [
+          "../systeme/td2.txt",
+          "/systeme/td2.txt",
+          "./systeme/td2.txt",
+          "../../systeme/td2.txt"
+        ],
+        "explication": "On remonte d'un niveau (..) dans cours, puis on descend dans systeme."
+      }
+    },
+    {
+      "id": "sys-mkdir-vf", "matiere": "sys", "notion": "Fichiers et répertoires", "format": "vrai_faux",
+      "donnees": {
+        "affirmation": "mkdir archive/2026 crée aussi archive si ce répertoire n'existe pas encore.",
+        "reponse": false,
+        "explication": "La commande échoue \u0001 il faut mkdir -p archive/2026 pour créer les répertoires intermédiaires."
+      }
+    },
+    {
+      "id": "sys-metacaracteres-associer", "matiere": "sys", "notion": "Méta-caractères", "format": "associer",
+      "donnees": {
+        "consigne": "Relie chaque méta-caractère du shell à ce qu'il désigne.",
+        "paires": [
+          [
+            "*",
+            "Une suite de 0 à n caractères"
+          ],
+          [
+            "?",
+            "Un seul caractère quelconque"
+          ],
+          [
+            "[xyz]",
+            "Un caractère \u0001 x, y ou z"
+          ],
+          [
+            "[^xyz]",
+            "Un caractère différent de x, y et z"
+          ]
+        ],
+        "explication": "Des crochets valent toujours un seul caractère. Et * ne désigne pas les fichiers cachés."
+      }
+    },
+    {
+      "id": "sys-inode-vf", "matiere": "sys", "notion": "Inodes et liens", "format": "vrai_faux",
+      "donnees": {
+        "affirmation": "Une copie avec cp garde le même inode que le fichier d'origine.",
+        "reponse": false,
+        "explication": "cp crée un nouvel inode. C'est mv qui garde le même inode, et un lien physique (ln) donne un autre nom au même inode."
+      }
+    },
+    {
+      "id": "sys-supprimer-vf", "matiere": "sys", "notion": "Droits d'accès", "format": "vrai_faux",
+      "donnees": {
+        "affirmation": "Pour supprimer un fichier, il faut le droit w sur ce fichier.",
+        "reponse": false,
+        "explication": "Supprimer modifie la liste du répertoire \u0001 il faut w et x sur le répertoire qui le contient. Les droits du fichier ne comptent pas."
+      }
+    },
+    {
+      "id": "sys-triplet-vf", "matiere": "sys", "notion": "Droits d'accès", "format": "vrai_faux",
+      "donnees": {
+        "affirmation": "Avec -r--r--rw- emma info2 bizarre.txt, emma peut modifier le fichier puisque les autres ont rw-.",
+        "reponse": false,
+        "explication": "emma est propriétaire \u0001 seul le triplet u (r--) compte. Le premier triplet qui correspond gagne."
+      }
+    },
+    {
+      "id": "sys-octal-trous", "matiere": "sys", "notion": "Notation octale", "format": "trous",
+      "donnees": {
+        "texte": "Les droits -w-r-xr-- s'écrivent ___ en octal.",
+        "reponse": "254",
+        "choix": [
+          "254",
+          "452",
+          "245",
+          "652"
+        ],
+        "explication": "-w- = 2, r-x = 4 + 1 = 5, r-- = 4, donc 254."
+      }
+    },
+    {
+      "id": "sys-chmod-qui-vf", "matiere": "sys", "notion": "chmod", "format": "vrai_faux",
+      "donnees": {
+        "affirmation": "Un membre du groupe propriétaire peut changer les droits d'un fichier avec chmod.",
+        "reponse": false,
+        "explication": "Seuls le propriétaire du fichier et root peuvent utiliser chmod dessus. Être membre du groupe ne suffit pas."
+      }
+    },
+    {
+      "id": "sys-redirections-associer", "matiere": "sys", "notion": "Redirections et tubes", "format": "associer",
+      "donnees": {
+        "consigne": "Relie chaque symbole à son effet.",
+        "paires": [
+          [
+            ">",
+            "Écrit le résultat en écrasant le fichier"
+          ],
+          [
+            ">>",
+            "Ajoute le résultat à la fin du fichier"
+          ],
+          [
+            "2>",
+            "Écrit les messages d'erreur dans un fichier"
+          ],
+          [
+            "<",
+            "La commande lit le fichier au lieu du clavier"
+          ],
+          [
+            "|",
+            "Envoie la sortie à la commande suivante"
+          ]
+        ],
+        "explication": "> ne redirige que la sortie normale \u0001 les erreurs passent par 2>."
+      }
+    },
+    {
+      "id": "sys-tube-erreur", "matiere": "sys", "notion": "Redirections et tubes", "format": "erreur",
+      "donnees": {
+        "consigne": "On veut compter les fichiers de /etc qui finissent par .conf. Quelle ligne est fausse \u0001",
+        "lignes": [
+          "ls /etc > liste.txt",
+          "egrep \"\\.conf$\" liste.txt ; wc -l"
+        ],
+        "ligne_fausse": 1,
+        "correction": "egrep \"\\.conf$\" liste.txt | wc -l",
+        "explication": "; lance des commandes indépendantes \u0001 wc -l attendrait le clavier. Pour passer le résultat à la commande suivante, c'est le tube |."
+      }
+    },
+    {
+      "id": "sys-egrep-trous", "matiere": "sys", "notion": "egrep et regex", "format": "trous",
+      "donnees": {
+        "texte": "Pour garder seulement les lignes « Fraise » ou « fraise » de fruits.txt, on écrit egrep ___ fruits.txt.",
+        "reponse": "\"^[Ff]raise$\"",
+        "choix": [
+          "\"^[Ff]raise$\"",
+          "\"[Ff]raise\"",
+          "\"^Fraise|fraise\"",
+          "[Ff]raise$"
+        ],
+        "explication": "Sans ^ et $, « afraise » sortirait aussi. Et le motif s'écrit toujours entre guillemets."
+      }
+    },
+    {
+      "id": "sys-cut-sort-vf", "matiere": "sys", "notion": "cut et sort", "format": "vrai_faux",
+      "donnees": {
+        "affirmation": "sort choisit le séparateur et la colonne avec -d et -f, comme cut.",
+        "reponse": false,
+        "explication": "cut prend -d et -f \u0001 sort prend -t (séparateur) et -k (champ), plus -n pour un tri numérique."
+      }
+    },
+    {
+      "id": "eco-maslow-ordre", "matiere": "eco", "notion": "Besoins", "format": "ordre",
+      "donnees": {
+        "consigne": "Range les besoins de la pyramide de Maslow, de la base au sommet.",
+        "etapes": [
+          "Physiologiques",
+          "Sécurité",
+          "Appartenance",
+          "Estime",
+          "Accomplissement"
+        ],
+        "explication": "On cherche d'abord à satisfaire les besoins du bas (boire, manger) avant ceux du haut (se réaliser)."
+      }
+    },
+    {
+      "id": "eco-keynes-fiche", "matiere": "eco", "notion": "Keynes", "format": "fiche",
+      "donnees": {
+        "titre": "Keynes, la rupture",
+        "paragraphes": [
+          "Dans la Théorie générale (1936), après la crise de 1929, Keynes montre que le marché ne s'autorégule pas toujours \u0001 il peut rester bloqué dans un équilibre de sous-emploi.",
+          "L'État doit alors relancer la demande \u0001 grands travaux, hausse des minima sociaux, car les ménages modestes dépensent presque tout ce qu'ils reçoivent."
+        ],
+        "a_retenir": "Classiques \u0001 le marché s'équilibre seul. Keynes \u0001 l'État relance la demande."
+      }
+    },
+    {
+      "id": "eco-keynes-trous", "matiere": "eco", "notion": "Keynes", "format": "trous",
+      "donnees": {
+        "texte": "Keynes publie la Théorie générale en ___.",
+        "reponse": "1936",
+        "choix": [
+          "1936",
+          "1929",
+          "1945",
+          "1776"
+        ],
+        "explication": "1929, c'est le krach \u0001 1776, La Richesse des nations d'Adam Smith."
+      }
+    },
+    {
+      "id": "eco-keynes-vf", "matiere": "eco", "notion": "Keynes", "format": "vrai_faux",
+      "donnees": {
+        "affirmation": "Pour Keynes, le marché revient toujours seul au plein emploi.",
+        "reponse": false,
+        "explication": "C'est la thèse des classiques. Pour Keynes, faute de flexibilité des prix à la baisse, le chômage peut durer \u0001 l'État doit intervenir."
+      }
+    },
+    {
+      "id": "eco-defaillances-associer", "matiere": "eco", "notion": "Défaillances du marché", "format": "associer",
+      "donnees": {
+        "consigne": "Relie chaque défaillance du marché à son exemple.",
+        "paires": [
+          [
+            "Externalité négative",
+            "La pollution d'une usine"
+          ],
+          [
+            "Bien collectif",
+            "L'éclairage public"
+          ],
+          [
+            "Monopole naturel",
+            "Le réseau électrique"
+          ]
+        ],
+        "explication": "Dans ces trois cas, même les libéraux admettent que l'État intervienne \u0001 taxe ou quotas, financement public, régulation."
+      }
+    },
+    {
+      "id": "eco-pib-calcul-trous", "matiere": "eco", "notion": "PIB", "format": "trous",
+      "donnees": {
+        "texte": "Blé vendu 100 €, farine 150 €, pain 250 € \u0001 la richesse créée par cette filière vaut ___.",
+        "reponse": "250 €",
+        "choix": [
+          "250 €",
+          "500 €",
+          "150 €",
+          "100 €"
+        ],
+        "explication": "Valeurs ajoutées \u0001 100 + 50 + 100 = 250 €, la valeur du pain final. Additionner les chiffres d'affaires (500 €) compterait plusieurs fois le blé."
+      }
+    },
+    {
+      "id": "eco-croissance-trous", "matiere": "eco", "notion": "Croissance", "format": "trous",
+      "donnees": {
+        "texte": "Si le PIB passe de 2 000 à 2 050 milliards d'euros, le taux de croissance est de ___.",
+        "reponse": "2,5 %",
+        "choix": [
+          "2,5 %",
+          "5 %",
+          "50 %",
+          "0,25 %"
+        ],
+        "explication": "(2 050 − 2 000) / 2 000 × 100 = 2,5 %."
+      }
+    },
+    {
+      "id": "eco-volume-vf", "matiere": "eco", "notion": "PIB", "format": "vrai_faux",
+      "donnees": {
+        "affirmation": "Le PIB en volume retire l'effet de l'inflation.",
+        "reponse": true,
+        "explication": "Il est calculé à prix constants pour ne garder que l'évolution des quantités. Le PIB en valeur, lui, monte avec les prix."
+      }
+    },
+    {
+      "id": "eco-kaldor-trous", "matiere": "eco", "notion": "Politiques économiques", "format": "trous",
+      "donnees": {
+        "texte": "Le carré magique de Kaldor réunit croissance, plein emploi, stabilité des prix et ___.",
+        "reponse": "équilibre extérieur",
+        "choix": [
+          "équilibre extérieur",
+          "baisse des impôts",
+          "dette publique nulle",
+          "hausse des salaires"
+        ],
+        "explication": "« Magique » parce qu'il est très difficile d'atteindre les 4 objectifs en même temps."
+      }
+    },
+    {
+      "id": "eco-politiques-associer", "matiere": "eco", "notion": "Politiques économiques", "format": "associer",
+      "donnees": {
+        "consigne": "Relie chaque politique à sa description.",
+        "paires": [
+          [
+            "Budgétaire",
+            "Conjoncturelle, menée par l'État avec son budget"
+          ],
+          [
+            "Monétaire",
+            "Conjoncturelle, menée par la banque centrale"
+          ],
+          [
+            "Industrielle",
+            "Structurelle \u0001 faire émerger des champions"
+          ],
+          [
+            "Concurrentielle",
+            "Structurelle \u0001 faire respecter le droit de la concurrence"
+          ],
+          [
+            "Commerciale",
+            "Structurelle \u0001 encadrer les échanges avec l'extérieur"
+          ]
+        ],
+        "explication": "Conjoncturelles = court terme, réagir à une crise. Structurelles = long terme, transformer l'économie."
+      }
+    },
+    {
+      "id": "eco-bce-vf", "matiere": "eco", "notion": "Politiques économiques", "format": "vrai_faux",
+      "donnees": {
+        "affirmation": "En cas de crise, la BCE baisse son taux directeur pour relancer le crédit.",
+        "reponse": true,
+        "explication": "Le crédit coûte moins cher, donc plus d'investissement et de consommation. En cas de forte inflation, elle fait l'inverse."
+      }
+    },
+    {
+      "id": "eco-dipp-trous", "matiere": "eco", "notion": "Mondialisation", "format": "trous",
+      "donnees": {
+        "texte": "Quand les étapes de fabrication d'un produit sont réalisées dans différents pays, on parle de ___.",
+        "reponse": "DIPP",
+        "choix": [
+          "DIPP",
+          "IDE",
+          "OMC",
+          "FMN"
+        ],
+        "explication": "Division internationale des processus productifs \u0001 on parle aussi de chaîne de valeur mondiale."
+      }
+    },
+    {
+      "id": "eco-dragons-vf", "matiere": "eco", "notion": "Mondialisation", "format": "vrai_faux",
+      "donnees": {
+        "affirmation": "La Chine fait partie des quatre dragons asiatiques.",
+        "reponse": false,
+        "explication": "Les 4 dragons sont Taïwan, Singapour, Hong Kong et la Corée du Sud (ni la Chine, ni le Japon)."
+      }
+    },
+    {
+      "id": "eco-dd-fiche", "matiere": "eco", "notion": "Développement durable", "format": "fiche",
+      "donnees": {
+        "titre": "Le développement durable",
+        "paragraphes": [
+          "Se développer en répondant aux besoins du présent sans compromettre la capacité des générations futures à répondre aux leurs \u0001 c'est la définition du rapport Brundtland (1987).",
+          "Il cherche à réconcilier trois piliers \u0001 l'économique, l'écologique et le social."
+        ],
+        "a_retenir": "3 piliers \u0001 économique, écologique, social. Rapport Brundtland, 1987."
       }
     }
   ]
