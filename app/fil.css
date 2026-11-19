@@ -501,3 +501,10 @@ h1, h2, h3 { font-family: var(--police); }
 .f-reglages .f-vitrine { margin-top: 12px; }
 /* Sur la piste de nuit, l'ombre d'encre ne se verrait pas : ombre rose disco à la place */
 .f-ecran[data-matiere="tube"] .f-carte { box-shadow: 6px 6px 0 #FF5FA2; }
+
+/* Pastille « À revoir » : la carte a été ratée la dernière fois (répétition espacée) */
+.f-a-revoir {
+  display: inline-block; margin-left: 8px; padding: 1px 9px 3px; vertical-align: 1px;
+  border: 2px solid var(--encre); border-radius: 999px; background: #FFC9D2; color: var(--encre);
+  font-size: 13px; font-weight: 800;
+}

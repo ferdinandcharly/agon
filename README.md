@@ -26,8 +26,23 @@ git subtree push --prefix app origin gh-pages
 
 Penser à changer `VERSION` dans `app/sw.js` à chaque livraison, sinon les téléphones gardent l'ancienne version.
 
+## Générer des cartes depuis ses cours
+
+1. Déposer le cours dans `sources/` (PDF, photos du cahier, Markdown). Le dossier n'est jamais versionné.
+2. Dans Claude Code, à la racine du projet : `/generer-cartes sources/<fichier>` (ou le nom d'une page Notion).
+   Claude écrit un lot dans `a-relire/` et le vérifie avec `node outils/valider.mjs <lot>`.
+3. Relire : `node outils/valider.mjs a-relire/<lot>.json` affiche chaque carte en clair.
+   Supprimer du fichier les cartes refusées.
+4. Ajouter au fil : `node outils/fusionner.mjs a-relire/<lot>.json` (refuse tout le lot s'il reste une erreur).
+
+## Répétition espacée
+
+Chaque jeu a une boîte de 1 à 5 (raté → boîte 1, réussi → boîte suivante). Il redevient prioritaire après
+0, 1, 3, 7 ou 14 jours selon sa boîte ; le fil commence par les jeux dus, les ratés en premier
+(pastille « À revoir »).
+
 ## Contenus
 
 `app/data/contenus.json` : une carte = `id`, `matiere`, `notion`, `format`, `donnees`.
-Les cartes mal formées sont écartées au chargement (voir `VALIDATEURS` dans `app/app.js`).
+Les cartes mal formées sont écartées au chargement (règles dans `app/validation.js`, partagées avec `outils/`).
 Les cours sources (`sources/`) ne sont jamais versionnés.

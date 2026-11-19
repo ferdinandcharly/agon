@@ -17,6 +17,8 @@ const JEUX_PAR_FICHE = 2;   // rythme du fil : une fiche, puis deux jeux, etc.
 const CLE_RESULTATS = "agon.resultats";
 const CLE_REGLAGES = "agon.reglages";
 const CLE_COLLECTION = "agon.collection";
+// Répétition espacée : délai (en jours) avant qu'une carte de la boîte 1, 2, 3, 4, 5 redevienne prioritaire
+const BOITES_JOURS = [0, 1, 3, 7, 14];
 const VINYLES_PAR_DISQUE = 7;   // Tube du jour : 7 vinyles gagnés = 1 disque d'or
 
 // Prise d'otage : QUESTIONS_CHRONO questions (vrai/faux ou trous) en DUREE_CHRONO ms, une erreur coûte PENALITE_CHRONO
@@ -78,7 +80,11 @@ function enregistrerResultat(id, reussi) {
   r.vu++;
   if (reussi === true) r.ok++;
   if (reussi === false) r.ko++;
-  if (reussi !== null) r.derniereOk = reussi;   // sert à la progression : réussie ou à revoir
+  if (reussi !== null) {
+    r.derniereOk = reussi;   // sert à la progression : réussie ou à revoir
+    // Répétition espacée (boîtes de Leitner) : ratée → boîte 1, réussie → boîte suivante
+    r.boite = reussi ? Math.min(BOITES_JOURS.length, (r.boite || 1) + 1) : 1;
+  }
   r.dernier = new Date().toISOString();
   resultats[id] = r;
   try { localStorage.setItem(CLE_RESULTATS, JSON.stringify(resultats)); } catch { /* tant pis */ }
@@ -199,36 +205,40 @@ function afficherScore() {
 // ---------- Validation ----------
 // Les contenus seront bientôt générés par une IA : une carte mal formée est écartée (avec un
 // avertissement en console) au lieu de casser tout le fil ou de donner un jeu impossible à finir.
-const estTexte = (x) => typeof x === "string" && x.trim() !== "";
-const listeDeTextes = (x, min) => Array.isArray(x) && x.length >= min && x.every(estTexte);
-
-const VALIDATEURS = {
-  fiche: (d) => estTexte(d.titre) && listeDeTextes(d.paragraphes, 1),
-  vrai_faux: (d) => estTexte(d.affirmation) && typeof d.reponse === "boolean",
-  trous: (d) => estTexte(d.texte) && d.texte.split("___").length === 2
-    && listeDeTextes(d.choix, 2) && d.choix.includes(d.reponse) && new Set(d.choix).size === d.choix.length,
-  associer: (d) => Array.isArray(d.paires) && d.paires.length >= 2
-    && d.paires.every((p) => Array.isArray(p) && p.length === 2 && p.every(estTexte))
-    && new Set(d.paires.map((p) => p[0])).size === d.paires.length
-    && new Set(d.paires.map((p) => p[1])).size === d.paires.length,
-  ordre: (d) => listeDeTextes(d.etapes, 2) && new Set(d.etapes).size === d.etapes.length,
-  erreur: (d) => Array.isArray(d.lignes) && d.lignes.length >= 2 && d.lignes.every((l) => typeof l === "string")
-    && Number.isInteger(d.ligne_fausse) && d.ligne_fausse >= 0 && d.ligne_fausse < d.lignes.length,
-};
-
+// Les règles sont dans validation.js, partagé avec les outils de génération (outils/valider.mjs).
+const cartesEcartees = new Set();
 function contenuValide(c) {
-  const ok = c && estTexte(c.id) && c.donnees && typeof c.donnees === "object"
-    && VALIDATEURS[c.format]?.(c.donnees);
-  if (!ok) console.warn("Carte écartée (format ou données invalides) :", c?.id ?? c);
-  return Boolean(ok);
+  const erreurs = FacettesValidation.erreursCarte(c);
+  if (erreurs.length && !cartesEcartees.has(c)) {
+    cartesEcartees.add(c);   // un seul avertissement par carte
+    console.warn("Carte écartée :", c?.id ?? c, erreurs);
+  }
+  return erreurs.length === 0;
 }
 
 // ---------- Ordre du fil ----------
 // Une fiche puis quelques jeux (au moins JEUX_PAR_FICHE, plus s'il y a beaucoup de jeux, pour ne pas
 // les entasser en fin de fil). On évite deux cartes de suite de la même matière ou du même format.
+// Un jeu est « dû » s'il n'a jamais été joué, ou si son délai de boîte est passé (boîte 1 : tout de suite).
+// Les jeux dus passent devant, les plus fragiles (boîte basse) d'abord ; le reste suit, mélangé.
+function prioriteJeu(c, resultats, maintenant) {
+  const r = resultats[c.id];
+  if (!r || r.derniereOk === undefined) return 1;   // jamais joué : dû, après les ratés
+  const boite = r.boite || (r.derniereOk ? 2 : 1);
+  const echeance = new Date(r.dernier).getTime() + BOITES_JOURS[boite - 1] * 86400000;
+  if (maintenant < echeance) return 10 + boite;     // pas encore dû : en fin de fil
+  return boite === 1 ? 0 : boite;                   // dû : les ratés en tout premier
+}
+
 function ordonner(contenus) {
   const fiches = melanger(contenus.filter((c) => c.format === "fiche"));
-  const jeux = melanger(contenus.filter((c) => c.format !== "fiche"));
+  const resultats = lireResultats();
+  const maintenant = Date.now();
+  // Mélange puis tri stable : à priorité égale, l'ordre reste aléatoire
+  const jeux = melanger(contenus.filter((c) => c.format !== "fiche"))
+    .map((c) => ({ c, p: prioriteJeu(c, resultats, maintenant) }))
+    .sort((a, b) => a.p - b.p)
+    .map((x) => x.c);
   const rythme = Math.max(JEUX_PAR_FICHE, Math.ceil(jeux.length / Math.max(fiches.length, 1)));
   const fil = [];
   let jeuxDepuisFiche = rythme;
@@ -614,7 +624,8 @@ function creerCarte(contenu) {
        el("p", { class: "f-format" }, el("b", {}, "Ton cerveau est retenu."),
          ` ${contenu.donnees.questions.length} bonnes réponses en ${DUREE_CHRONO / 1000} secondes pour le libérer.`)]
     : [el("p", { class: "f-matiere" }, matiere ? matiere.nom : contenu.matiere),
-       el("p", { class: "f-format" }, el("b", {}, NOMS_FORMATS[contenu.format]), ` sur ${contenu.notion}`)];
+       el("p", { class: "f-format" }, el("b", {}, NOMS_FORMATS[contenu.format]), ` sur ${contenu.notion}`,
+         lireResultats()[contenu.id]?.derniereOk === false ? el("span", { class: "f-a-revoir" }, "À revoir") : null)];
   const pile = el("div", { class: "f-pile" }, el("div", { class: "f-haut" }, ...haut), carte);
 
   // Appelée une seule fois, quand la carte est lue ou le jeu terminé
