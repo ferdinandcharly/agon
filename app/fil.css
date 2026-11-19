@@ -44,6 +44,8 @@
 [data-matiere="com"]    { --c: #F0A6FF; }
 /* Prise d'otage : rouge alarme, toutes matières confondues */
 [data-matiere="chrono"] { --c: #D61F3B; --sur: #FFFFFF; }
+/* Survie : violet électrique */
+[data-matiere="survie"] { --c: #6A3DF0; --sur: #FFFFFF; }
 /* Tube du jour : piste de danse de nuit */
 [data-matiere="tube"]   { --c: #16112B; --sur: #FFFFFF; }
 
@@ -632,3 +634,23 @@ h1, h2, h3 { font-family: var(--police); }
 .f-legende .f-facette { width: 14px; height: 14px; }
 .f-legende .f-feuille.maitrisee .f-facette { background: #00C08B; }
 .f-legende .f-feuille.en_cours .f-facette { background: #C9B8FF; }
+
+/* ---------- Mode Survie ---------- */
+.f-survie-record { font-size: 16px; font-weight: 700; }
+.f-survie-points { font-size: 15px; font-weight: 700; }
+.f-survie-score { font-size: 30px; font-weight: 800; font-stretch: 75%; }
+.f-bonus { background: var(--bon); color: var(--encre); }
+.f-survie-fin { display: grid; justify-items: center; gap: 4px; text-align: center; }
+.f-survie-total { font-size: 18px; }
+.f-survie-total b { font-size: 40px; font-weight: 800; font-stretch: 75%; margin-right: 4px; }
+.f-retour-survie { text-align: center; font-weight: 700; }
+
+/* Accueil : bouton Survie, plus discret que « Lancer la session » */
+.f-bouton-survie {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 10px; width: 100%;
+  padding: 12px 16px; border: 2.5px solid #FFFFFF; border-radius: 16px; background: none; color: #FFFFFF;
+  font-family: var(--police); cursor: pointer;
+}
+.f-bouton-survie b { font-size: 20px; font-weight: 800; font-stretch: 80%; }
+.f-bouton-survie span { font-size: 14px; color: #CFC9E8; }
+.f-bouton-survie:active { transform: translate(2px, 2px); }

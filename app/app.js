@@ -159,6 +159,148 @@ function tubeDuJour() {
   return { id: `tube-${jour}`, matiere: "tube", format: "tube", notion: q.notion, donnees: { question: q } };
 }
 
+// ---------- Question rapide (Prise d'otage, Survie) ----------
+// Un vrai/faux (à tirer ou à toucher) ou un texte à trous à 4 choix ; repondre(juste) est appelée une fois.
+function questionRapide(q, repondre) {
+  let fait = false;
+  const une = (ok) => { if (!fait) { fait = true; repondre(ok); } };
+  if (q.format === "vrai_faux") {
+    const carte = el("div", { class: "f-affirmation" }, q.donnees.affirmation);
+    rendreGlissable(carte, (vrai) => une(vrai === q.donnees.reponse));
+    return [carte, el("div", { class: "f-choix deux" },
+      el("button", { class: "f-option", type: "button", onclick: () => une(q.donnees.reponse === false) }, "✗ Faux"),
+      el("button", { class: "f-option", type: "button", onclick: () => une(q.donnees.reponse === true) }, "✓ Vrai"))];
+  }
+  const [avant, apres] = q.donnees.texte.split("___");
+  return [el("p", { class: "f-phrase" }, avant, el("span", { class: "f-trou" }, " "), apres),
+    el("div", { class: "f-choix deux" }, ...melanger(q.donnees.choix).map((mot) =>
+      el("button", { class: "f-option", type: "button", onclick: () => une(mot === q.donnees.reponse) }, mot)))];
+}
+
+// Bonne réponse attendue, en clair (récap de fin de partie)
+function reponseEnClair(q) {
+  return q.format === "vrai_faux"
+    ? `${q.donnees.affirmation} C'est ${q.donnees.reponse ? "vrai" : "faux"}.`
+    : q.donnees.texte.replace("___", `« ${q.donnees.reponse} »`);
+}
+
+// ---------- Mode Survie ----------
+// Questions à la chaîne : 15 s au départ, chaque bonne réponse rajoute du temps (de moins en moins),
+// une erreur ou le chrono à zéro arrête tout. Score = bonnes réponses ; le record reste sur l'appareil.
+const CLE_SURVIE = "agon.survie";
+const SURVIE_DEPART = 15000;
+const SURVIE_MAX = 30000;
+const bonusSurvie = (score) => (score < 10 ? 4000 : score < 20 ? 3000 : 2000);
+
+function lireRecordSurvie() {
+  try { return Number(JSON.parse(localStorage.getItem(CLE_SURVIE))?.record) || 0; } catch { return 0; }
+}
+function ecrireRecordSurvie(record) {
+  try { localStorage.setItem(CLE_SURVIE, JSON.stringify({ record })); } catch { /* tant pis */ }
+}
+
+function creerEcranSurvie() {
+  const carte = el("div", { class: "f-carte f-jeu" });
+  const pile = el("div", { class: "f-pile" },
+    el("div", { class: "f-haut" },
+      el("p", { class: "f-matiere" }, "Survie"),
+      el("p", { class: "f-format" }, el("b", {}, "Une erreur et c'est fini."), " Chaque bonne réponse rajoute du temps.")),
+    carte);
+  const ecran = el("section", { class: "f-ecran", "data-matiere": "survie" }, pile);
+
+  const pool = contenusRetenus().filter((c) => c.format === "vrai_faux" || c.format === "trous");
+  let ordre = melanger(pool);
+  let indice = 0;
+  const record = lireRecordSurvie();
+
+  carte.append(
+    el("p", { class: "f-consigne" }, `Tiens le plus longtemps possible : ${pool.length} questions de toutes les matières.`),
+    el("p", { class: "f-discret" }, `Tu pars avec ${SURVIE_DEPART / 1000} secondes. +${bonusSurvie(0) / 1000} s par bonne réponse au début, puis de moins en moins.`),
+    el("p", { class: "f-survie-record" }, record ? `Ton record : ${record}` : "Pas encore de record."),
+    el("button", { class: "f-option f-lancer", type: "button", onclick: lancer }, "C'est parti"));
+
+  const temps = el("b", { class: "f-chrono-temps" });
+  const score = el("b", { class: "f-survie-score", "aria-live": "polite" }, "0");
+  const jauge = el("i");
+  const question = el("div", { class: "f-chrono-question" });
+  let restant = SURVIE_DEPART;
+  let points = 0;
+  let dernierInstant = null;
+  let fini = false;
+
+  function afficher() {
+    temps.textContent = `${Math.max(0, restant / 1000).toFixed(1).replace(".", ",")} s`;
+    jauge.style.width = `${Math.max(0, restant / SURVIE_MAX) * 100}%`;
+    temps.classList.toggle("urgent", !fini && restant < 5000);
+  }
+
+  function tic(instant) {
+    if (fini) return;
+    if (dernierInstant !== null) restant -= instant - dernierInstant;
+    dernierInstant = instant;
+    afficher();
+    if (restant <= 0) return finir(null);
+    requestAnimationFrame(tic);
+  }
+
+  function lancer() {
+    if (!pool.length) return;
+    fil.classList.add("verrouille");   // pas de fuite pendant la partie
+    carte.replaceChildren(
+      el("div", { class: "f-chrono-barre" }, temps, el("span", { class: "f-survie-points" }, score, " bonnes")),
+      el("div", { class: "f-chrono-jauge" }, jauge),
+      question);
+    afficher();
+    suivante();
+    requestAnimationFrame(tic);
+  }
+
+  function suivante() {
+    if (indice >= ordre.length) { ordre = melanger(pool); indice = 0; }
+    const q = ordre[indice++];
+    question.replaceChildren(...questionRapide(q, (ok) => repondre(q, ok)));
+    question.classList.remove("entre"); void question.offsetWidth; question.classList.add("entre");
+  }
+
+  function repondre(q, ok) {
+    if (fini) return;
+    enregistrerResultat(q.id, ok);   // compte aussi dans la progression et la répétition espacée
+    if (!ok) return finir(q);
+    const bonus = bonusSurvie(points);
+    points++;
+    score.textContent = String(points);
+    restant = Math.min(SURVIE_MAX, restant + bonus);
+    const plus = el("span", { class: "f-penalite f-bonus", "aria-hidden": "true" }, `+${bonus / 1000} s`);
+    temps.parentElement.append(plus);
+    setTimeout(() => plus.remove(), 900);
+    question.classList.remove("eclair-ok", "eclair-ko"); void question.offsetWidth; question.classList.add("eclair-ok");
+    suivante();
+  }
+
+  function finir(rate) {
+    fini = true;
+    restant = Math.max(0, restant);
+    afficher();
+    const nouveauRecord = points > record;
+    if (nouveauRecord) ecrireRecordSurvie(points);
+    const tampon = el("div", { class: `f-tampon ${nouveauRecord ? "ok" : "ko"}` }, nouveauRecord ? "Record !" : "Perdu");
+    carte.replaceChildren(
+      el("div", { class: "f-survie-fin" },
+        tampon,
+        el("p", { class: "f-survie-total" }, el("b", {}, String(points)), ` bonne${points > 1 ? "s" : ""} réponse${points > 1 ? "s" : ""}`),
+        el("p", { class: "f-discret" }, nouveauRecord
+          ? (record ? `Ancien record : ${record}.` : "Premier record enregistré.")
+          : `Ton record reste ${record}.`)),
+      rate ? el("div", { class: "f-recap" }, el("b", {}, "La bonne réponse"), el("p", {}, reponseEnClair(rate)))
+        : el("div", { class: "f-recap" }, el("b", {}, "Temps écoulé"), el("p", {}, "Le chrono est tombé à zéro.")),
+      el("button", { class: "f-option f-lancer", type: "button", onclick: construireFil }, "Rejouer"),
+      el("button", { class: "f-option f-retour-survie", type: "button", onclick: afficherAccueil }, "Retour au menu"));
+    fil.classList.remove("verrouille");
+  }
+
+  return ecran;
+}
+
 // ---------- Glisser à gauche ou à droite ----------
 // Rend un élément « tirable » : droite = vrai, gauche = faux. Le vertical reste au fil (touch-action: pan-y).
 // decider(vrai) est appelée quand on lâche au-delà du seuil ; arreter() fige l'élément après la réponse.
@@ -409,20 +551,7 @@ const formats = {
 
     function poserQuestion() {
       majPastilles();
-      const q = d.questions[indice];
-      if (q.format === "vrai_faux") {
-        const carte = el("div", { class: "f-affirmation" }, q.donnees.affirmation);
-        rendreGlissable(carte, (vrai) => repondre(vrai === q.donnees.reponse));
-        question.replaceChildren(carte, el("div", { class: "f-choix deux" },
-          el("button", { class: "f-option", type: "button", onclick: () => repondre(q.donnees.reponse === false) }, "✗ Faux"),
-          el("button", { class: "f-option", type: "button", onclick: () => repondre(q.donnees.reponse === true) }, "✓ Vrai")));
-      } else {
-        const [avant, apres] = q.donnees.texte.split("___");
-        question.replaceChildren(
-          el("p", { class: "f-phrase" }, avant, el("span", { class: "f-trou" }, " "), apres),
-          el("div", { class: "f-choix deux" }, ...melanger(q.donnees.choix).map((mot) =>
-            el("button", { class: "f-option", type: "button", onclick: () => repondre(mot === q.donnees.reponse) }, mot))));
-      }
+      question.replaceChildren(...questionRapide(d.questions[indice], repondre));
       question.classList.remove("entre"); void question.offsetWidth; question.classList.add("entre");
     }
 
@@ -753,6 +882,8 @@ function construireFil() {
   if (modeFil === "tube") {
     const tube = tubeDuJour();
     ecrans = [...(tube ? [creerCarte(tube)] : []), carteRetourMenu()];
+  } else if (modeFil === "survie") {
+    ecrans = [creerEcranSurvie()];
   } else {
     ecrans = retenus.length ? [...ajouterChronos(ordonner(retenus)).map(creerCarte), carteFin()] : [carteVide()];
   }
@@ -922,7 +1053,10 @@ function remplirAccueil() {
           el("span", {}, `${pluriel(retenus.length, "carte")}, ${pluriel(nbMatieres, "matière")}`))),
       el("p", { class: "f-ligne-info" }, vinyles,
         `${collection.vinyles}/${VINYLES_PAR_DISQUE} vinyles` + (collection.disquesOr ? `, ${pluriel(collection.disquesOr, "disque")} d'or` : "")),
-      el("p", { class: "f-ligne-info discret" }, "Bientôt : Survie, Top scores, Défis"))));
+      el("button", { class: "f-bouton-survie", type: "button", onclick: () => montrerFil("survie") },
+        el("b", {}, "Mode survie"),
+        el("span", {}, lireRecordSurvie() ? `Record : ${lireRecordSurvie()}` : "Pas encore joué")),
+      el("p", { class: "f-ligne-info discret" }, "Bientôt : Top scores, Défis"))));
 }
 
 // ---------- Ton arbre : ce qu'on a vu, matière par matière ----------
