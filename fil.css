@@ -78,12 +78,13 @@ h1, h2, h3 { font-family: var(--police); }
    Un écran = une carte. scroll-snap-stop: always empêche de sauter plusieurs cartes d'un coup de pouce. */
 .f-fil {
   position: fixed; inset: 0;
-  overflow-y: auto; overscroll-behavior: contain;
+  /* Pas de défilement libre : app.js avance d'une carte par geste (doigt, molette, clavier) */
+  overflow: hidden; overscroll-behavior: contain;
   scroll-snap-type: y mandatory; scrollbar-width: none;
 }
 .f-fil::-webkit-scrollbar { display: none; }
 .f-ecran {
-  height: 100%; scroll-snap-align: start; scroll-snap-stop: always;
+  height: 100%; scroll-snap-align: start;
   display: grid; grid-template-columns: minmax(0, 1fr); place-items: center;
   padding: calc(max(12px, env(safe-area-inset-top)) + 58px) 18px max(18px, env(safe-area-inset-bottom));
   background: var(--c); color: var(--sur);
