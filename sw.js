@@ -2,7 +2,7 @@
 // Coquille (HTML/CSS/JS/police) : cache d'abord. Données (data/*.json) : réseau d'abord avec un délai
 // maximal, cache en secours, sinon les nouvelles cartes n'apparaîtraient jamais. Seules les réponses OK
 // sont mises en cache. Changer VERSION à chaque livraison de la coquille pour invalider l'ancien cache.
-const VERSION = "agon-v5";
+const VERSION = "agon-v7";
 const COQUILLE = [".", "index.html", "theme.css", "fil.css", "app.js", "manifest.webmanifest",
   "icone.svg", "icone-180.png", "polices/bricolage-grotesque.woff2", "data/contenus.json"];
 const DELAI_RESEAU = 4000;   // ms : au-delà, on sert les cartes en cache
