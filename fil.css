@@ -541,7 +541,7 @@ button.f-tuile:active:not(:disabled) { transform: translate(4px, 4px); box-shado
 
 .f-tuile-lancer { grid-column: span 2; background: #FFC21A; }
 .f-tuile-rond { display: grid; place-items: center; width: 48px; height: 48px; border: var(--trait); border-radius: 50%; background: #FFFFFF; }
-.f-tuile-rond svg { width: 20px; height: 20px; margin-left: 3px; }
+.f-tuile-rond svg { width: 20px; height: 20px; }
 
 .f-tuile-tube { background: #FF5FA2; }
 .f-tuile-vinyle {
@@ -570,3 +570,50 @@ button.f-tuile:active:not(:disabled) { transform: translate(4px, 4px); box-shado
   margin-top: 6px; padding: 12px 18px; border: var(--trait); border-radius: 14px; box-shadow: var(--ombre-petite);
   background: #FFFFFF; color: var(--encre); font: 700 17px var(--police);
 }
+
+/* Tuile Réussite : bouton vers l'arbre */
+.f-tuile-lien { margin-top: 4px; font-size: 14px; font-weight: 800; text-decoration: underline 2px; text-underline-offset: 3px; }
+
+/* ---------- Ton arbre ----------
+   Un tronc vertical, une branche par matière (sa couleur), une feuille-facette par notion. */
+.f-retour-menu {
+  align-self: flex-start; padding: 6px 14px 8px; border: var(--trait); border-radius: 999px;
+  background: #FFFFFF; color: var(--encre); font: 700 15px var(--police); box-shadow: 3px 3px 0 #7B4DFF; cursor: pointer;
+}
+.f-arbre-intro { color: #CFC9E8; font-size: 15px; line-height: 1.4; }
+.f-legende { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13px; color: #CFC9E8; }
+.f-legende .f-feuille { display: inline-flex; align-items: center; gap: 6px; }
+
+.f-tronc { position: relative; display: grid; gap: 12px; padding-left: 18px; margin-top: 4px; }
+.f-tronc::before { content: ""; position: absolute; left: 4px; top: 6px; bottom: 6px; width: 4px; border-radius: 4px; background: #3A3260; }
+
+.f-branche { position: relative; border: var(--trait); border-radius: 18px; background: #FFFFFF; color: var(--encre); box-shadow: 4px 4px 0 var(--c); }
+.f-branche::before { content: ""; position: absolute; left: -16px; top: 26px; width: 16px; height: 4px; background: #3A3260; }
+.f-branche summary {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 10px; align-items: center;
+  padding: 12px 14px; cursor: pointer; list-style: none;
+}
+.f-branche summary::-webkit-details-marker { display: none; }
+.f-branche-nom { font-size: 19px; font-weight: 800; letter-spacing: -0.01em; }
+.f-branche-nom::before { content: "▸"; display: inline-block; margin-right: 6px; color: var(--gris); transition: transform .2s; }
+.f-branche[open] .f-branche-nom::before { transform: rotate(90deg); }
+.f-branche-detail { font-size: 13px; font-weight: 600; color: var(--gris); }
+.f-branche-barre { grid-column: span 2; height: 8px; border: 2px solid var(--encre); border-radius: 999px; overflow: hidden; background: #F4F2FA; }
+.f-branche-barre i { display: block; height: 100%; background: var(--c); }
+
+.f-feuilles { display: grid; gap: 2px; padding: 0 14px 12px 30px; position: relative; }
+.f-feuilles::before { content: ""; position: absolute; left: 21px; top: 0; bottom: 22px; width: 2px; background: #E3DFF0; }
+.f-feuille { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 0 10px; align-items: center; position: relative; padding: 6px 0; }
+.f-feuilles .f-feuille::before { content: ""; position: absolute; left: -9px; top: 50%; width: 9px; height: 2px; background: #E3DFF0; }
+.f-feuille-nom { font-size: 15px; font-weight: 700; }
+.f-feuille-detail { grid-column: 2; font-size: 12px; color: var(--gris); }
+
+/* La feuille est une facette : un carré arrondi penché, comme la tuile qui saute du logo */
+.f-facette { width: 18px; height: 18px; border-radius: 5px; rotate: 15deg; border: 2px solid var(--encre); background: #FFFFFF; grid-row: span 2; }
+.f-feuille.maitrisee .f-facette { background: var(--c, #00C08B); }
+.f-feuille.en_cours .f-facette { background: color-mix(in srgb, var(--c, #7B4DFF) 35%, #FFFFFF); }
+.f-feuille.a_revoir .f-facette { background: #FFC9D2; border-color: #D61F3B; }
+.f-feuille.pas_vue .f-facette { border-style: dashed; border-color: #B9B3D1; }
+.f-legende .f-facette { width: 14px; height: 14px; }
+.f-legende .f-feuille.maitrisee .f-facette { background: #00C08B; }
+.f-legende .f-feuille.en_cours .f-facette { background: #C9B8FF; }
