@@ -22,7 +22,39 @@
 <header class="f-entete">
   <span class="f-marque" aria-label="Agon">Agon</span>
   <span class="f-score cache" id="score" aria-live="polite"></span>
+  <button class="f-menu" id="btn-reglages" type="button" aria-label="Réglages et progression">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true">
+      <path d="M4 7h16M4 12h16M4 17h16"></path>
+    </svg>
+  </button>
 </header>
+
+<!-- Réglages : rempli par app.js à chaque ouverture -->
+<dialog class="f-reglages" id="reglages" aria-labelledby="titre-reglages">
+  <div class="f-reglages-haut">
+    <h2 id="titre-reglages" tabindex="-1" autofocus>Réglages</h2>
+    <button class="f-option f-fermer" id="btn-fermer-reglages" type="button">Fermer</button>
+  </div>
+  <section>
+    <h3>Matières</h3>
+    <p class="f-discret">Celles qui apparaissent dans le fil.</p>
+    <div class="f-pastilles" id="choix-matieres"></div>
+  </section>
+  <section>
+    <h3>Jeux</h3>
+    <p class="f-discret">Les formats de cartes à mélanger.</p>
+    <div class="f-pastilles" id="choix-formats"></div>
+  </section>
+  <section>
+    <h3>Progression</h3>
+    <div class="f-progression" id="progression"></div>
+  </section>
+  <section>
+    <h3>Remettre à zéro</h3>
+    <p class="f-discret">Efface tes résultats sur cet appareil. Les réglages sont gardés.</p>
+    <button class="f-option f-danger" id="btn-zero" type="button">Effacer ma progression</button>
+  </section>
+</dialog>
 
 <!-- Le fil : un écran par carte, on fait défiler verticalement (scroll-snap) -->
 <main class="f-fil" id="fil" aria-label="Fil de révision">
