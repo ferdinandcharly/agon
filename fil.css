@@ -249,7 +249,8 @@ h1, h2, h3 { font-family: var(--police); }
 @keyframes f-eclair-ok { from { box-shadow: 0 0 0 8px var(--bon); } }
 @keyframes f-eclair-ko { from { box-shadow: 0 0 0 8px var(--rate); } 30% { translate: -6px 0; } 60% { translate: 6px 0; } }
 .f-chrono .f-choix.deux .f-option { font-size: 16px; font-weight: 600; padding-inline: 8px; }
-.f-recap { padding: 12px 14px; border: var(--trait); border-radius: 14px; background: color-mix(in srgb, var(--c) 10%, var(--papier)); font-size: 15px; line-height: 1.4; }
+.f-bilan { text-align: center; font-weight: 600; margin-top: -4px; }
+.f-recap { padding: 10px 14px; border: var(--trait); border-radius: 14px; background: color-mix(in srgb, var(--c) 10%, var(--papier)); font-size: 14px; line-height: 1.35; }
 .f-recap b { display: block; margin-bottom: 4px; font-size: 16px; font-weight: 800; }
 .f-recap ul { display: grid; gap: 6px; padding-left: 18px; list-style: disc; }
 
@@ -398,9 +399,8 @@ h1, h2, h3 { font-family: var(--police); }
 .f-lettre.jaune { background: #FFC21A; color: var(--encre); }
 .f-lettre.rose { background: #FF5FA2; color: var(--encre); }
 .f-lettre.bleu { background: #3D5AFE; color: #FFFFFF; }
-.f-otage.capture .f-lettre { animation: f-lettre-colle .3s var(--ressort) both; }
-.f-otage.capture .f-lettre:nth-child(2n) { animation-delay: .7s; }
-.f-otage.capture .f-lettre:nth-child(2n+1) { animation-delay: .8s; }
-.f-otage.capture .f-lettre:nth-child(3n) { animation-delay: .9s; }
-.f-otage.capture .f-mot + .f-mot .f-lettre { animation-delay: 1s; }
+/* Les lettres se collent une à une, juste après la chute des barreaux */
+.f-otage.capture .f-lettre { animation: f-lettre-colle .28s var(--ressort) both; animation-delay: calc(.5s + var(--i, 0) * 45ms); }
 @keyframes f-lettre-colle { from { transform: scale(1.8); opacity: 0; } }
+/* Avant la capture, le titre reste caché : il apparaîtra collé lettre par lettre (pas de clignotement) */
+.f-otage:not(.capture):not(.termine) .f-lettre { opacity: 0; }
