@@ -512,8 +512,9 @@ h1, h2, h3 { font-family: var(--police); }
   font-size: 13px; font-weight: 800;
 }
 
-/* ---------- Accueil en mosaïque ----------
-   Piste de nuit, tuiles-autocollants aux couleurs du logo : la plus grande lance la session. */
+/* ---------- Accueil : la boule à facettes ----------
+   Une facette par notion. Éteinte tant qu'elle n'est pas vue, pâle en cours, rose à revoir,
+   allumée (couleur de sa matière) quand elle est maîtrisée. Un seul gros bouton en bas. */
 .f-marque { pointer-events: auto; cursor: pointer; font-family: var(--police); color: var(--encre); }
 .f-marque:active { transform: translate(3px, 3px); box-shadow: none; }
 .f-accueil {
@@ -522,48 +523,64 @@ h1, h2, h3 { font-family: var(--police); }
   padding: calc(max(12px, env(safe-area-inset-top)) + 64px) 18px max(20px, env(safe-area-inset-bottom));
 }
 .f-accueil-col { max-width: 480px; margin-inline: auto; display: flex; flex-direction: column; gap: 14px; }
-.f-accueil-titre { font-size: 46px; font-weight: 800; font-stretch: 75%; line-height: .95; letter-spacing: -0.04em; }
-.f-mosaique { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.f-accueil-boule { min-height: 100%; }
+.f-accueil-titre { font-size: 40px; font-weight: 800; font-stretch: 75%; line-height: .98; letter-spacing: -0.035em; text-wrap: balance; }
+.f-accueil-date { margin-bottom: -8px; font-size: 15px; color: #CFC9E8; }
+.f-accueil-date::first-letter { text-transform: uppercase; }
 
-.f-tuile {
-  position: relative; display: flex; flex-direction: column; justify-content: space-between; align-items: flex-start; gap: 10px;
-  min-height: 150px; padding: 14px; border: var(--trait); border-radius: 22px; box-shadow: 5px 5px 0 #FFFFFF;
-  color: var(--encre); font-family: var(--police); text-align: left;
+.f-scene { position: relative; align-self: center; width: min(78vw, 300px); aspect-ratio: 1; margin-block: 6px; }
+.f-boule { display: block; width: 100%; height: 100%; padding: 0; border: 0; border-radius: 50%; background: none; cursor: pointer; }
+.f-boule:focus-visible { outline: 3px dashed #FFFFFF; outline-offset: 6px; }
+.f-boule-svg { width: 100%; height: 100%; overflow: visible; }
+.f-facette-boule { fill: #241D42; stroke: #3A3260; stroke-width: .6; }
+.f-facette-boule.decor { fill: #1C1636; stroke: none; }
+.f-facette-boule.en_cours { fill: var(--c); fill-opacity: .4; stroke: none; }
+.f-facette-boule.a_revoir { fill: #FF4D6D; stroke: #FFC9D2; stroke-width: .8; }
+.f-facette-boule.maitrisee { fill: var(--c); stroke: #FFFFFF; stroke-width: .6; }
+/* Seul mouvement : à l'ouverture, les facettes allumées s'éclairent une à une */
+.f-facette-boule.maitrisee, .f-facette-boule.en_cours, .f-facette-boule.a_revoir {
+  animation: f-allume .5s ease-out both; animation-delay: calc(.2s + var(--i) * 12ms);
 }
-button.f-tuile { cursor: pointer; transition: transform .1s, box-shadow .1s; }
-button.f-tuile:active:not(:disabled) { transform: translate(4px, 4px); box-shadow: 1px 1px 0 #FFFFFF; }
-.f-tuile-bas { display: flex; flex-direction: column; gap: 2px; }
-.f-tuile-titre { font-size: 34px; font-weight: 800; font-stretch: 75%; line-height: 1; letter-spacing: -0.03em; }
-.f-tuile-titre.petit { font-size: 22px; font-stretch: 80%; letter-spacing: -0.02em; }
-.f-tuile-detail { font-size: 14px; font-weight: 600; line-height: 1.25; }
-.f-tuile-detail.fort { font-size: 15px; font-weight: 700; }
-.f-tuile-chiffre { font-size: 46px; font-weight: 800; font-stretch: 75%; line-height: .9; }
+@keyframes f-allume { from { opacity: .15; } }
+.f-boule-legende { text-align: center; font-size: 14px; color: #CFC9E8; margin-top: -4px; }
+.f-boule-legende b { display: block; color: #FFFFFF; font-size: 16px; }
 
-.f-tuile-lancer { grid-column: span 2; background: #FFC21A; }
-.f-tuile-rond { display: grid; place-items: center; width: 48px; height: 48px; border: var(--trait); border-radius: 50%; background: #FFFFFF; }
-.f-tuile-rond svg { width: 20px; height: 20px; }
-
-.f-tuile-tube { background: #FF5FA2; }
-.f-tuile-vinyle {
-  width: 58px; height: 58px; border: var(--trait); border-radius: 50%;
-  background: radial-gradient(circle, #FFFFFF 0 7%, #FFC21A 8% 30%, transparent 31%), repeating-radial-gradient(circle, #16112B 0 2px, #3A3260 2px 3px);
-  animation: f-tourne 6s linear infinite;
+/* Le tube : la facette qui s'échappe de la boule, en vinyle */
+.f-bulle-tube {
+  position: absolute; top: -6%; right: -8%; display: flex; flex-direction: column; align-items: center; gap: 4px;
+  padding: 0; border: 0; background: none; color: #FFFFFF; font-family: var(--police); cursor: pointer; rotate: 12deg;
+}
+.f-bulle-vinyle {
+  width: 66px; height: 66px; border: 2.5px solid #FFFFFF; border-radius: 50%;
+  background: radial-gradient(circle, #FFFFFF 0 7%, #FF5FA2 8% 30%, transparent 31%), repeating-radial-gradient(circle, #16112B 0 2px, #3A3260 2px 3px);
+  box-shadow: 0 0 0 5px rgba(255, 95, 162, .3), 0 0 24px rgba(255, 95, 162, .55);
+  animation: f-tourne 5s linear infinite;
 }
 @keyframes f-tourne { to { transform: rotate(360deg); } }
-.f-tuile-badge { position: absolute; top: 12px; right: 12px; padding: 1px 8px 3px; border: 2px solid var(--encre); border-radius: 999px; background: #FFFFFF; font-size: 12px; font-weight: 800; }
-.f-tuile-tube:disabled { background: #2A2347; color: #CFC9E8; border-color: #6F6896; box-shadow: none; cursor: default; }
-.f-tuile-tube:disabled .f-tuile-vinyle { animation: none; opacity: .5; border-color: #6F6896; }
-.f-tuile-tube:disabled .f-tuile-badge { background: #B9F6CA; color: var(--encre); }
+.f-bulle-texte { padding: 1px 8px 3px; border: 2px solid var(--encre); border-radius: 8px; background: #FFFFFF; color: var(--encre); font-size: 12px; font-weight: 800; white-space: nowrap; }
+.f-bulle-tube.jouee { cursor: default; }
+.f-bulle-tube.jouee .f-bulle-vinyle { animation: none; box-shadow: none; opacity: .45; border-color: #6F6896; }
+.f-bulle-tube.jouee .f-bulle-texte { background: #2A2347; color: #CFC9E8; border-color: #6F6896; }
 
-.f-tuile-reussite { background: #00C08B; }
+.f-accueil-bas { margin-top: auto; display: flex; flex-direction: column; gap: 10px; padding-top: 8px; }
+.f-lancer-session {
+  display: flex; align-items: center; gap: 14px; width: 100%; padding: 14px 16px;
+  border: var(--trait); border-radius: 20px; background: #FFC21A; color: var(--encre);
+  box-shadow: 5px 5px 0 #FFFFFF; font-family: var(--police); text-align: left; cursor: pointer;
+  transition: transform .1s, box-shadow .1s;
+}
+.f-lancer-session:active { transform: translate(4px, 4px); box-shadow: 1px 1px 0 #FFFFFF; }
+.f-lancer-texte { display: flex; flex-direction: column; }
+.f-lancer-texte b { font-size: 28px; font-weight: 800; font-stretch: 75%; line-height: 1; letter-spacing: -0.03em; }
+.f-lancer-texte span { font-size: 14px; font-weight: 600; }
+.f-tuile-rond { flex: none; display: grid; place-items: center; width: 48px; height: 48px; border: var(--trait); border-radius: 50%; background: #FFFFFF; }
+.f-tuile-rond svg { width: 20px; height: 20px; }
 
-.f-tuile-collection { grid-column: span 2; min-height: 0; background: #FFFFFF; box-shadow: 5px 5px 0 #7B4DFF; }
-.f-tuile-collection .f-vitrine { justify-items: start; align-self: stretch; }
-.f-tuile-collection .f-vinyles { justify-content: flex-start; }
-
-.f-bientot { grid-column: span 2; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
-.f-bientot-case { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 10px 6px; border: 2px dashed #6F6896; border-radius: 14px; color: #CFC9E8; font-size: 12px; text-align: center; }
-.f-bientot-case b { font-size: 15px; color: #FFFFFF; }
+.f-ligne-info { display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 14px; color: #CFC9E8; }
+.f-ligne-info.discret { font-size: 13px; color: #8A84A6; }
+.f-mini-vinyles { display: inline-flex; gap: 3px; }
+.f-mini-vinyles i { width: 12px; height: 12px; border-radius: 50%; border: 1.5px dashed #6F6896; }
+.f-mini-vinyles i.plein { border: 1.5px solid #FFFFFF; background: radial-gradient(circle, #FF5FA2 0 30%, #16112B 32%); }
 
 /* Fin du fil : deux boutons */
 .f-fin .btn-secondaire {
@@ -571,8 +588,6 @@ button.f-tuile:active:not(:disabled) { transform: translate(4px, 4px); box-shado
   background: #FFFFFF; color: var(--encre); font: 700 17px var(--police);
 }
 
-/* Tuile Réussite : bouton vers l'arbre */
-.f-tuile-lien { margin-top: 4px; font-size: 14px; font-weight: 800; text-decoration: underline 2px; text-underline-offset: 3px; }
 
 /* ---------- Ton arbre ----------
    Un tronc vertical, une branche par matière (sa couleur), une feuille-facette par notion. */
