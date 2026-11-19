@@ -1,5 +1,5 @@
-// Agon — étape 1 : fil vertical + les 6 formats, contenus écrits à la main (data/contenus.json).
-// Pas encore de compte ni de Supabase : les résultats restent dans ce navigateur (localStorage).
+// Agon — fil vertical de fiches et de jeux, contenus dans data/contenus.json.
+// Pas encore de compte ni de Supabase : résultats et réglages restent dans ce navigateur (localStorage).
 "use strict";
 
 const NOMS_FORMATS = {
@@ -9,9 +9,17 @@ const NOMS_FORMATS = {
   associer: "Associer",
   ordre: "Remettre dans l'ordre",
   erreur: "Trouve l'erreur",
+  chrono: "Prise d'otage",
 };
 const JEUX_PAR_FICHE = 2;   // rythme du fil : une fiche, puis deux jeux, etc.
 const CLE_RESULTATS = "agon.resultats";
+const CLE_REGLAGES = "agon.reglages";
+
+// Prise d'otage : QUESTIONS_CHRONO questions (vrai/faux ou trous) en DUREE_CHRONO ms, une erreur coûte PENALITE_CHRONO
+const QUESTIONS_CHRONO = 5;
+const DUREE_CHRONO = 30000;
+const PENALITE_CHRONO = 3000;
+const CARTES_ENTRE_CHRONOS = 10;
 
 const fil = document.getElementById("fil");
 const zoneScore = document.getElementById("score");
@@ -66,9 +74,62 @@ function enregistrerResultat(id, reussi) {
   r.vu++;
   if (reussi === true) r.ok++;
   if (reussi === false) r.ko++;
+  if (reussi !== null) r.derniereOk = reussi;   // sert à la progression : réussie ou à revoir
   r.dernier = new Date().toISOString();
   resultats[id] = r;
   try { localStorage.setItem(CLE_RESULTATS, JSON.stringify(resultats)); } catch { /* tant pis */ }
+}
+
+// Réglages : on stocke ce qui est EXCLU, pour qu'une nouvelle matière ou un nouveau jeu soit actif par défaut
+function lireReglages() {
+  try {
+    const v = JSON.parse(localStorage.getItem(CLE_REGLAGES));
+    return {
+      matieresExclues: Array.isArray(v?.matieresExclues) ? v.matieresExclues : [],
+      formatsExclus: Array.isArray(v?.formatsExclus) ? v.formatsExclus : [],
+    };
+  } catch { return { matieresExclues: [], formatsExclus: [] }; }
+}
+function ecrireReglages(r) {
+  try { localStorage.setItem(CLE_REGLAGES, JSON.stringify(r)); } catch { /* tant pis */ }
+}
+let reglages = lireReglages();
+
+// ---------- Glisser à gauche ou à droite ----------
+// Rend un élément « tirable » : droite = vrai, gauche = faux. Le vertical reste au fil (touch-action: pan-y).
+// decider(vrai) est appelée quand on lâche au-delà du seuil ; arreter() fige l'élément après la réponse.
+function rendreGlissable(element, decider) {
+  let depart = null;
+  let fini = false;
+  element.classList.add("f-glissable");
+  const remettre = () => {
+    element.style.transform = "";
+    element.classList.remove("tire", "vers-vrai", "vers-faux");
+  };
+  element.addEventListener("pointerdown", (e) => {
+    // Seulement le bouton principal, et un seul doigt à la fois
+    if (fini || e.button !== 0 || depart !== null) return;
+    depart = e.clientX;
+    element.setPointerCapture(e.pointerId);
+    element.classList.add("tire");
+  });
+  element.addEventListener("pointermove", (e) => {
+    if (fini || depart === null) return;
+    const dx = e.clientX - depart;
+    element.style.transform = `translateX(${dx}px) rotate(${dx / 25}deg)`;
+    element.classList.toggle("vers-vrai", dx > 40);
+    element.classList.toggle("vers-faux", dx < -40);
+  });
+  const lacher = (e) => {
+    if (depart === null) return;
+    const dx = e.type === "pointercancel" ? 0 : e.clientX - depart;
+    depart = null;
+    remettre();
+    if (!fini && Math.abs(dx) > 80) decider(dx > 0);
+  };
+  element.addEventListener("pointerup", lacher);
+  element.addEventListener("pointercancel", lacher);
+  return { arreter() { fini = true; depart = null; remettre(); } };
 }
 
 function afficherScore() {
@@ -148,10 +209,8 @@ const formats = {
     function repondre(dit) {
       if (fini) return;
       fini = true;
-      depart = null;   // un glissé en cours (autre doigt) ne doit plus déplacer la carte
+      glisse.arreter();   // un glissé en cours (autre doigt) ne doit plus déplacer la carte
       const reussi = dit === d.reponse;
-      carte.style.transform = "";
-      carte.classList.remove("tire", "vers-vrai", "vers-faux");
       carte.classList.add(d.reponse ? "vers-vrai" : "vers-faux");
       (dit ? btnVrai : btnFaux).classList.add(reussi ? "bon" : "faux");
       btnVrai.disabled = btnFaux.disabled = true;
@@ -159,40 +218,111 @@ const formats = {
     }
     btnFaux.addEventListener("click", () => repondre(false));
     btnVrai.addEventListener("click", () => repondre(true));
-
-    // Glissé horizontal : droite = vrai, gauche = faux. Le vertical reste au fil (touch-action: pan-y).
-    let depart = null;
-    carte.addEventListener("pointerdown", (e) => {
-      // Seulement le bouton principal, et un seul doigt à la fois
-      if (fini || e.button !== 0 || depart !== null) return;
-      depart = e.clientX;
-      carte.setPointerCapture(e.pointerId);
-      carte.classList.add("tire");
-    });
-    carte.addEventListener("pointermove", (e) => {
-      if (fini || depart === null) return;
-      const dx = e.clientX - depart;
-      carte.style.transform = `translateX(${dx}px) rotate(${dx / 25}deg)`;
-      carte.classList.toggle("vers-vrai", dx > 40);
-      carte.classList.toggle("vers-faux", dx < -40);
-    });
-    const lacher = (e) => {
-      if (depart === null) return;
-      const dx = e.type === "pointercancel" ? 0 : e.clientX - depart;
-      depart = null;
-      carte.classList.remove("tire");
-      if (Math.abs(dx) > 80) return repondre(dx > 0);
-      carte.style.transform = "";
-      carte.classList.remove("vers-vrai", "vers-faux");
-    };
-    carte.addEventListener("pointerup", lacher);
-    carte.addEventListener("pointercancel", lacher);
+    const glisse = rendreGlissable(carte, repondre);
 
     return [
       carte,
-      el("div", { class: "f-aide-swipe" }, el("span", {}, "← faux"), el("span", {}, "vrai →")),
+      el("div", { class: "f-aide-swipe" }, el("span", {}, "← faux"), el("span", {}, "Glisse la carte"), el("span", {}, "vrai →")),
       el("div", { class: "f-choix deux" }, btnFaux, btnVrai),
     ];
+  },
+
+  // Prise d'otage : une série de questions rapides contre la montre. d.questions = contenus vrai_faux / trous.
+  chrono(d, terminer) {
+    const zone = el("div", { class: "f-chrono" });
+    const intro = el("div", { class: "f-chrono-intro" },
+      el("p", { class: "f-consigne" }, `Libère l'otage : réponds aux ${d.questions.length} questions avant la fin du chrono.`),
+      el("p", { class: "f-discret" }, `Tu as ${DUREE_CHRONO / 1000} secondes. Chaque erreur en retire ${PENALITE_CHRONO / 1000}.`),
+      el("button", { class: "f-option f-lancer", type: "button", onclick: lancer }, "Lancer le chrono"));
+    zone.append(intro);
+
+    const jauge = el("i");
+    const temps = el("b", { class: "f-chrono-temps" });
+    const compteur = el("span", { class: "f-chrono-compteur" });
+    const question = el("div", { class: "f-chrono-question", "aria-live": "polite" });
+    const reponses = [];   // { contenu, ok }
+    let restant = DUREE_CHRONO;
+    let dernierInstant = null;
+    let indice = 0;
+    let fini = false;
+
+    function afficherTemps() {
+      temps.textContent = `${Math.max(0, restant / 1000).toFixed(1).replace(".", ",")} s`;
+      jauge.style.width = `${Math.max(0, restant / DUREE_CHRONO) * 100}%`;
+      temps.classList.toggle("urgent", restant < 8000);
+    }
+
+    // Le chrono ne tourne que si son écran est celui affiché (on peut faire défiler sans perdre de temps)
+    function tic(instant) {
+      if (fini) return;
+      const visible = zone.closest(".f-ecran") === ecranActif;
+      if (visible && dernierInstant !== null) restant -= instant - dernierInstant;
+      dernierInstant = visible ? instant : null;
+      afficherTemps();
+      if (restant <= 0) return finir();
+      requestAnimationFrame(tic);
+    }
+
+    function lancer() {
+      zone.replaceChildren(
+        el("div", { class: "f-chrono-barre" }, temps, compteur),
+        el("div", { class: "f-chrono-jauge" }, jauge),
+        question);
+      poserQuestion();
+      requestAnimationFrame(tic);
+    }
+
+    function repondre(ok) {
+      if (fini) return;
+      const contenu = d.questions[indice];
+      reponses.push({ contenu, ok });
+      enregistrerResultat(contenu.id, ok);
+      if (!ok) restant -= PENALITE_CHRONO;
+      question.classList.remove("eclair-ok", "eclair-ko");
+      void question.offsetWidth;   // relance l'éclair même s'il vient de jouer
+      question.classList.add(ok ? "eclair-ok" : "eclair-ko");
+      indice++;
+      if (restant <= 0 || indice === d.questions.length) return finir();
+      poserQuestion();
+    }
+
+    function poserQuestion() {
+      compteur.textContent = `${indice + 1}/${d.questions.length}`;
+      const q = d.questions[indice];
+      if (q.format === "vrai_faux") {
+        const carte = el("div", { class: "f-affirmation" }, q.donnees.affirmation);
+        rendreGlissable(carte, (vrai) => repondre(vrai === q.donnees.reponse));
+        question.replaceChildren(carte, el("div", { class: "f-choix deux" },
+          el("button", { class: "f-option", type: "button", onclick: () => repondre(q.donnees.reponse === false) }, "✗ Faux"),
+          el("button", { class: "f-option", type: "button", onclick: () => repondre(q.donnees.reponse === true) }, "✓ Vrai")));
+      } else {
+        const [avant, apres] = q.donnees.texte.split("___");
+        question.replaceChildren(
+          el("p", { class: "f-phrase" }, avant, el("span", { class: "f-trou" }, " "), apres),
+          el("div", { class: "f-choix deux" }, ...melanger(q.donnees.choix).map((mot) =>
+            el("button", { class: "f-option", type: "button", onclick: () => repondre(mot === q.donnees.reponse) }, mot))));
+      }
+    }
+
+    function finir() {
+      fini = true;
+      restant = Math.max(0, restant);
+      afficherTemps();
+      const bonnes = reponses.filter((r) => r.ok).length;
+      const libere = reponses.length === d.questions.length && restant > 0;
+      // Récap : ce qui a été raté ou pas atteint, avec la bonne réponse
+      const aRevoir = d.questions.filter((q, i) => !reponses[i]?.ok).map((q) => el("li", {},
+        q.format === "vrai_faux"
+          ? `${q.donnees.affirmation} C'est ${q.donnees.reponse ? "vrai" : "faux"}.`
+          : q.donnees.texte.replace("___", `« ${q.donnees.reponse} »`)));
+      question.replaceChildren(aRevoir.length ? el("div", { class: "f-recap" }, el("b", {}, "À revoir"), el("ul", {}, ...aRevoir)) : "");
+      terminer(libere,
+        libere ? "Otage libéré !" : "Trop tard, l'otage n'a pas pu être libéré.",
+        `${bonnes} bonne${bonnes > 1 ? "s" : ""} réponse${bonnes > 1 ? "s" : ""} sur ${d.questions.length}` +
+          (libere ? `, avec ${(restant / 1000).toFixed(1).replace(".", ",")} s d'avance.` : "."));
+    }
+
+    return [zone];
   },
 
   trous(d, terminer) {
@@ -324,11 +454,12 @@ function creerCarte(contenu) {
   // Sur le fond de couleur de la matière : son nom en grand, le format, puis l'autocollant du contenu
   const carte = el("div", { class: `f-carte f-${contenu.format === "fiche" ? "fiche" : "jeu"}` });
   const matiere = donnees.matieres.find((m) => m.id === contenu.matiere);
-  const pile = el("div", { class: "f-pile" },
-    el("div", { class: "f-haut" },
-      el("p", { class: "f-matiere" }, matiere ? matiere.nom : contenu.matiere),
-      el("p", { class: "f-format" }, el("b", {}, NOMS_FORMATS[contenu.format]), ` sur ${contenu.notion}`)),
-    carte);
+  const haut = contenu.format === "chrono"
+    ? [el("p", { class: "f-matiere" }, "Prise d'otage"),
+       el("p", { class: "f-format" }, el("b", {}, `${contenu.donnees.questions.length} questions`), ` en ${DUREE_CHRONO / 1000} secondes, toutes matières`)]
+    : [el("p", { class: "f-matiere" }, matiere ? matiere.nom : contenu.matiere),
+       el("p", { class: "f-format" }, el("b", {}, NOMS_FORMATS[contenu.format]), ` sur ${contenu.notion}`)];
+  const pile = el("div", { class: "f-pile" }, el("div", { class: "f-haut" }, ...haut), carte);
 
   // Appelée une seule fois, quand la carte est lue ou le jeu terminé
   function terminer(reussi, titre, texte, enPlus) {
@@ -362,26 +493,74 @@ function creerCarte(contenu) {
     }
   }
   const ecran = el("section", { class: "f-ecran", "data-matiere": contenu.matiere }, pile);
-  if (contenu.format === "fiche") {
-    ecran.dataset.id = contenu.id;
-    observateurFiches.observe(ecran);
-  }
+  if (contenu.format === "fiche") ecran.dataset.fiche = contenu.id;
   return ecran;
 }
 
-// Une fiche compte comme lue quand elle reste affichée à plus de moitié, une fois par fil
-const observateurFiches = new IntersectionObserver((entrees) => {
+// ---------- Écran affiché ----------
+// Un seul observateur suit l'écran visible : il colore la barre du navigateur, compte les fiches lues,
+// fait tourner le chrono seulement à l'écran, et montre une fois comment tirer une carte vrai/faux.
+let ecranActif = null;
+let indiceGlisseMontre = false;
+const metaTheme = document.querySelector('meta[name="theme-color"]');
+
+const observateurEcrans = new IntersectionObserver((entrees) => {
   for (const e of entrees) {
     if (!e.isIntersecting) continue;
-    enregistrerResultat(e.target.dataset.id, null);
-    observateurFiches.unobserve(e.target);
+    const ecran = e.target;
+    ecranActif = ecran;
+    metaTheme.setAttribute("content", getComputedStyle(ecran).backgroundColor);
+    if (ecran.dataset.fiche) {
+      enregistrerResultat(ecran.dataset.fiche, null);
+      delete ecran.dataset.fiche;   // une seule fois par fil
+    }
+    const aTirer = ecran.querySelector(".f-affirmation:not(.vers-vrai):not(.vers-faux)");
+    if (aTirer && !indiceGlisseMontre) {
+      indiceGlisseMontre = true;
+      aTirer.classList.add("indice-glisse");
+    }
   }
 }, { root: fil, threshold: 0.6 });
 
+// Contenus retenus par les réglages (matières et formats cochés)
+function contenusRetenus() {
+  return donnees.contenus.filter((c) => contenuValide(c)
+    && !reglages.matieresExclues.includes(c.matiere) && !reglages.formatsExclus.includes(c.format));
+}
+
+// Glisse une Prise d'otage toutes les CARTES_ENTRE_CHRONOS cartes, avec des questions rapides tirées au hasard
+function ajouterChronos(liste) {
+  if (reglages.formatsExclus.includes("chrono")) return liste;
+  const rapides = donnees.contenus.filter((c) => (c.format === "vrai_faux" || c.format === "trous")
+    && contenuValide(c) && !reglages.matieresExclues.includes(c.matiere));
+  if (rapides.length < QUESTIONS_CHRONO) return liste;
+  const resultat = [];
+  liste.forEach((c, i) => {
+    resultat.push(c);
+    if ((i + 1) % CARTES_ENTRE_CHRONOS === 0) {
+      resultat.push({ id: `chrono-${i}`, matiere: "chrono", format: "chrono",
+        donnees: { questions: melanger(rapides).slice(0, QUESTIONS_CHRONO) } });
+    }
+  });
+  return resultat;
+}
+
 function construireFil() {
-  observateurFiches.disconnect();
-  fil.replaceChildren(...ordonner(donnees.contenus.filter(contenuValide)).map(creerCarte), carteFin());
+  observateurEcrans.disconnect();
+  const retenus = contenusRetenus();
+  const ecrans = retenus.length
+    ? [...ajouterChronos(ordonner(retenus)).map(creerCarte), carteFin()]
+    : [carteVide()];
+  fil.replaceChildren(...ecrans);
+  for (const ecran of ecrans) observateurEcrans.observe(ecran);
   fil.scrollTo({ top: 0 });
+}
+
+function carteVide() {
+  return el("section", { class: "f-ecran" }, el("div", { class: "f-carte f-fin" },
+    el("h2", {}, "Aucune carte à afficher"),
+    el("p", { class: "f-discret" }, "Les matières et les jeux cochés dans les réglages ne donnent aucune carte."),
+    el("button", { class: "btn btn-principal", type: "button", onclick: ouvrirReglages }, "Ouvrir les réglages")));
 }
 
 function carteFin() {
@@ -391,12 +570,116 @@ function carteFin() {
     el("button", { class: "btn btn-principal", type: "button", onclick: construireFil }, "Remélanger le fil")));
 }
 
+// ---------- Réglages et progression ----------
+const dialogue = document.getElementById("reglages");
+let reglagesModifies = false;
+
+// Une pastille à cocher (aria-pressed). Interdit de décocher la dernière d'un groupe : le fil serait vide.
+function pastille(texte, active, couleur, basculer) {
+  const b = el("button", { class: "f-pastille", type: "button", "aria-pressed": String(active) }, texte);
+  if (couleur) b.style.setProperty("--pastille", couleur);
+  b.addEventListener("click", () => {
+    const groupe = b.parentElement;
+    const actives = groupe.querySelectorAll('[aria-pressed="true"]').length;
+    const devient = b.getAttribute("aria-pressed") !== "true";
+    if (!devient && actives === 1) {
+      b.classList.remove("secoue"); void b.offsetWidth; b.classList.add("secoue");
+      return;
+    }
+    b.setAttribute("aria-pressed", String(devient));
+    basculer(devient);
+    ecrireReglages(reglages);
+    reglagesModifies = true;
+    remplirProgression();
+  });
+  return b;
+}
+
+function basculerDans(liste, valeur, actif) {
+  const i = liste.indexOf(valeur);
+  if (actif && i >= 0) liste.splice(i, 1);
+  if (!actif && i < 0) liste.push(valeur);
+}
+
+function remplirProgression() {
+  const resultats = lireResultats();
+  const lignes = donnees.matieres.map((m) => {
+    // On compte les jeux (pas les fiches) : réussis au dernier essai, ratés à revoir, jamais joués
+    const jeux = donnees.contenus.filter((c) => c.matiere === m.id && c.format !== "fiche" && contenuValide(c));
+    const reussis = jeux.filter((c) => resultats[c.id]?.derniereOk === true).length;
+    const aRevoir = jeux.filter((c) => resultats[c.id]?.derniereOk === false).length;
+    const part = jeux.length ? reussis / jeux.length : 0;
+    const detail = `${reussis} réussi${reussis > 1 ? "s" : ""} sur ${jeux.length}` + (aRevoir ? `, ${aRevoir} à revoir` : "");
+    const ligne = el("div", { class: "f-prog-ligne", "data-matiere": m.id },
+      el("div", { class: "f-prog-texte" }, el("b", {}, m.nom), el("span", {}, detail)),
+      el("div", { class: "f-prog-barre", role: "img", "aria-label": `${Math.round(part * 100)} % réussi` }, el("i")));
+    ligne.querySelector("i").style.width = `${part * 100}%`;
+    return ligne;
+  });
+  document.getElementById("progression").replaceChildren(...lignes);
+}
+
+function remplirReglages() {
+  const couleurDe = (id) => {
+    const temoin = el("span", { "data-matiere": id });
+    document.body.append(temoin);
+    const c = getComputedStyle(temoin).getPropertyValue("--c").trim();
+    temoin.remove();
+    return c;
+  };
+  document.getElementById("choix-matieres").replaceChildren(...donnees.matieres.map((m) =>
+    pastille(m.nom, !reglages.matieresExclues.includes(m.id), couleurDe(m.id),
+      (actif) => basculerDans(reglages.matieresExclues, m.id, actif))));
+  document.getElementById("choix-formats").replaceChildren(...Object.entries(NOMS_FORMATS).map(([id, nom]) =>
+    pastille(nom, !reglages.formatsExclus.includes(id), null,
+      (actif) => basculerDans(reglages.formatsExclus, id, actif))));
+  remplirProgression();
+}
+
+function ouvrirReglages() {
+  if (!donnees) return;
+  reglagesModifies = false;
+  btnZero.classList.remove("confirmer");
+  btnZero.textContent = "Effacer ma progression";
+  remplirReglages();
+  dialogue.showModal();
+}
+dialogue.addEventListener("close", () => {
+  if (reglagesModifies) construireFil();
+});
+document.getElementById("btn-reglages").addEventListener("click", ouvrirReglages);
+document.getElementById("btn-fermer-reglages").addEventListener("click", () => dialogue.close());
+// Toucher le fond grisé autour du panneau le ferme aussi
+dialogue.addEventListener("click", (e) => { if (e.target === dialogue) dialogue.close(); });
+
+// Effacer en deux temps : le premier appui demande confirmation pendant 4 s
+const btnZero = document.getElementById("btn-zero");
+let minuteurZero = null;
+btnZero.addEventListener("click", () => {
+  if (!btnZero.classList.contains("confirmer")) {
+    btnZero.classList.add("confirmer");
+    btnZero.textContent = "Confirmer : tout effacer";
+    minuteurZero = setTimeout(() => {
+      btnZero.classList.remove("confirmer");
+      btnZero.textContent = "Effacer ma progression";
+    }, 4000);
+    return;
+  }
+  clearTimeout(minuteurZero);
+  try { localStorage.removeItem(CLE_RESULTATS); } catch { /* tant pis */ }
+  session.joues = session.reussis = 0;
+  afficherScore();
+  btnZero.classList.remove("confirmer");
+  btnZero.textContent = "Progression effacée";
+  remplirProgression();
+});
+
 // Clavier sur ordinateur : flèches et espace passent d'une carte à l'autre.
 // indexCible retient la carte visée pendant l'animation, pour que des appuis rapides s'additionnent.
 let indexCible = null;
 let minuteurCible = null;
 document.addEventListener("keydown", (e) => {
-  if (e.ctrlKey || e.altKey || e.metaKey) return;
+  if (e.ctrlKey || e.altKey || e.metaKey || dialogue.open) return;
   if (e.target.closest("button") && e.key === " ") return;
   let sens = { ArrowDown: 1, PageDown: 1, " ": 1, ArrowUp: -1, PageUp: -1 }[e.key];
   if (!sens) return;

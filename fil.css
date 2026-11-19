@@ -39,7 +39,8 @@
 [data-matiere="reseau"] { --c: #7B4DFF; --sur: #FFFFFF; }
 [data-matiere="maths"]  { --c: #FFC21A; }
 [data-matiere="web"]    { --c: #FF5FA2; }
-[data-matiere="lsf"]    { --c: #2FD3E0; }
+/* Prise d'otage : rouge alarme, toutes matières confondues */
+[data-matiere="chrono"] { --c: #D61F3B; --sur: #FFFFFF; }
 
 /* !important : sans lui, une règle display:flex/grid gagne à spécificité égale (piège [hidden]) */
 .cache { display: none !important; }
@@ -59,8 +60,16 @@ h1, h2, h3 { font-family: var(--police); }
   padding: 4px 14px 6px; border: var(--trait); border-radius: 999px;
   background: var(--papier); box-shadow: var(--ombre-petite);
 }
-.f-marque { font-size: 22px; font-weight: 800; font-stretch: 80%; letter-spacing: -0.03em; line-height: 1.1; }
+.f-marque { font-size: 22px; font-weight: 800; font-stretch: 80%; letter-spacing: -0.03em; line-height: 1.1; margin-right: auto; }
 .f-score { font-size: 16px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.3; }
+.f-entete { gap: 10px; }
+.f-menu {
+  pointer-events: auto; display: grid; place-items: center; width: 42px; height: 42px; padding: 0;
+  border: var(--trait); border-radius: 50%; background: var(--papier); color: var(--encre);
+  box-shadow: var(--ombre-petite); cursor: pointer;
+}
+.f-menu svg { width: 20px; height: 20px; }
+.f-menu:active { transform: translate(3px, 3px); box-shadow: none; }
 
 /* ---------- Le fil ----------
    Un écran = une carte. scroll-snap-stop: always empêche de sauter plusieurs cartes d'un coup de pouce. */
@@ -158,6 +167,77 @@ h1, h2, h3 { font-family: var(--police); }
 .f-affirmation.vers-vrai::after { content: "Vrai"; right: 14px; rotate: 6deg; opacity: 1; }
 .f-affirmation.vers-faux::after { content: "Faux"; left: 14px; rotate: -6deg; opacity: 1; }
 .f-aide-swipe { display: flex; justify-content: space-between; margin-top: -4px; font-size: 14px; color: var(--gris); }
+.f-aide-swipe span:nth-child(2) { font-weight: 700; color: var(--encre); }
+/* Première carte vrai/faux de la session : elle se balance une fois pour montrer qu'on peut la tirer */
+.f-affirmation.indice-glisse { animation: f-balance 1.4s var(--courbe) .5s 1; }
+@keyframes f-balance {
+  20% { transform: translateX(-38px) rotate(-2deg); }
+  45% { transform: translateX(38px) rotate(2deg); }
+  70% { transform: none; }
+}
+
+/* ---------- Prise d'otage ---------- */
+.f-chrono { display: flex; flex-direction: column; gap: 14px; }
+.f-chrono-intro { display: flex; flex-direction: column; gap: 10px; }
+.f-lancer { margin-top: 6px; text-align: center; font-weight: 800; font-size: 20px; padding-block: 16px; background: var(--c); color: var(--sur); }
+.f-chrono-barre { display: flex; align-items: baseline; justify-content: space-between; }
+.f-chrono-temps { font-size: 40px; font-weight: 800; font-stretch: 75%; line-height: 1; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.f-chrono-temps.urgent { color: var(--c); animation: f-pouls .5s ease-in-out infinite alternate; }
+@keyframes f-pouls { to { transform: scale(1.06); } }
+.f-chrono-compteur { font-size: 18px; font-weight: 700; }
+.f-chrono-jauge { height: 14px; border: var(--trait); border-radius: 999px; overflow: hidden; background: var(--papier); }
+.f-chrono-jauge i { display: block; height: 100%; background: var(--encre); }
+.f-chrono-question { display: flex; flex-direction: column; gap: 12px; border-radius: 18px; }
+.f-chrono-question.eclair-ok { animation: f-eclair-ok .35s; }
+.f-chrono-question.eclair-ko { animation: f-eclair-ko .35s; }
+@keyframes f-eclair-ok { from { box-shadow: 0 0 0 8px var(--bon); } }
+@keyframes f-eclair-ko { from { box-shadow: 0 0 0 8px var(--rate); } 30% { translate: -6px 0; } 60% { translate: 6px 0; } }
+.f-chrono .f-choix.deux .f-option { font-size: 16px; font-weight: 600; padding-inline: 8px; }
+.f-recap { padding: 12px 14px; border: var(--trait); border-radius: 14px; background: color-mix(in srgb, var(--c) 10%, var(--papier)); font-size: 15px; line-height: 1.4; }
+.f-recap b { display: block; margin-bottom: 4px; font-size: 16px; font-weight: 800; }
+.f-recap ul { display: grid; gap: 6px; padding-left: 18px; list-style: disc; }
+
+/* ---------- Réglages ---------- */
+.f-reglages {
+  width: min(100% - 24px, 520px); max-height: min(100% - 32px, 760px); margin: auto;
+  padding: 0; border: var(--trait); border-radius: 22px; box-shadow: var(--ombre);
+  background: var(--papier); color: var(--encre); overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none;
+}
+.f-reglages::backdrop { background: rgb(22 17 43 / .55); }
+.f-reglages[open] { animation: f-pose .35s var(--ressort); }
+.f-reglages-haut {
+  position: sticky; top: 0; z-index: 1; display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 18px 12px; background: var(--papier); border-bottom: var(--trait);
+}
+.f-reglages h2 { font-size: 30px; font-weight: 800; font-stretch: 80%; letter-spacing: -0.03em; line-height: 1; }
+.f-reglages section { padding: 16px 18px; }
+.f-reglages section + section { border-top: 2px dashed var(--trait-doux, #E6E9EE); }
+.f-reglages h3 { font-size: 20px; font-weight: 800; letter-spacing: -0.01em; }
+.f-reglages .f-discret { font-size: 15px; margin-top: 2px; }
+.f-fermer { padding: 8px 14px; font-weight: 700; }
+
+.f-pastilles { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.f-pastille {
+  display: inline-flex; align-items: center; gap: 8px; padding: 7px 14px 8px;
+  border: var(--trait); border-radius: 999px; background: var(--papier); color: var(--gris);
+  font: 600 15px var(--police); cursor: pointer; box-shadow: none;
+  transition: background-color .15s, box-shadow .15s, transform .1s;
+}
+.f-pastille::before { content: ""; width: 12px; height: 12px; border: 2px solid var(--encre); border-radius: 50%; background: var(--papier); }
+.f-pastille[aria-pressed="true"] { color: var(--encre); box-shadow: var(--ombre-petite); }
+.f-pastille[aria-pressed="true"]::before { background: var(--pastille, var(--encre)); }
+.f-pastille:active { transform: translate(2px, 2px); }
+.f-pastille.secoue { animation: f-secoue .3s; }
+
+.f-progression { display: grid; gap: 12px; margin-top: 12px; }
+.f-prog-texte { display: flex; justify-content: space-between; gap: 10px; font-size: 15px; }
+.f-prog-texte span { color: var(--gris); text-align: right; }
+.f-prog-barre { height: 12px; margin-top: 4px; border: 2px solid var(--encre); border-radius: 999px; overflow: hidden; background: var(--papier); }
+.f-prog-barre i { display: block; height: 100%; background: var(--c); border-right: 2px solid var(--encre); }
+.f-prog-barre i[style="width: 0%;"] { border-right: 0; }
+
+.f-danger { text-align: center; font-weight: 700; margin-top: 12px; width: 100%; }
+.f-danger.confirmer { background: var(--rate); }
 
 /* ---------- Texte à trous ---------- */
 .f-phrase { font-size: 21px; font-weight: 600; line-height: 1.45; letter-spacing: -0.01em; }
@@ -219,3 +299,7 @@ h1, h2, h3 { font-family: var(--police); }
   .f-matiere { font-size: 2rem; }
   .f-pile { gap: 10px; }
 }
+.f-reglages h2:focus { outline: none; }
+
+/* Vrai ou faux : la carte tirée peut sortir de l'autocollant (contenu court, pas besoin de défiler) */
+.f-jeu:has(> .f-affirmation) { overflow: visible; }
