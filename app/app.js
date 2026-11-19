@@ -10,11 +10,14 @@ const NOMS_FORMATS = {
   ordre: "Remettre dans l'ordre",
   erreur: "Trouve l'erreur",
   chrono: "Prise d'otage",
+  tube: "Tube du jour",
 };
 const JEUX_PAR_FICHE = 2;   // rythme du fil : une fiche, puis deux jeux, etc.
 // Clés gardées depuis l'ancien nom Agon : la progression déjà enregistrée n'est pas perdue
 const CLE_RESULTATS = "agon.resultats";
 const CLE_REGLAGES = "agon.reglages";
+const CLE_COLLECTION = "agon.collection";
+const VINYLES_PAR_DISQUE = 7;   // Tube du jour : 7 vinyles gagnés = 1 disque d'or
 
 // Prise d'otage : QUESTIONS_CHRONO questions (vrai/faux ou trous) en DUREE_CHRONO ms, une erreur coûte PENALITE_CHRONO
 const QUESTIONS_CHRONO = 5;
@@ -95,6 +98,60 @@ function ecrireReglages(r) {
   try { localStorage.setItem(CLE_REGLAGES, JSON.stringify(r)); } catch { /* tant pis */ }
 }
 let reglages = lireReglages();
+
+// ---------- Tube du jour et collection de vinyles ----------
+// Chaque jour, une question en tête du fil ; une seule chance. Réussie = un vinyle ; 7 vinyles = un disque d'or.
+// Rien ne se perd si on saute un jour : pas de série à casser, la collection ne fait que grandir.
+function jourDuJour() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+function lireCollection() {
+  try {
+    const v = JSON.parse(localStorage.getItem(CLE_COLLECTION));
+    if (v && typeof v === "object") {
+      return { vinyles: Number(v.vinyles) || 0, disquesOr: Number(v.disquesOr) || 0,
+               dernierJour: typeof v.dernierJour === "string" ? v.dernierJour : null };
+    }
+  } catch { /* collection vide */ }
+  return { vinyles: 0, disquesOr: 0, dernierJour: null };
+}
+function ecrireCollection(c) {
+  try { localStorage.setItem(CLE_COLLECTION, JSON.stringify(c)); } catch { /* tant pis */ }
+}
+
+// Vitrine : 7 emplacements de vinyles + le compte de disques d'or. gagne = "vinyle" | "or" anime la dernière arrivée.
+function vitrine(c, gagne = null) {
+  const emplacements = el("div", { class: "f-vinyles", role: "img",
+    "aria-label": `${c.vinyles} vinyle${c.vinyles > 1 ? "s" : ""} sur ${VINYLES_PAR_DISQUE}` });
+  for (let i = 0; i < VINYLES_PAR_DISQUE; i++) {
+    const v = el("span", { class: "f-vinyle" + (i < c.vinyles ? " plein" : "") });
+    if (gagne === "vinyle" && i === c.vinyles - 1) v.classList.add("arrive");
+    if (gagne === "or") v.classList.add("fondu");
+    emplacements.append(v);
+  }
+  const legende = el("p", { class: "f-vitrine-legende" },
+    `${c.vinyles}/${VINYLES_PAR_DISQUE} vers le prochain disque d'or`);
+  const bloc = el("div", { class: "f-vitrine" }, emplacements, legende);
+  if (c.disquesOr > 0) {
+    const or = el("span", { class: "f-disque-or" + (gagne === "or" ? " arrive" : "") },
+      `${c.disquesOr} disque${c.disquesOr > 1 ? "s" : ""} d'or`);
+    bloc.insertBefore(or, legende);
+  }
+  return bloc;
+}
+
+// La question du jour : la même toute la journée, choisie parmi les jeux courts des matières cochées
+function tubeDuJour() {
+  const jour = jourDuJour();
+  if (lireCollection().dernierJour === jour) return null;
+  const choix = contenusRetenus().filter((c) => ["vrai_faux", "trous", "erreur"].includes(c.format));
+  if (!choix.length) return null;
+  let graine = 0;
+  for (const ch of jour) graine = (graine * 31 + ch.charCodeAt(0)) % 100003;
+  const q = choix[graine % choix.length];
+  return { id: `tube-${jour}`, matiere: "tube", format: "tube", notion: q.notion, donnees: { question: q } };
+}
 
 // ---------- Glisser à gauche ou à droite ----------
 // Rend un élément « tirable » : droite = vrai, gauche = faux. Le vertical reste au fil (touch-action: pan-y).
@@ -226,6 +283,31 @@ const formats = {
       el("div", { class: "f-aide-swipe" }, el("span", {}, "← faux"), el("span", {}, "Glisse la carte"), el("span", {}, "vrai →")),
       el("div", { class: "f-choix deux" }, btnFaux, btnVrai),
     ];
+  },
+
+  // Tube du jour : la question est jouée avec son format habituel ; le résultat remplit la collection
+  tube(d, terminer) {
+    const q = d.question;
+    let zoneVitrine = vitrine(lireCollection());
+    const blocs = formats[q.format](q.donnees, (reussi, titre, texte, enPlus) => {
+      const c = lireCollection();
+      c.dernierJour = jourDuJour();
+      let gagne = null;
+      if (reussi) {
+        c.vinyles++;
+        gagne = "vinyle";
+        if (c.vinyles >= VINYLES_PAR_DISQUE) { c.vinyles = 0; c.disquesOr++; gagne = "or"; }
+      }
+      ecrireCollection(c);
+      const nouvelle = vitrine(c, gagne);
+      zoneVitrine.replaceWith(nouvelle);
+      zoneVitrine = nouvelle;
+      terminer(reussi,
+        gagne === "or" ? "Disque d'or ! 7 vinyles réunis." : reussi ? "Gagné : un vinyle de plus !" : "Raté pour aujourd'hui. Nouveau tube demain.",
+        [titre, texte].filter(Boolean).join(" "), enPlus);
+    });
+    return [el("p", { class: "f-tube-regle" }, "Une seule chance aujourd'hui. Réussis-le pour gagner un vinyle."),
+      ...blocs, zoneVitrine];
   },
 
   // Prise d'otage : une série de questions rapides contre la montre. d.questions = contenus vrai_faux / trous.
@@ -522,7 +604,12 @@ function creerCarte(contenu) {
   // Sur le fond de couleur de la matière : son nom en grand, le format, puis l'autocollant du contenu
   const carte = el("div", { class: `f-carte f-${contenu.format === "fiche" ? "fiche" : "jeu"}` });
   const matiere = donnees.matieres.find((m) => m.id === contenu.matiere);
-  const haut = contenu.format === "chrono"
+  const question = contenu.format === "tube" ? contenu.donnees.question : null;
+  const haut = question
+    ? [el("p", { class: "f-matiere" }, "Le tube du jour"),
+       el("p", { class: "f-format" }, el("b", {}, NOMS_FORMATS[question.format]),
+         ` sur ${question.notion}, ${donnees.matieres.find((m) => m.id === question.matiere)?.nom ?? question.matiere}`)]
+    : contenu.format === "chrono"
     ? [lettreDeRancon("Prise d'otage"),
        el("p", { class: "f-format" }, el("b", {}, "Ton cerveau est retenu."),
          ` ${contenu.donnees.questions.length} bonnes réponses en ${DUREE_CHRONO / 1000} secondes pour le libérer.`)]
@@ -648,7 +735,7 @@ function construireFil() {
   fil.classList.remove("verrouille");
   const retenus = contenusRetenus();
   const ecrans = retenus.length
-    ? [...ajouterChronos(ordonner(retenus)).map(creerCarte), carteFin()]
+    ? [...[tubeDuJour(), ...ajouterChronos(ordonner(retenus))].filter(Boolean).map(creerCarte), carteFin()]
     : [carteVide()];
   fil.replaceChildren(...ecrans);
   for (const ecran of ecrans) observateurEcrans.observe(ecran);
@@ -733,6 +820,7 @@ function remplirReglages() {
     pastille(nom, !reglages.formatsExclus.includes(id), null,
       (actif) => basculerDans(reglages.formatsExclus, id, actif))));
   remplirProgression();
+  document.getElementById("collection").replaceChildren(vitrine(lireCollection()));
 }
 
 function ouvrirReglages() {
@@ -876,6 +964,11 @@ async function demarrer() {
         : `Recharge la page. Si ça persiste, vérifie que l'appli est servie par un serveur (py -m http.server). Détail : ${err.message}`))));
   }
 }
+
+// Écran de lancement : un toucher le fait lever tout de suite
+const lancement = document.getElementById("lancement");
+lancement?.addEventListener("pointerdown", () => lancement.classList.add("passe"));
+lancement?.addEventListener("animationend", (e) => { if (e.target === lancement) lancement.remove(); });
 
 // ---------- Mises à jour ----------
 // Quand une nouvelle version prend la main : rechargement direct au démarrage, sinon une étiquette
