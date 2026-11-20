@@ -837,6 +837,7 @@ function creerCarte(contenu) {
     }
   }
   const ecran = el("section", { class: "f-ecran", "data-matiere": contenu.matiere }, pile);
+  if (contenu.notion) ecran.dataset.notion = contenu.notion;
   if (contenu.format === "chrono") {
     ecran.classList.add("f-otage");
     ecran.prepend(el("div", { class: "f-barreaux", "aria-hidden": "true" }));
@@ -920,6 +921,7 @@ function ajouterChronos(liste) {
 
 // Le fil a deux modes : « session » (toutes les cartes) ou « tube » (le tube du jour, seul)
 let modeFil = "session";
+let cibleFil = null;   // fils ciblés : { matiere } (album) ou { matiere, notion } (une piste)
 
 function construireFil() {
   observateurEcrans.disconnect();
@@ -931,6 +933,11 @@ function construireFil() {
     ecrans = [...(tube ? [creerCarte(tube)] : []), carteRetourMenu()];
   } else if (modeFil === "survie") {
     ecrans = [creerEcranSurvie()];
+  } else if (modeFil === "notion" || modeFil === "album") {
+    // Choix explicite : on ignore les matières exclues et les cases, mais pas les formats non cochés
+    const cible = donnees.contenus.filter((c) => contenuValide(c) && c.matiere === cibleFil.matiere
+      && (modeFil === "album" || c.notion === cibleFil.notion) && !reglages.formatsExclus.includes(c.format));
+    ecrans = cible.length ? [...ordonner(cible).map(creerCarte), carteFinCiblee()] : [carteVideCiblee()];
   } else {
     ecrans = retenus.length ? [...ajouterChronos(ordonner(retenus)).map(creerCarte), carteFin()] : [carteVide()];
   }
@@ -952,6 +959,26 @@ function carteFin() {
     el("p", { class: "f-discret" }, "Toutes les cartes du moment sont passées."),
     el("button", { class: "btn btn-principal", type: "button", onclick: afficherAccueil }, "Retour au menu"),
     el("button", { class: "btn btn-secondaire", type: "button", onclick: construireFil }, "Remélanger et continuer")));
+}
+
+// Fin d'un fil ciblé : on revient sur le même album
+function retourDiscotheque() {
+  if (typeof Discotheque !== "undefined") Discotheque.ouvrir(cibleFil?.matiere);
+  else afficherAccueil();
+}
+function carteFinCiblee() {
+  return el("section", { class: "f-ecran" }, el("div", { class: "f-carte f-fin" },
+    el("h2", {}, cibleFil?.notion ? "Piste terminée" : "Album terminé"),
+    el("p", { class: "f-discret" }, cibleFil?.notion ?? donnees.matieres.find((m) => m.id === cibleFil?.matiere)?.nom ?? ""),
+    el("button", { class: "btn btn-principal", type: "button", onclick: retourDiscotheque }, "Retour à la discothèque"),
+    el("button", { class: "btn btn-secondaire", type: "button", onclick: afficherAccueil }, "Retour au menu")));
+}
+function carteVideCiblee() {
+  return el("section", { class: "f-ecran" }, el("div", { class: "f-carte f-fin" },
+    el("h2", {}, "Aucune carte à afficher"),
+    el("p", { class: "f-discret" }, "Les jeux cochés dans les réglages ne donnent aucune carte ici."),
+    el("button", { class: "btn btn-principal", type: "button", onclick: retourDiscotheque }, "Retour à la discothèque"),
+    el("button", { class: "btn btn-secondaire", type: "button", onclick: ouvrirReglages }, "Ouvrir les réglages")));
 }
 
 function carteRetourMenu() {
@@ -982,8 +1009,9 @@ function afficherAccueil() {
   accueil.scrollTo({ top: 0 });
 }
 
-function montrerFil(mode) {
+function montrerFil(mode, cible = null) {
   modeFil = mode;
+  cibleFil = cible;
   accueil.classList.add("cache");
   arbre.classList.add("cache");
   ecranClassement.classList.add("cache");
