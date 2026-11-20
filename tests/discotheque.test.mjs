@@ -249,6 +249,17 @@ try {
   assert.ok(r14.label.includes(r14.pastille), "scénario 14 : la pastille n'est pas lue");
   console.log("14 : accessibilité du bac");
 
+  // 15 (livret) : sans compte, ni « + » ni livret ; contrôle local des fichiers
+  await a.evaluer("Discotheque.ouvrir('reseau')");
+  await attendre(400);
+  assert.equal(await a.evaluer("!!document.querySelector('#discotheque .f-livret-ajouter, #discotheque .f-livret')"), false, "scénario 15 : livret visible sans compte");
+  const v = (f) => a.evaluer(`Livret.verifierFichier(${JSON.stringify(f)})`);
+  assert.equal(await v({ name: "a.pdf", type: "application/pdf", size: 1000 }), null, "scénario 15 : PDF refusé");
+  assert.match(await v({ name: "a.zip", type: "application/zip", size: 1000 }) || "", /PDF/, "scénario 15 : zip accepté");
+  assert.match(await v({ name: "a.pdf", type: "application/pdf", size: 21 * 1024 * 1024 }) || "", /20 Mo/, "scénario 15 : fichier trop gros accepté");
+  assert.equal(await v({ name: "IMG_1.HEIC", type: "", size: 2000 }), null, "scénario 15 : photo iPhone (type vide) refusée");
+  console.log("15 : livret absent sans compte, contrôle des fichiers");
+
   assert.deepEqual(a.violationsCsp, [], "violations CSP");
   assert.deepEqual(a.erreurs, [], "erreurs");
   console.log("OK — discothèque");

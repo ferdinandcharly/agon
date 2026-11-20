@@ -470,6 +470,8 @@ const Compte = (() => {
     afficherDans(element) { conteneur = element; dessiner(); },
     publierPartie,
     profil: () => profil,
+    // Admin = posé en base dans app_metadata (que l'utilisateur ne peut pas modifier) ; à jour avec le jeton
+    estAdmin: () => utilisateur?.app_metadata?.admin === true,
     messagePseudo,
     fileDe,
     fusionReglages,

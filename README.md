@@ -59,6 +59,16 @@ notions maîtrisées (doré quand tout l'est). Chaque piste : « ▶ » (révise
 lance toute la matière. Les cases sont dans les réglages (`notions`), donc synchronisées ; la Survie les ignore.
 Spec et plan : `docs/superpowers/specs/2026-11-20-discotheque-design.md`, `docs/superpowers/plans/2026-11-20-discotheque.md`.
 
+## Livret de cours (admin)
+
+Dans la discothèque, le compte admin a « + Ajouter un cours » sous « Réviser l'album » (PDF et photos, 20 Mo) et un
+livret en bas de l'album (ouvrir, supprimer, état « en attente » / « transformé en cartes »). Fichiers dans le bucket
+privé `cours`, table `documents` ; tout est réservé à l'admin (`raw_app_meta_data.admin = true`, posé en SQL ; se
+reconnecter ensuite pour que le jeton le porte).
+Sur le PC : `node outils/recuperer-cours.mjs` télécharge les cours en attente dans `sources/<matière>/` (clé secrète dans
+`.env`, jamais ailleurs : `SUPABASE_URL=…` et `SUPABASE_CLE_SECRETE=sb_secret_…`), puis `/generer-cartes` ; la fusion
+d'un lot qui liste ses `documents` les marque « transformés en cartes ».
+
 ## Classement Survie
 
 Pseudo (Réglages → Compte), parties de Survie publiées (file locale `agon.parties`, envoyée à la synchro),
@@ -80,7 +90,7 @@ table ou fonctionnalité ; sa section 5 liste ce qui est obligatoire avant d'ouv
   depuis 2 ans purgés chaque lundi (`pg_cron`, schéma `private`).
 - **Tests** (racine du dépôt, Edge installé) :
   `node tests/csp.test.mjs`, `node tests/turnstile.test.mjs`,
-  `node tests/donnees.test.mjs`, `node tests/classement.test.mjs`, `node tests/discotheque.test.mjs`,
+  `node tests/donnees.test.mjs`, `node tests/classement.test.mjs`, `node tests/discotheque.test.mjs`, `node tests/outils.test.mjs`,
   et les blocs SQL de `tests/sql/` (annulés, résultat dans le message d'erreur).
   Le CAPTCHA étant actif, aucun test ne connecte de compte : la logique serveur est testée en SQL (rôles simulés),
   le parcours connecté se vérifie à la main sur l'iPhone.

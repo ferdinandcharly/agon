@@ -109,7 +109,12 @@ const Discotheque = (() => {
           + (aVenir ? ` · ${aVenir} à venir` : ""))),
       el("button", { class: "f-option f-album-jouer", type: "button",
         onclick: () => montrerFil("album", { matiere: album.id }) }, `▶${NB}Réviser l'album`),
-      el("ol", { class: "f-pistes", "data-matiere": album.id }, ...album.notions.map((n, i) => piste(album, n, i)))));
+      el("div", { class: "f-livret-bouton-zone" }),
+      el("ol", { class: "f-pistes", "data-matiere": album.id }, ...album.notions.map((n, i) => piste(album, n, i))),
+      el("div", { class: "f-livret-zone" })));
+    // Livret de cours (compte admin seulement)
+    if (typeof Livret !== "undefined")
+      Livret.dessiner(zone.querySelector(".f-livret-zone"), album.id, zone.querySelector(".f-livret-bouton-zone"));
     ecran.querySelectorAll(".f-pochette").forEach((p) => {
       p.classList.toggle("courante", p.dataset.matiere === courant);
       if (p.dataset.matiere === courant) p.setAttribute("aria-current", "true"); else p.removeAttribute("aria-current");
