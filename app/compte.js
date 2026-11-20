@@ -9,6 +9,14 @@ const SUPABASE_URL = "https://hiqymrmygjisqqypbfxp.supabase.co";
 const SUPABASE_CLE = "sb_publishable_2HJGYwOQeUPh7BoNbMGQ5Q_jFNLOVJj";   // clé publique : c'est la RLS qui protège les données
 const DELAI_ENVOI = 3000;   // ms : on regroupe les réponses rapprochées en un seul envoi
 
+// Turnstile (Cloudflare) protège l'envoi des codes contre les robots ; Supabase vérifie le jeton côté serveur.
+// Sur localhost seulement, ?turnstile=ok|ko prend les clés de test officielles de Cloudflare.
+const TURNSTILE_CLE = (() => {
+  const test = { ok: "1x00000000000000000000AA", ko: "2x00000000000000000000AB" }[new URLSearchParams(location.search).get("turnstile")];
+  return location.hostname === "localhost" && test ? test : "0x4AAAAAAGKGu9RQ0EvSTWc5";
+})();
+const DELAI_TURNSTILE = 8000;   // ms : au-delà, on considère Turnstile injoignable
+
 const Compte = (() => {
   // La bibliothèque peut manquer (fichier non chargé) : l'appli reste utilisable sans compte
   const sb = window.supabase?.createClient(SUPABASE_URL, SUPABASE_CLE, {
@@ -148,13 +156,32 @@ const Compte = (() => {
     const code = err?.code || "";
     if (navigator.onLine === false || err?.name === "AuthRetryableFetchError") return "Pas de connexion. Réessaie quand tu as du réseau.";
     if (err?.status === 429 || code.includes("rate_limit")) return "Trop de demandes d'un coup. Attends une minute avant de réessayer.";
-    if (code === "otp_expired" || code === "invalid_credentials") return "Code faux ou expiré. Vérifie le dernier e-mail reçu, ou redemande un code.";
+    if (code === "captcha_failed") return "La vérification anti-robot a échoué. Réessaie.";
+    if (code === "otp_expired"|| code === "invalid_credentials") return "Code faux ou expiré. Vérifie le dernier e-mail reçu, ou redemande un code.";
     if (code === "email_address_invalid" || code === "validation_failed") return "Cette adresse e-mail n'est pas valide.";
     return `Ça n'a pas marché (${err?.message || "erreur inconnue"}).`;
   }
 
-  async function envoyerCode(email) {
-    const { error } = await sb.auth.signInWithOtp({ email, options: { shouldCreateUser: true } });
+  // Le script n'est chargé qu'à l'affichage du formulaire (l'appli hors ligne n'en dépend pas)
+  let chargementTurnstile = null;
+  function chargerTurnstile() {
+    if (window.turnstile) return Promise.resolve();
+    if (!chargementTurnstile) {
+      chargementTurnstile = new Promise((ok, ko) => {
+        const script = document.createElement("script");
+        script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
+        script.async = true;
+        const delai = setTimeout(() => ko(new Error("délai dépassé")), DELAI_TURNSTILE);
+        script.onload = () => { clearTimeout(delai); window.turnstile ? ok() : ko(new Error("turnstile absent")); };
+        script.onerror = () => { clearTimeout(delai); ko(new Error("chargement impossible")); };
+        document.head.append(script);
+      }).catch((err) => { chargementTurnstile = null; throw err; });   // on réessaiera au prochain affichage
+    }
+    return chargementTurnstile;
+  }
+
+  async function envoyerCode(email, jeton) {
+    const { error } = await sb.auth.signInWithOtp({ email, options: { shouldCreateUser: true, captchaToken: jeton } });
     if (error) throw error;
     emailEnAttente = email;
   }
@@ -260,14 +287,41 @@ const Compte = (() => {
       return;
     }
 
+    // Formulaire d'e-mail : le bouton n'est actif qu'avec un jeton Turnstile, et chaque jeton ne sert qu'une fois
     const champ = el("input", { class: "f-champ", type: "email", autocomplete: "email", required: "",
       placeholder: "ton@adresse.fr", "aria-label": "Adresse e-mail" });
-    const formulaire = el("form", { class: "f-compte-form" }, champ,
-      el("button", { class: "f-option f-compte-valider", type: "submit" }, "Recevoir un code"));
-    surEnvoi(formulaire, message, () => envoyerCode(champ.value.trim()));
+    const valider = el("button", { class: "f-option f-compte-valider", type: "submit", disabled: "" }, "Recevoir un code");
+    const zone = el("div", { class: "f-turnstile" });
+    const formulaire = el("form", { class: "f-compte-form" }, champ, valider);
+    let jeton = null;
+    let widget = null;
+    const renouveler = () => { try { if (widget !== null) window.turnstile.reset(widget); } catch { /* widget retiré */ } };
+    formulaire.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if (!jeton) return;
+      const utilise = jeton;
+      jeton = null;
+      valider.disabled = true;
+      champ.disabled = true;
+      message.textContent = "";
+      try { await envoyerCode(champ.value.trim(), utilise); dessiner(); }
+      catch (err) { champ.disabled = false; message.textContent = messageErreur(err); renouveler(); }
+    });
+    chargerTurnstile().then(() => {
+      if (!zone.isConnected) return;
+      widget = window.turnstile.render(zone, {
+        sitekey: TURNSTILE_CLE, size: "flexible", theme: "light", language: "fr",
+        callback: (j) => { jeton = j; valider.disabled = false; },
+        "expired-callback": () => { jeton = null; valider.disabled = true; renouveler(); },
+        "error-callback": () => { jeton = null; valider.disabled = true; message.textContent = "La vérification anti-robot a échoué. Réessaie."; },
+      });
+    }).catch(() => {
+      message.textContent = "Vérification anti-robot indisponible : réessaie avec une autre connexion (sans bloqueur).";
+    });
     conteneur.replaceChildren(
       el("p", { class: "f-discret" }, "Connecte-toi pour retrouver ta progression, ta collection et ton record sur PC et sur iPhone. Pas de mot de passe : un code par e-mail."),
-      formulaire, message);
+      formulaire, zone, message,
+      el("button", { class: "f-lien", type: "button", onclick: () => { if (typeof Donnees !== "undefined") Donnees.ouvrir(); } }, "Tes données"));
   }
 
   return {
