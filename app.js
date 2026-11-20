@@ -104,8 +104,27 @@ function lireReglages() {
       formatsExclus: Array.isArray(v?.formatsExclus) ? v.formatsExclus : [],
       maj: typeof v?.maj === "string" ? v.maj : null,
       remise: typeof v?.remise === "string" ? v.remise : null,
+      notions: lireCases(v?.notions),
     };
-  } catch { return { matieresExclues: [], formatsExclus: [], maj: null, remise: null }; }
+  } catch { return { matieresExclues: [], formatsExclus: [], maj: null, remise: null, notions: {} }; }
+}
+
+// Cases par notion : « À venir » (pas encore vue en cours) ou « DS passé ». Clé « matiere/notion ».
+const ETATS_CASE = ["a_venir", "ds_passe"];
+function lireCases(v) {
+  if (!v || typeof v !== "object" || Array.isArray(v)) return {};
+  return Object.fromEntries(Object.entries(v).filter(([, etat]) => ETATS_CASE.includes(etat)));
+}
+function etatCase(matiere, notion) {
+  return reglages.notions[`${matiere}/${notion}`] ?? null;
+}
+// Cocher une case ; recocher la même la décoche ; les deux s'excluent
+function basculerCase(matiere, notion, etat) {
+  const cle = `${matiere}/${notion}`;
+  if (reglages.notions[cle] === etat) delete reglages.notions[cle];
+  else reglages.notions[cle] = etat;
+  reglages.maj = new Date().toISOString();
+  ecrireReglages(reglages);
 }
 function ecrireReglages(r) {
   try { localStorage.setItem(CLE_REGLAGES, JSON.stringify(r)); } catch { /* tant pis */ }
@@ -392,7 +411,14 @@ function prioriteJeu(c, resultats, maintenant) {
   return boite === 1 ? 0 : boite;                   // dû : les ratés en tout premier
 }
 
+// Les notions « DS passé » restent, mais après tout le reste (on les entretient sans y passer son temps)
 function ordonner(contenus) {
+  const dsPasse = contenus.filter((c) => etatCase(c.matiere, c.notion) === "ds_passe");
+  if (dsPasse.length && dsPasse.length < contenus.length)
+    return [...ordonnerSans(contenus.filter((c) => !dsPasse.includes(c))), ...ordonnerSans(dsPasse)];
+  return ordonnerSans(contenus);
+}
+function ordonnerSans(contenus) {
   const fiches = melanger(contenus.filter((c) => c.format === "fiche"));
   const resultats = lireResultats();
   const maintenant = Date.now();
@@ -871,7 +897,8 @@ function liberer(ecran, libere) {
 // Contenus retenus par les réglages (matières et formats cochés)
 function contenusRetenus() {
   return donnees.contenus.filter((c) => contenuValide(c)
-    && !reglages.matieresExclues.includes(c.matiere) && !reglages.formatsExclus.includes(c.format));
+    && !reglages.matieresExclues.includes(c.matiere) && !reglages.formatsExclus.includes(c.format)
+    && etatCase(c.matiere, c.notion) !== "a_venir");   // pas encore vue en cours : pas dans le fil
 }
 
 // Glisse une Prise d'otage toutes les CARTES_ENTRE_CHRONOS cartes, avec des questions rapides tirées au hasard
