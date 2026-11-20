@@ -6,7 +6,7 @@
   <!-- CSP (GitHub Pages n'envoie pas d'en-têtes) : seuls nos fichiers, Supabase et Turnstile sont autorisés.
        Elle protège la session (dans localStorage) même si une faille XSS apparaissait un jour. -->
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://challenges.cloudflare.com; connect-src 'self' https://hiqymrmygjisqqypbfxp.supabase.co; frame-src https://challenges.cloudflare.com; img-src 'self' data:; style-src 'self'; font-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
-  <meta name="referrer" content="no-referrer">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
   <title>Facettes</title>
   <meta name="description" content="Facettes : un fil de révision du BUT informatique, fiches et petits jeux qui alternent.">
   <link rel="manifest" href="manifest.webmanifest">
