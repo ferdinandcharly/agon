@@ -9,3 +9,6 @@ __pycache__/
 .env
 *.local.*
 .superpowers/
+
+# Captures des tests navigateur
+tests/captures/
