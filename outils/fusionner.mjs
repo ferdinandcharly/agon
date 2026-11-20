@@ -6,6 +6,7 @@ import { readFileSync, writeFileSync, mkdirSync, renameSync } from "node:fs";
 import { basename, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { verifierLot } from "./valider.mjs";
+import { lireEnv, marquerTraites } from "./supabase-secret.mjs";
 
 const RACINE = join(dirname(fileURLToPath(import.meta.url)), "..");
 const FICHIER = join(RACINE, "app", "data", "contenus.json");
@@ -50,3 +51,14 @@ console.log(`${lot.contenus.length} carte(s) ajoutée(s)` +
   (nouvellesMatieres.length ? `, ${nouvellesMatieres.length} nouvelle(s) matière(s)` : "") +
   `. Lot rangé dans ${join(range, basename(chemin))}.`);
 console.log("Pense à changer VERSION dans app/sw.js si tu publies la coquille ; les cartes, elles, sont prises au prochain chargement.");
+
+// Cours du livret utilisés par ce lot : ils passent à « transformé en cartes » dans l'appli
+const documents = Array.isArray(lot.documents) ? lot.documents : [];
+if (documents.length) {
+  const env = lireEnv();
+  if (!env) console.log(`${documents.length} cours du livret à marquer « transformés » : ajoute la clé secrète dans .env puis relance le marquage.`);
+  else {
+    try { await marquerTraites(env, documents, basename(chemin)); console.log(`${documents.length} cours du livret marqués « transformés en cartes ».`); }
+    catch (err) { console.error(`Cartes ajoutées, mais le marquage des cours a échoué : ${err.message}`); }
+  }
+}

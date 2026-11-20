@@ -6,6 +6,14 @@ argument-hint: "[fichier ou dossier dans sources/, ou nom d'une page Notion] [no
 Tu génères des cartes de révision pour **Facettes** (BUT informatique, 1re année) à partir d'un cours.
 Cible : $ARGUMENTS (par défaut : tout ce qui est nouveau dans `sources/`, environ 15 cartes par cours).
 
+## 0. Récupérer les cours du livret
+
+- Lance `node outils/recuperer-cours.mjs` : les cours ajoutés depuis l'appli (bouton « + » d'un album) arrivent dans
+  `sources/<matiere>/`. S'il manque la clé secrète, l'outil explique quoi mettre dans `.env` : transmets le message
+  à Ferdinand, ne demande jamais la clé et ne la lis pas.
+- `sources/<matiere>/.documents.json` relie chaque fichier récupéré à l'id de son document : note les ids des
+  fichiers que tu utilises.
+
 ## 1. Lire avant d'écrire
 
 - Lis `app/data/contenus.json` : les matières existantes (`matieres`), les notions déjà couvertes, le style des cartes. Ne refais pas une carte qui existe.
@@ -39,7 +47,7 @@ Chaque carte : `{"id", "matiere", "notion", "format", "donnees"}`.
 
 ## 4. Enregistrer et vérifier
 
-1. Écris le lot dans `a-relire/lot-AAAA-MM-JJ-HHMM.json` : `{"source": "<fichier ou page>", "matieres": [], "contenus": [ … ]}`.
+1. Écris le lot dans `a-relire/lot-AAAA-MM-JJ-HHMM.json` : `{"source": "<fichier ou page>", "documents": [<ids des cours du livret utilisés>], "matieres": [], "contenus": [ … ]}` (`documents` vide si aucun cours du livret). À la fusion, ces cours passent à « transformé en cartes ».
 2. Lance `node outils/valider.mjs <ce fichier>` et corrige jusqu'à 0 problème.
 3. Relis toi-même chaque carte affichée par le validateur contre la source ; retire celles dont tu n'es pas sûr.
 4. Termine par : le chemin du lot, le nombre de cartes par format et par notion, et les cartes qui méritent un œil attentif.

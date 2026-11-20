@@ -1,6 +1,6 @@
 // Vérifie un lot de cartes générées avant relecture.
 // Usage : node outils/valider.mjs a-relire/lot-2026-11-20-1830.json
-// Lot = { "source": "d'où viennent les cartes", "matieres": [nouvelles matières, facultatif], "contenus": [cartes] }
+// Lot = { "source": "d'où viennent les cartes", "documents": [ids des cours du livret, facultatif], "matieres": [nouvelles matières, facultatif], "contenus": [cartes] }
 // Affiche chaque carte en clair (pour la relire) et sort avec le code 1 s'il reste une erreur.
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
