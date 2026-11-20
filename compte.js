@@ -269,6 +269,8 @@ const Compte = (() => {
     minuteur = null;
     const { error } = await sb.rpc("supprimer_mon_compte");
     if (error) throw error;
+    ecrireFile([]);   // les parties en attente appartenaient au compte supprimé
+    profil = null;
     await sb.auth.signOut({ scope: "local" }).catch(() => {});
   }
 
