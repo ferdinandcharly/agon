@@ -51,3 +51,8 @@ $$;
 
 revoke execute on function public.supprimer_mon_compte() from public, anon;
 grant execute on function public.supprimer_mon_compte() to authenticated;
+
+-- Purge RGPD (migration « purge_inactifs », détail dans migrations/2026-11-20-purge-inactifs.sql) :
+-- private.purger_comptes_inactifs() supprime les comptes sans connexion depuis 2 ans
+-- (coalesce(last_sign_in_at, created_at)), lancée chaque lundi à 03:00 UTC par pg_cron
+-- (tâche « purge-comptes-inactifs »). Schéma private non exposé, exécution révoquée pour tous les rôles API.
