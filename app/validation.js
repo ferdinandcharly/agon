@@ -6,6 +6,9 @@
   const estTexte = (x) => typeof x === "string" && x.trim() !== "";
   const listeDeTextes = (x, min) => Array.isArray(x) && x.length >= min && x.every(estTexte);
   const sansDoublon = (liste) => new Set(liste).size === liste.length;
+  // Tabulation et saut de ligne tolérés (code), les autres caractères de contrôle non
+  const contientControle = (x) => typeof x === "string" ? /[\u0000-\u0008\u000b-\u001f\u007f]/.test(x)
+    : x && typeof x === "object" ? Object.values(x).some(contientControle) : false;
 
   // Chaque règle : [condition à respecter, message si elle ne l'est pas]
   const REGLES = {
@@ -54,6 +57,9 @@
     if (!c.donnees || typeof c.donnees !== "object") erreurs.push("« donnees » doit être un objet");
     if (erreurs.length) return erreurs;
     for (const [respectee, message] of REGLES[c.format](c.donnees)) if (!respectee) erreurs.push(message);
+    // Caractère de contrôle (ex. \u0001 à la place de « : » ou « ? ») : il s'afficherait comme un carré
+    if (contientControle(c.donnees))
+      erreurs.push("un texte contient un caractère de contrôle invisible (\\u0001…) : remets la ponctuation voulue, souvent « : » ou « ? »");
     return erreurs;
   }
 

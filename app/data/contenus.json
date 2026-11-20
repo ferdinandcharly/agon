@@ -326,10 +326,10 @@
       "donnees": {
         "titre": "Les pointeurs",
         "paragraphes": [
-          "Un pointeur est une variable qui contient l'adresse d'une autre variable. On le déclare avec une étoile \u0001 int *p;",
-          "&x donne l'adresse de la variable x. *p donne la valeur rangée à l'adresse contenue dans p \u0001 c'est le déréférencement."
+          "Un pointeur est une variable qui contient l'adresse d'une autre variable. On le déclare avec une étoile : int *p;",
+          "&x donne l'adresse de la variable x. *p donne la valeur rangée à l'adresse contenue dans p : c'est le déréférencement."
         ],
-        "a_retenir": "&x \u0001 l'adresse de x. *p \u0001 la valeur pointée par p."
+        "a_retenir": "&x : l'adresse de x. *p : la valeur pointée par p."
       }
     },
     {
@@ -359,13 +359,13 @@
       "donnees": {
         "affirmation": "Écrire p = &y; modifie la valeur de la variable sur laquelle p pointait.",
         "reponse": false,
-        "explication": "p = &y change le pointeur lui-même \u0001 il pointe maintenant sur y. L'ancienne variable pointée ne change pas. Pour modifier le contenu pointé, il faut écrire *p = …"
+        "explication": "p = &y change le pointeur lui-même : il pointe maintenant sur y. L'ancienne variable pointée ne change pas. Pour modifier le contenu pointé, il faut écrire *p = …"
       }
     },
     {
       "id": "dev-dereferencement-erreur", "matiere": "dev", "notion": "Déréférencement", "format": "erreur",
       "donnees": {
-        "consigne": "Cette fonction doit mettre à 0 l'entier dont on lui donne l'adresse. Quelle ligne est fausse \u0001",
+        "consigne": "Cette fonction doit mettre à 0 l'entier dont on lui donne l'adresse. Quelle ligne est fausse ?",
         "lignes": [
           "void raz(int *a) {",
           "    a = 0;",
@@ -373,7 +373,7 @@
         ],
         "ligne_fausse": 1,
         "correction": "    *a = 0;",
-        "explication": "a = 0 change seulement le pointeur local (il ne pointe plus sur rien). Pour modifier l'entier pointé, il faut déréférencer \u0001 *a = 0."
+        "explication": "a = 0 change seulement le pointeur local (il ne pointe plus sur rien). Pour modifier l'entier pointé, il faut déréférencer : *a = 0."
       }
     },
     {
@@ -381,10 +381,10 @@
       "donnees": {
         "titre": "Les structures",
         "paragraphes": [
-          "typedef struct permet de créer son propre type qui regroupe plusieurs champs \u0001 typedef struct { int heure; int minute; } Horaire;",
-          "Sur une variable h de ce type, on accède aux champs avec l'opérateur point \u0001 h.heure, h.minute."
+          "typedef struct permet de créer son propre type qui regroupe plusieurs champs : typedef struct { int heure; int minute; } Horaire;",
+          "Sur une variable h de ce type, on accède aux champs avec l'opérateur point : h.heure, h.minute."
         ],
-        "a_retenir": "Une structure regroupe des champs \u0001 on les lit et on les modifie avec le point."
+        "a_retenir": "Une structure regroupe des champs : on les lit et on les modifie avec le point."
       }
     },
     {
@@ -404,7 +404,7 @@
     {
       "id": "dev-structures-erreur", "matiere": "dev", "notion": "Structures", "format": "erreur",
       "donnees": {
-        "consigne": "Cette fonction doit dire si un horaire est valide (de 00:00 à 23:59). Quelle ligne est fausse \u0001",
+        "consigne": "Cette fonction doit dire si un horaire est valide (de 00:00 à 23:59). Quelle ligne est fausse ?",
         "lignes": [
           "int est_valide(Horaire h) {",
           "  return h.heure >= 0",
@@ -435,7 +435,7 @@
     {
       "id": "dev-recherche-erreur", "matiere": "dev", "notion": "Recherche dans un tableau", "format": "erreur",
       "donnees": {
-        "consigne": "est_present doit dire si x est dans le tableau t de taille n, avec un seul return. Quelle ligne est fausse \u0001",
+        "consigne": "est_present doit dire si x est dans le tableau t de taille n, avec un seul return. Quelle ligne est fausse ?",
         "lignes": [
           "int est_present(int t[], int n,",
           "                int x) {",
@@ -469,7 +469,7 @@
           "Décaler d'une case vers la droite les éléments plus grands",
           "Placer l'élément dans la case libérée"
         ],
-        "explication": "La partie gauche du tableau reste toujours triée \u0001 on y insère les éléments un par un, à leur place."
+        "explication": "La partie gauche du tableau reste toujours triée : on y insère les éléments un par un, à leur place."
       }
     },
     {
@@ -502,7 +502,7 @@
       "donnees": {
         "affirmation": "Pour Adam Smith, la « main invisible » désigne l'intervention de l'État qui guide le marché.",
         "reponse": false,
-        "explication": "C'est l'inverse \u0001 la main invisible est le mécanisme du marché lui-même, qui oriente les intérêts individuels vers l'intérêt général sans intervention."
+        "explication": "C'est l'inverse : la main invisible est le mécanisme du marché lui-même, qui oriente les intérêts individuels vers l'intérêt général sans intervention."
       }
     },
     {
@@ -510,10 +510,10 @@
       "donnees": {
         "titre": "Walras et la concurrence pure et parfaite",
         "paragraphes": [
-          "Léon Walras, économiste néoclassique, modélise l'équilibre général \u0001 tous les marchés s'équilibrent en même temps grâce aux prix.",
-          "Ce modèle suppose la concurrence pure et parfaite (CPP), qui repose sur cinq conditions \u0001 atomicité, homogénéité des produits, libre entrée et sortie, transparence de l'information, mobilité des facteurs de production."
+          "Léon Walras, économiste néoclassique, modélise l'équilibre général : tous les marchés s'équilibrent en même temps grâce aux prix.",
+          "Ce modèle suppose la concurrence pure et parfaite (CPP), qui repose sur cinq conditions : atomicité, homogénéité des produits, libre entrée et sortie, transparence de l'information, mobilité des facteurs de production."
         ],
-        "a_retenir": "CPP \u0001 atomicité, homogénéité, libre entrée, transparence, mobilité."
+        "a_retenir": "CPP : atomicité, homogénéité, libre entrée, transparence, mobilité."
       }
     },
     {
@@ -550,8 +550,8 @@
       "donnees": {
         "titre": "Le PIB et ses limites",
         "paragraphes": [
-          "Le PIB mesure la richesse produite sur un territoire en un an \u0001 c'est la somme des valeurs ajoutées des unités résidentes (plus les impôts sur les produits, moins les subventions).",
-          "Il a des limites \u0001 il ne compte pas le travail domestique ni le bénévolat, ne dit rien des inégalités et ne retire pas les dégâts faits à l'environnement."
+          "Le PIB mesure la richesse produite sur un territoire en un an : c'est la somme des valeurs ajoutées des unités résidentes (plus les impôts sur les produits, moins les subventions).",
+          "Il a des limites : il ne compte pas le travail domestique ni le bénévolat, ne dit rien des inégalités et ne retire pas les dégâts faits à l'environnement."
         ],
         "a_retenir": "PIB = somme des valeurs ajoutées. Il mesure une production, pas le bien-être."
       }
@@ -575,7 +575,7 @@
       "donnees": {
         "affirmation": "Le travail domestique non rémunéré (ménage, cuisine à la maison) est compté dans le PIB.",
         "reponse": false,
-        "explication": "Le PIB ne compte que la production déclarée, marchande ou payée par les administrations. Le travail domestique et le bénévolat n'y sont pas \u0001 c'est une de ses limites."
+        "explication": "Le PIB ne compte que la production déclarée, marchande ou payée par les administrations. Le travail domestique et le bénévolat n'y sont pas : c'est une de ses limites."
       }
     },
     {
@@ -604,7 +604,7 @@
             "Achète nos exportations et nous vend des importations"
           ]
         ],
-        "explication": "Le circuit économique représente les échanges entre ces agents \u0001 chaque flux réel a son flux monétaire en sens inverse."
+        "explication": "Le circuit économique représente les échanges entre ces agents : chaque flux réel a son flux monétaire en sens inverse."
       }
     },
     {
@@ -661,10 +661,10 @@
       "donnees": {
         "titre": "Le CPU, la RAM et le cache",
         "paragraphes": [
-          "Le CPU et la RAM communiquent par le bus. La RAM stocke les variables et les instructions du programme \u0001 les registres, dans le CPU, sont de toutes petites mémoires ultra-rapides.",
-          "Le cache est une mémoire tampon rapide dans le CPU qui garde des copies de blocs de la RAM. Si la donnée n'y est pas, c'est un défaut de cache \u0001 il faut aller la chercher en RAM, plus lentement."
+          "Le CPU et la RAM communiquent par le bus. La RAM stocke les variables et les instructions du programme : les registres, dans le CPU, sont de toutes petites mémoires ultra-rapides.",
+          "Le cache est une mémoire tampon rapide dans le CPU qui garde des copies de blocs de la RAM. Si la donnée n'y est pas, c'est un défaut de cache : il faut aller la chercher en RAM, plus lentement."
         ],
-        "a_retenir": "Registre < cache < RAM \u0001 plus c'est loin du CPU, plus c'est gros et lent."
+        "a_retenir": "Registre < cache < RAM : plus c'est loin du CPU, plus c'est gros et lent."
       }
     },
     {
@@ -693,7 +693,7 @@
           "défaut de page",
           "erreur de bus"
         ],
-        "explication": "En anglais cache miss \u0001 le CPU doit alors interroger la RAM, ce qui coûte du temps."
+        "explication": "En anglais cache miss : le CPU doit alors interroger la RAM, ce qui coûte du temps."
       }
     },
     {
@@ -701,7 +701,7 @@
       "donnees": {
         "affirmation": "Un CPU de 8 cœurs avec hyper-threading peut gérer 16 threads.",
         "reponse": true,
-        "explication": "Chaque cœur peut gérer 2 threads grâce à l'hyper-threading \u0001 8 × 2 = 16."
+        "explication": "Chaque cœur peut gérer 2 threads grâce à l'hyper-threading : 8 × 2 = 16."
       }
     },
     {
@@ -709,13 +709,13 @@
       "donnees": {
         "affirmation": "Deux threads sur un même cœur sont aussi performants que deux cœurs physiques.",
         "reponse": false,
-        "explication": "Le cœur est une unité physique de calcul, le thread une unité logique \u0001 deux threads se partagent le même cœur."
+        "explication": "Le cœur est une unité physique de calcul, le thread une unité logique : deux threads se partagent le même cœur."
       }
     },
     {
       "id": "archi-gpu-trous", "matiere": "archi", "notion": "GPU", "format": "trous",
       "donnees": {
-        "texte": "Le GPU fonctionne en ___ \u0001 la même instruction est exécutée sur des données différentes.",
+        "texte": "Le GPU fonctionne en ___ : la même instruction est exécutée sur des données différentes.",
         "reponse": "SIMD",
         "choix": [
           "SIMD",
@@ -723,7 +723,7 @@
           "SISD",
           "RISC"
         ],
-        "explication": "SIMD = Single Instruction, Multiple Data. Le CPU, lui, est MIMD \u0001 ses cœurs sont indépendants."
+        "explication": "SIMD = Single Instruction, Multiple Data. Le CPU, lui, est MIMD : ses cœurs sont indépendants."
       }
     },
     {
@@ -744,9 +744,9 @@
         "titre": "Le RAID",
         "paragraphes": [
           "Un système RAID répartit les données sur plusieurs disques pour gagner en débit et en fiabilité.",
-          "Dans le RAID étudié, un disque est réservé aux codes de contrôle (parité) \u0001 si un disque tombe en panne, ses données sont reconstituées à partir des autres. Le hot-swap permet de changer le disque sans arrêter le système."
+          "Dans le RAID étudié, un disque est réservé aux codes de contrôle (parité) : si un disque tombe en panne, ses données sont reconstituées à partir des autres. Le hot-swap permet de changer le disque sans arrêter le système."
         ],
-        "a_retenir": "N disques dont 1 de parité \u0001 (N − 1) disques d'espace utile."
+        "a_retenir": "N disques dont 1 de parité : (N − 1) disques d'espace utile."
       }
     },
     {
@@ -760,7 +760,7 @@
           "1 To",
           "2,5 To"
         ],
-        "explication": "Le 5e disque sert aux codes de contrôle \u0001 il reste 4 disques de 1 To pour les données."
+        "explication": "Le 5e disque sert aux codes de contrôle : il reste 4 disques de 1 To pour les données."
       }
     },
     {
@@ -793,7 +793,7 @@
             "Déplacer une VM d'un serveur à un autre sans coupure"
           ]
         ],
-        "explication": "« Windows dans Windows » sur un PC perso, c'est un hyperviseur de type 2 \u0001 les datacenters utilisent surtout le type 1."
+        "explication": "« Windows dans Windows » sur un PC perso, c'est un hyperviseur de type 2 : les datacenters utilisent surtout le type 1."
       }
     },
     {
@@ -801,7 +801,7 @@
       "donnees": {
         "affirmation": "Comme une copie analogique, une copie numérique perd un peu de qualité à chaque copie.",
         "reponse": false,
-        "explication": "Le signal numérique (0 et 1) se recopie à l'identique \u0001 c'est son grand avantage sur l'analogique."
+        "explication": "Le signal numérique (0 et 1) se recopie à l'identique : c'est son grand avantage sur l'analogique."
       }
     },
     {
@@ -844,7 +844,7 @@
             "Numériser l'audio entrant et le reconvertir en sortie"
           ]
         ],
-        "explication": "Le son peut aussi passer par HDMI \u0001 audio et vidéo dans un seul câble numérique."
+        "explication": "Le son peut aussi passer par HDMI : audio et vidéo dans un seul câble numérique."
       }
     },
     {
@@ -868,8 +868,8 @@
       "donnees": {
         "titre": "Les territoires de la communication",
         "paragraphes": [
-          "La communication est vitale et se décline en territoires reliés entre eux \u0001 intra-personnelle, inter-personnelle, de groupe, des organisations, sociale et de masse.",
-          "Watzlawick (école de Palo Alto) le résume ainsi \u0001 « L'être humain ne peut pas ne pas communiquer »."
+          "La communication est vitale et se décline en territoires reliés entre eux : intra-personnelle, inter-personnelle, de groupe, des organisations, sociale et de masse.",
+          "Watzlawick (école de Palo Alto) le résume ainsi : « L'être humain ne peut pas ne pas communiquer »."
         ],
         "a_retenir": "Communication sociale = faire changer les comportements. De masse = toucher le plus de monde possible."
       }
@@ -914,7 +914,7 @@
           "agir",
           "mentir"
         ],
-        "explication": "C'est le premier des 5 axiomes de la communication de l'école de Palo Alto \u0001 même un silence communique."
+        "explication": "C'est le premier des 5 axiomes de la communication de l'école de Palo Alto : même un silence communique."
       }
     },
     {
@@ -935,13 +935,13 @@
       "donnees": {
         "consigne": "Remets les questions de la méthode QQOQCCP dans l'ordre du sigle.",
         "etapes": [
-          "Qui \u0001",
-          "Quoi \u0001",
-          "Où \u0001",
-          "Quand \u0001",
-          "Comment \u0001",
-          "Combien \u0001",
-          "Pourquoi \u0001"
+          "Qui ?",
+          "Quoi ?",
+          "Où ?",
+          "Quand ?",
+          "Comment ?",
+          "Combien ?",
+          "Pourquoi ?"
         ],
         "explication": "Le « Pourquoi » vient en dernier, mais c'est lui qui justifie tous les autres points."
       }
@@ -958,7 +958,7 @@
           "Choisir le support",
           "Construire le message"
         ],
-        "explication": "L'objectif d'abord (informer, notoriété, image, émotion, faire agir, fidéliser) \u0001 ne pas le confondre avec le support, qui n'est que le moyen."
+        "explication": "L'objectif d'abord (informer, notoriété, image, émotion, faire agir, fidéliser) : ne pas le confondre avec le support, qui n'est que le moyen."
       }
     },
     {
@@ -966,8 +966,8 @@
       "donnees": {
         "titre": "Chemins absolus et relatifs",
         "paragraphes": [
-          "Un chemin absolu part de la racine, donc commence par / \u0001 /home/sam/cours/systeme/td2.txt. Il marche quel que soit le répertoire courant.",
-          "Un chemin relatif part du répertoire courant \u0001 . = ici, .. = le parent. Le répertoire d'accueil de sam s'écrit /home/sam ou ~."
+          "Un chemin absolu part de la racine, donc commence par / : /home/sam/cours/systeme/td2.txt. Il marche quel que soit le répertoire courant.",
+          "Un chemin relatif part du répertoire courant : . = ici, .. = le parent. Le répertoire d'accueil de sam s'écrit /home/sam ou ~."
         ],
         "a_retenir": "Un / au début = la racine. Pour un fichier du répertoire courant, juste son nom."
       }
@@ -991,7 +991,7 @@
       "donnees": {
         "affirmation": "mkdir archive/2026 crée aussi archive si ce répertoire n'existe pas encore.",
         "reponse": false,
-        "explication": "La commande échoue \u0001 il faut mkdir -p archive/2026 pour créer les répertoires intermédiaires."
+        "explication": "La commande échoue : il faut mkdir -p archive/2026 pour créer les répertoires intermédiaires."
       }
     },
     {
@@ -1009,7 +1009,7 @@
           ],
           [
             "[xyz]",
-            "Un caractère \u0001 x, y ou z"
+            "Un caractère : x, y ou z"
           ],
           [
             "[^xyz]",
@@ -1032,7 +1032,7 @@
       "donnees": {
         "affirmation": "Pour supprimer un fichier, il faut le droit w sur ce fichier.",
         "reponse": false,
-        "explication": "Supprimer modifie la liste du répertoire \u0001 il faut w et x sur le répertoire qui le contient. Les droits du fichier ne comptent pas."
+        "explication": "Supprimer modifie la liste du répertoire : il faut w et x sur le répertoire qui le contient. Les droits du fichier ne comptent pas."
       }
     },
     {
@@ -1040,7 +1040,7 @@
       "donnees": {
         "affirmation": "Avec -r--r--rw- emma info2 bizarre.txt, emma peut modifier le fichier puisque les autres ont rw-.",
         "reponse": false,
-        "explication": "emma est propriétaire \u0001 seul le triplet u (r--) compte. Le premier triplet qui correspond gagne."
+        "explication": "emma est propriétaire : seul le triplet u (r--) compte. Le premier triplet qui correspond gagne."
       }
     },
     {
@@ -1091,20 +1091,20 @@
             "Envoie la sortie à la commande suivante"
           ]
         ],
-        "explication": "> ne redirige que la sortie normale \u0001 les erreurs passent par 2>."
+        "explication": "> ne redirige que la sortie normale : les erreurs passent par 2>."
       }
     },
     {
       "id": "sys-tube-erreur", "matiere": "sys", "notion": "Redirections et tubes", "format": "erreur",
       "donnees": {
-        "consigne": "On veut compter les fichiers de /etc qui finissent par .conf. Quelle ligne est fausse \u0001",
+        "consigne": "On veut compter les fichiers de /etc qui finissent par .conf. Quelle ligne est fausse ?",
         "lignes": [
           "ls /etc > liste.txt",
           "egrep \"\\.conf$\" liste.txt ; wc -l"
         ],
         "ligne_fausse": 1,
         "correction": "egrep \"\\.conf$\" liste.txt | wc -l",
-        "explication": "; lance des commandes indépendantes \u0001 wc -l attendrait le clavier. Pour passer le résultat à la commande suivante, c'est le tube |."
+        "explication": "; lance des commandes indépendantes : wc -l attendrait le clavier. Pour passer le résultat à la commande suivante, c'est le tube |."
       }
     },
     {
@@ -1126,7 +1126,7 @@
       "donnees": {
         "affirmation": "sort choisit le séparateur et la colonne avec -d et -f, comme cut.",
         "reponse": false,
-        "explication": "cut prend -d et -f \u0001 sort prend -t (séparateur) et -k (champ), plus -n pour un tri numérique."
+        "explication": "cut prend -d et -f : sort prend -t (séparateur) et -k (champ), plus -n pour un tri numérique."
       }
     },
     {
@@ -1148,10 +1148,10 @@
       "donnees": {
         "titre": "Keynes, la rupture",
         "paragraphes": [
-          "Dans la Théorie générale (1936), après la crise de 1929, Keynes montre que le marché ne s'autorégule pas toujours \u0001 il peut rester bloqué dans un équilibre de sous-emploi.",
-          "L'État doit alors relancer la demande \u0001 grands travaux, hausse des minima sociaux, car les ménages modestes dépensent presque tout ce qu'ils reçoivent."
+          "Dans la Théorie générale (1936), après la crise de 1929, Keynes montre que le marché ne s'autorégule pas toujours : il peut rester bloqué dans un équilibre de sous-emploi.",
+          "L'État doit alors relancer la demande : grands travaux, hausse des minima sociaux, car les ménages modestes dépensent presque tout ce qu'ils reçoivent."
         ],
-        "a_retenir": "Classiques \u0001 le marché s'équilibre seul. Keynes \u0001 l'État relance la demande."
+        "a_retenir": "Classiques : le marché s'équilibre seul. Keynes : l'État relance la demande."
       }
     },
     {
@@ -1165,7 +1165,7 @@
           "1945",
           "1776"
         ],
-        "explication": "1929, c'est le krach \u0001 1776, La Richesse des nations d'Adam Smith."
+        "explication": "1929, c'est le krach : 1776, La Richesse des nations d'Adam Smith."
       }
     },
     {
@@ -1173,7 +1173,7 @@
       "donnees": {
         "affirmation": "Pour Keynes, le marché revient toujours seul au plein emploi.",
         "reponse": false,
-        "explication": "C'est la thèse des classiques. Pour Keynes, faute de flexibilité des prix à la baisse, le chômage peut durer \u0001 l'État doit intervenir."
+        "explication": "C'est la thèse des classiques. Pour Keynes, faute de flexibilité des prix à la baisse, le chômage peut durer : l'État doit intervenir."
       }
     },
     {
@@ -1194,13 +1194,13 @@
             "Le réseau électrique"
           ]
         ],
-        "explication": "Dans ces trois cas, même les libéraux admettent que l'État intervienne \u0001 taxe ou quotas, financement public, régulation."
+        "explication": "Dans ces trois cas, même les libéraux admettent que l'État intervienne : taxe ou quotas, financement public, régulation."
       }
     },
     {
       "id": "eco-pib-calcul-trous", "matiere": "eco", "notion": "PIB", "format": "trous",
       "donnees": {
-        "texte": "Blé vendu 100 €, farine 150 €, pain 250 € \u0001 la richesse créée par cette filière vaut ___.",
+        "texte": "Blé vendu 100 €, farine 150 €, pain 250 € : la richesse créée par cette filière vaut ___.",
         "reponse": "250 €",
         "choix": [
           "250 €",
@@ -1208,7 +1208,7 @@
           "150 €",
           "100 €"
         ],
-        "explication": "Valeurs ajoutées \u0001 100 + 50 + 100 = 250 €, la valeur du pain final. Additionner les chiffres d'affaires (500 €) compterait plusieurs fois le blé."
+        "explication": "Valeurs ajoutées : 100 + 50 + 100 = 250 €, la valeur du pain final. Additionner les chiffres d'affaires (500 €) compterait plusieurs fois le blé."
       }
     },
     {
@@ -1262,15 +1262,15 @@
           ],
           [
             "Industrielle",
-            "Structurelle \u0001 faire émerger des champions"
+            "Structurelle : faire émerger des champions"
           ],
           [
             "Concurrentielle",
-            "Structurelle \u0001 faire respecter le droit de la concurrence"
+            "Structurelle : faire respecter le droit de la concurrence"
           ],
           [
             "Commerciale",
-            "Structurelle \u0001 encadrer les échanges avec l'extérieur"
+            "Structurelle : encadrer les échanges avec l'extérieur"
           ]
         ],
         "explication": "Conjoncturelles = court terme, réagir à une crise. Structurelles = long terme, transformer l'économie."
@@ -1295,7 +1295,7 @@
           "OMC",
           "FMN"
         ],
-        "explication": "Division internationale des processus productifs \u0001 on parle aussi de chaîne de valeur mondiale."
+        "explication": "Décomposition internationale des processus productifs : on parle aussi de chaîne de valeur mondiale."
       }
     },
     {
@@ -1311,10 +1311,10 @@
       "donnees": {
         "titre": "Le développement durable",
         "paragraphes": [
-          "Se développer en répondant aux besoins du présent sans compromettre la capacité des générations futures à répondre aux leurs \u0001 c'est la définition du rapport Brundtland (1987).",
-          "Il cherche à réconcilier trois piliers \u0001 l'économique, l'écologique et le social."
+          "Se développer en répondant aux besoins du présent sans compromettre la capacité des générations futures à répondre aux leurs : c'est la définition du rapport Brundtland (1987).",
+          "Il cherche à réconcilier trois piliers : l'économique, l'écologique et le social."
         ],
-        "a_retenir": "3 piliers \u0001 économique, écologique, social. Rapport Brundtland, 1987."
+        "a_retenir": "3 piliers : économique, écologique, social. Rapport Brundtland, 1987."
       }
     }
   ]
