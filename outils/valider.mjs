@@ -17,6 +17,10 @@ export function verifierLot(lot, existant) {
   const matieres = new Set([...existant.matieres, ...(lot.matieres ?? [])].map((m) => m.id));
   const idsExistants = new Set(existant.contenus.map((c) => c.id));
   const vus = new Set();
+  // Cours du livret utilisés par le lot : des ids de documents (marqués « transformés » à la fusion)
+  if (lot.documents !== undefined && !(Array.isArray(lot.documents)
+      && lot.documents.every((id) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id))))
+    problemes.push("« documents » doit être une liste d'ids de cours du livret (uuid)");
   const cartes = lot.contenus.map((c, i) => {
     const erreurs = erreursCarte(c);
     if (c?.matiere && !matieres.has(c.matiere)) erreurs.push(`matière inconnue « ${c.matiere} » (à déclarer dans « matieres » du lot)`);

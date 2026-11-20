@@ -86,11 +86,14 @@ const Livret = (() => {
     function ligne(doc) {
       const ouvrir = el("button", { class: "f-lien", type: "button" }, "Ouvrir");
       ouvrir.addEventListener("click", async () => {
-        // L'onglet s'ouvre tout de suite (sinon Safari le bloque), puis reçoit le lien signé valable 1 h
+        // L'onglet s'ouvre tout de suite (sinon Safari le bloque), sans lien vers l'appli, puis reçoit un lien
+        // signé valable 5 minutes. Jamais d'ouverture dans l'appli elle-même : installée, elle n'a pas de retour.
         const onglet = window.open("", "_blank");
-        const { data, error } = await sb.storage.from("cours").createSignedUrl(doc.chemin, 3600);
-        if (error) { onglet?.close(); message.textContent = `Impossible d'ouvrir ${doc.nom} (${error.message}).`; return; }
-        if (onglet) onglet.location.href = data.signedUrl; else window.location.href = data.signedUrl;
+        if (!onglet) { message.textContent = "L'ouverture a été bloquée : autorise les fenêtres pour Facettes."; return; }
+        onglet.opener = null;
+        const { data, error } = await sb.storage.from("cours").createSignedUrl(doc.chemin, 300);
+        if (error) { onglet.close(); message.textContent = `Impossible d'ouvrir ${doc.nom} (${error.message}).`; return; }
+        onglet.location.href = data.signedUrl;
       });
       const supprimer = el("button", { class: "f-lien f-livret-suppr", type: "button" }, "Supprimer");
       let minuteur = null;

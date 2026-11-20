@@ -56,9 +56,10 @@ console.log("Pense à changer VERSION dans app/sw.js si tu publies la coquille ;
 const documents = Array.isArray(lot.documents) ? lot.documents : [];
 if (documents.length) {
   const env = lireEnv();
-  if (!env) console.log(`${documents.length} cours du livret à marquer « transformés » : ajoute la clé secrète dans .env puis relance le marquage.`);
+  const rattrapage = `node outils/marquer-cours.mjs ${join(range, basename(chemin))}`;
+  if (!env) console.log(`${documents.length} cours du livret à marquer « transformés » : ajoute la clé secrète dans .env puis lance ${rattrapage}`);
   else {
     try { await marquerTraites(env, documents, basename(chemin)); console.log(`${documents.length} cours du livret marqués « transformés en cartes ».`); }
-    catch (err) { console.error(`Cartes ajoutées, mais le marquage des cours a échoué : ${err.message}`); }
+    catch (err) { console.error(`Cartes ajoutées, mais le marquage des cours a échoué : ${err.message}. Pour réessayer : ${rattrapage}`); }
   }
 }
