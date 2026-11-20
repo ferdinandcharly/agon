@@ -90,7 +90,7 @@ d'audience, pas de cookie tiers (Turnstile n'en dépose pas à des fins publicit
   - combien de temps : tant que le compte existe ; compte supprimé automatiquement après **2 ans sans
     connexion** ;
   - droits : exporter, supprimer (boutons), et contact pour tout le reste ;
-  - responsable : Ferdinand Charly, adresse de contact (à fournir par Ferdinand, voir « Décisions ») ;
+  - responsable : Ferdinand Charly, contact facettes.app@gmail.com ;
   - sans compte : rien ne quitte l'appareil.
 - **Exporter mes données** : bouton qui télécharge un JSON (`facettes-mes-donnees.json`) avec le compte
   (e-mail, date de création), la ligne `progression`, et plus tard profil et parties. Fait côté client avec
@@ -118,13 +118,13 @@ Liste à cocher avant d'ouvrir au-delà des amis ; chaque point coûte ou demand
    simple.
 6. **Anti-triche** des scores par fonction serveur si un classement public a de l'enjeu.
 
-## Décisions demandées à Ferdinand
+## Décisions prises
 
-- Adresse de contact publiée dans « Tes données » : Gmail perso ou adresse dédiée (ex. un Gmail
-  `facettes.app@…`) — recommandé : une adresse dédiée.
-- Créer un compte Cloudflare (gratuit) et un widget Turnstile pour le domaine `ferdinandcharly.github.io`
-  (et `localhost` pour les tests) ; donner la **clé de site** (publique) à Claude ; saisir la **clé
-  secrète** dans Supabase.
+- Contact RGPD : **facettes.app@gmail.com** (adresse dédiée, créée le 20/11).
+- Turnstile : widget « Facettes » (mode Managed) pour `ferdinandcharly.github.io` et `localhost` ;
+  clé de site publique `0x4AAAAAAGKGu9RQ0EvSTWc5` (dans le code) ; clé secrète saisie par Ferdinand dans
+  Supabase (Attack Protection) **seulement après** la mise en ligne du code qui envoie le jeton — sinon plus
+  personne ne peut se connecter.
 
 ## Tests
 
