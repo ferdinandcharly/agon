@@ -66,6 +66,33 @@ try {
   assert.ok(toutReseau.total > 0, "scénario 3 : le fil est vide alors que d'autres matières restent");
   console.log("3 : bascule exclusive, persistance, fusion, matière entière à venir");
 
+  // 4 : fils ciblés — ils ignorent les cases et les matières exclues, mais pas les formats exclus
+  await avecReglages(a, { matieresExclues: ["reseau"], notions: { "reseau/DHCP": "a_venir" } });
+  const r4 = await a.evaluer(`(() => { montrerFil("notion", { matiere: "reseau", notion: "DHCP" });
+    const ecrans = [...document.querySelectorAll("#fil > .f-ecran")];
+    const cartes = ecrans.filter((e) => e.dataset.notion);
+    return { n: cartes.length, bons: cartes.every((e) => e.dataset.matiere === "reseau" && e.dataset.notion === "DHCP"),
+             chrono: ecrans.some((e) => e.dataset.matiere === "chrono"),
+             fin: ecrans.at(-1).innerText }; })()`);
+  assert.ok(r4.n > 0, "scénario 4 : fil de notion vide");
+  assert.ok(r4.bons, "scénario 4 : des cartes d'une autre notion");
+  assert.equal(r4.chrono, false, "scénario 4 : Prise d'otage dans un fil ciblé");
+  assert.match(r4.fin, /Retour à la discothèque/, "scénario 4 : pas de retour à la discothèque");
+  const r4b = await a.evaluer(`(() => { montrerFil("album", { matiere: "eco" });
+    const cartes = [...document.querySelectorAll("#fil > .f-ecran")].filter((e) => e.dataset.notion);
+    return { n: cartes.length, bons: cartes.every((e) => e.dataset.matiere === "eco") }; })()`);
+  assert.ok(r4b.n > 0 && r4b.bons, "scénario 4 : le fil d'album contient autre chose que l'Économie");
+  console.log("4 : fils ciblés (notion, album)");
+
+  // 5 : notion sans carte jouable avec les formats cochés → écran vide propre, retour à la discothèque
+  await avecReglages(a, { formatsExclus: ["vrai_faux", "trous", "associer", "ordre", "erreur", "fiche"] });
+  const r5 = await a.evaluer(`(() => { montrerFil("notion", { matiere: "reseau", notion: "DHCP" });
+    return document.getElementById("fil").innerText; })()`);
+  assert.match(r5, /Aucune carte/, "scénario 5 : pas d'écran vide");
+  assert.match(r5, /Retour à la discothèque/, "scénario 5 : pas de retour à la discothèque");
+  await a.evaluer("afficherAccueil()");
+  console.log("5 : fil ciblé vide propre");
+
   assert.deepEqual(a.violationsCsp, [], "violations CSP");
   assert.deepEqual(a.erreurs, [], "erreurs");
   console.log("OK — discothèque");
