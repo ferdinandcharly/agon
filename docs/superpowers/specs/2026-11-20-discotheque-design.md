@@ -60,11 +60,12 @@ Remplace `#arbre` (même accès : toucher la boule de l'accueil ; même bouton �
 - Dans les réglages locaux (`agon.reglages`) : `notions: { "<matiere>/<notion>": "a_venir" | "ds_passe" }`
   (clé absente = normal). `lireReglages` le lit (objet, valeurs filtrées) ; chaque changement met à jour
   `reglages.maj` et appelle `ecrireReglages` (donc la synchro).
-- Fusion entre appareils (`compte.js`) : les réglages les plus récents gagnent en bloc, `notions` compris.
+- Fusion entre appareils (`compte.js`) : les réglages les plus récents gagnent en bloc, `notions` compris —
+  sauf s'ils viennent d'une ancienne version sans `notions` : on garde alors les cases locales (relecture).
 - Export « Tes données » : déjà inclus (les réglages sont exportés tels quels).
 - Effets : `contenusRetenus()` exclut les cartes des notions `a_venir` ; `ordonner()` place les cartes des
-  notions `ds_passe` après toutes les autres (leur ordre interne inchangé) ; la Prise d'otage et le Tube du jour
-  utilisent `contenusRetenus()` donc suivent ; la Survie n'utilise pas `contenusRetenus()` (inchangée).
+  notions `ds_passe` après toutes les autres (leur ordre interne inchangé) ; le Tube du jour utilise `contenusRetenus()` donc suit ;
+  la Prise d'otage a son propre tirage, qui exclut aussi les notions `a_venir` (relecture) ; la Survie n'utilise pas `contenusRetenus()` (inchangée).
 - Accueil : compteur de cartes et boule à facettes inchangés dans leur logique (ils lisent `contenusRetenus` /
   les résultats).
 
