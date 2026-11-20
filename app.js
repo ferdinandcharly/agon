@@ -218,13 +218,14 @@ function creerEcranSurvie() {
     carte);
   const ecran = el("section", { class: "f-ecran", "data-matiere": "survie" }, pile);
 
-  const pool = contenusRetenus().filter((c) => c.format === "vrai_faux" || c.format === "trous");
+  // Toutes les matières, quels que soient les réglages : les records doivent se comparer entre joueurs
+  const pool = donnees.contenus.filter((c) => contenuValide(c) && (c.format === "vrai_faux" || c.format === "trous"));
   let ordre = melanger(pool);
   let indice = 0;
   const record = lireRecordSurvie();
 
   carte.append(
-    el("p", { class: "f-consigne" }, `Tiens le plus longtemps possible : ${pool.length} questions de toutes les matières.`),
+    el("p", { class: "f-consigne" }, `Tiens le plus longtemps possible. Toutes les matières, pour que les records se comparent : ${pool.length} questions.`),
     el("p", { class: "f-discret" }, `Tu pars avec ${SURVIE_DEPART / 1000} secondes. +${bonusSurvie(0) / 1000} s par bonne réponse au début, puis de moins en moins.`),
     el("p", { class: "f-survie-record" }, record ? `Ton record : ${record}` : "Pas encore de record."),
     el("button", { class: "f-option f-lancer", type: "button", onclick: lancer }, "C'est parti"));
@@ -293,6 +294,7 @@ function creerEcranSurvie() {
     afficher();
     const nouveauRecord = points > record;
     if (nouveauRecord) ecrireRecordSurvie(points);
+    if (typeof Compte !== "undefined") Compte.publierPartie(points);   // chaque partie compte pour la semaine
     const tampon = el("div", { class: `f-tampon ${nouveauRecord ? "ok" : "ko"}` }, nouveauRecord ? "Record !" : "Perdu");
     carte.replaceChildren(
       el("div", { class: "f-survie-fin" },
