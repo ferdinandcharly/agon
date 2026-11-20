@@ -1316,6 +1316,986 @@
         ],
         "a_retenir": "3 piliers : économique, écologique, social. Rapport Brundtland, 1987."
       }
+    },
+    {
+      "id": "reseau-masque-fiche", "matiere": "reseau", "notion": "Masque et CIDR", "format": "fiche",
+      "donnees": {
+        "titre": "Le masque de sous-réseau",
+        "paragraphes": [
+          "Le masque sépare une adresse IPv4 en deux parties : le réseau (les bits à 1 du masque) et la machine (les bits à 0).",
+          "En notation CIDR, on écrit après une barre le nombre de bits à 1 : 192.168.1.0/24 a pour masque 255.255.255.0.",
+          "Deux machines qui ont la même partie réseau peuvent se parler directement, sans passer par un routeur."
+        ],
+        "a_retenir": "/24 = 255.255.255.0 : 24 bits pour le réseau, 8 bits pour les machines."
+      }
+    },
+    {
+      "id": "reseau-masque-trous", "matiere": "reseau", "notion": "Masque et CIDR", "format": "trous",
+      "donnees": {
+        "texte": "Le masque 255.255.0.0 s'écrit ___ en notation CIDR.",
+        "reponse": "/16",
+        "choix": [
+          "/16",
+          "/24",
+          "/8",
+          "/32"
+        ],
+        "explication": "255.255.0.0, ce sont deux octets à 1, soit 16 bits à 1 : /16."
+      }
+    },
+    {
+      "id": "reseau-hotes-trous", "matiere": "reseau", "notion": "Masque et CIDR", "format": "trous",
+      "donnees": {
+        "texte": "Un réseau en /24 peut accueillir ___ machines.",
+        "reponse": "254",
+        "choix": [
+          "254",
+          "256",
+          "255",
+          "24"
+        ],
+        "explication": "8 bits pour les machines donnent 256 adresses, moins l'adresse du réseau et l'adresse de diffusion : 254."
+      }
+    },
+    {
+      "id": "reseau-diffusion-vf", "matiere": "reseau", "notion": "Masque et CIDR", "format": "vrai_faux",
+      "donnees": {
+        "affirmation": "Dans le réseau 192.168.1.0/24, on peut donner l'adresse 192.168.1.255 à une machine.",
+        "reponse": false,
+        "explication": "C'est l'adresse de diffusion (broadcast) : elle sert à envoyer un message à toutes les machines du réseau."
+      }
+    },
+    {
+      "id": "reseau-privees-fiche", "matiere": "reseau", "notion": "Adresses privées", "format": "fiche",
+      "donnees": {
+        "titre": "Les adresses privées",
+        "paragraphes": [
+          "Trois plages sont réservées aux réseaux privés (maison, entreprise) : 10.0.0.0/8, 172.16.0.0/12 et 192.168.0.0/16.",
+          "Ces adresses ne circulent pas telles quelles sur Internet : la box les remplace par son adresse publique. C'est le NAT."
+        ],
+        "a_retenir": "10.x.x.x, 172.16 à 172.31, 192.168.x.x : privées. La box fait la traduction (NAT)."
+      }
+    },
+    {
+      "id": "reseau-privees-vf", "matiere": "reseau", "notion": "Adresses privées", "format": "vrai_faux",
+      "donnees": {
+        "affirmation": "L'adresse 172.20.5.1 est une adresse privée.",
+        "reponse": true,
+        "explication": "La plage privée 172.16.0.0/12 va de 172.16.0.0 à 172.31.255.255 : 172.20 en fait partie."
+      }
+    },
+    {
+      "id": "reseau-privees-vf-2", "matiere": "reseau", "notion": "Adresses privées", "format": "vrai_faux",
+      "donnees": {
+        "affirmation": "L'adresse 8.8.8.8 est une adresse privée.",
+        "reponse": false,
+        "explication": "Elle n'est dans aucune plage privée (10/8, 172.16/12, 192.168/16) : c'est une adresse publique, joignable sur Internet."
+      }
+    },
+    {
+      "id": "reseau-dns-fiche", "matiere": "reseau", "notion": "DNS", "format": "fiche",
+      "donnees": {
+        "titre": "Le DNS",
+        "paragraphes": [
+          "Les machines communiquent avec des adresses IP, mais nous retenons des noms comme iut.fr.",
+          "Quand on tape un nom, l'ordinateur demande à un serveur DNS l'adresse IP qui correspond, puis contacte cette adresse."
+        ],
+        "a_retenir": "DNS : nom de domaine → adresse IP. Il utilise le port 53."
+      }
+    },
+    {
+      "id": "reseau-protocoles-associer", "matiere": "reseau", "notion": "Protocoles", "format": "associer",
+      "donnees": {
+        "consigne": "Relie chaque protocole à son rôle.",
+        "paires": [
+          [
+            "DNS",
+            "Traduire un nom en adresse IP"
+          ],
+          [
+            "DHCP",
+            "Donner automatiquement une adresse IP"
+          ],
+          [
+            "ARP",
+            "Trouver l'adresse MAC d'une adresse IP locale"
+          ],
+          [
+            "ICMP",
+            "Messages de contrôle, utilisés par ping"
+          ],
+          [
+            "HTTP",
+            "Échanger des pages web"
+          ]
+        ],
+        "explication": "DNS et DHCP rendent le réseau pratique, ARP fait le lien entre IP et MAC sur le réseau local, ICMP sert au diagnostic."
+      }
+    },
+    {
+      "id": "reseau-dhcp-ordre", "matiere": "reseau", "notion": "DHCP", "format": "ordre",
+      "donnees": {
+        "consigne": "Remets dans l'ordre l'obtention d'une adresse par DHCP.",
+        "etapes": [
+          "Le client cherche un serveur (Discover)",
+          "Le serveur propose une adresse (Offer)",
+          "Le client demande cette adresse (Request)",
+          "Le serveur confirme (Acknowledge)"
+        ],
+        "explication": "On retient DORA : Discover, Offer, Request, Acknowledge."
+      }
+    },
+    {
+      "id": "reseau-tcp-udp-fiche", "matiere": "reseau", "notion": "TCP et UDP", "format": "fiche",
+      "donnees": {
+        "titre": "TCP ou UDP ?",
+        "paragraphes": [
+          "TCP et UDP sont deux protocoles de la couche transport (couche 4).",
+          "TCP ouvre une connexion, numérote les segments, renvoie ceux qui sont perdus et les remet dans l'ordre : il est fiable.",
+          "UDP envoie sans connexion ni garantie : il est plus léger et plus rapide, utile pour la vidéo en direct, les jeux ou le DNS."
+        ],
+        "a_retenir": "TCP : fiable mais plus lourd. UDP : rapide mais sans garantie."
+      }
+    },
+    {
+      "id": "reseau-udp-vf", "matiere": "reseau", "notion": "TCP et UDP", "format": "vrai_faux",
+      "donnees": {
+        "affirmation": "UDP garantit que les paquets arrivent tous, et dans l'ordre.",
+        "reponse": false,
+        "explication": "C'est TCP qui offre ces garanties. UDP envoie sans vérifier : un paquet peut se perdre ou arriver en désordre."
+      }
+    },
+    {
+      "id": "reseau-tcp-trous", "matiere": "reseau", "notion": "TCP et UDP", "format": "trous",
+      "donnees": {
+        "texte": "Le protocole ___ établit une connexion et renvoie les données perdues.",
+        "reponse": "TCP",
+        "choix": [
+          "TCP",
+          "UDP",
+          "IP",
+          "ARP"
+        ],
+        "explication": "TCP est le protocole fiable de la couche transport ; UDP ne renvoie rien."
+      }
+    },
+    {
+      "id": "reseau-tcp-ordre", "matiere": "reseau", "notion": "TCP et UDP", "format": "ordre",
+      "donnees": {
+        "consigne": "Remets dans l'ordre l'ouverture d'une connexion TCP.",
+        "etapes": [
+          "Le client envoie SYN",
+          "Le serveur répond SYN-ACK",
+          "Le client envoie ACK"
+        ],
+        "explication": "C'est la poignée de main en trois temps (three-way handshake) : après le ACK, les données peuvent circuler."
+      }
+    },
+    {
+      "id": "reseau-mac-vf", "matiere": "reseau", "notion": "Adresse MAC", "format": "vrai_faux",
+      "donnees": {
+        "affirmation": "Une adresse MAC fait 48 bits et identifie une carte réseau.",
+        "reponse": true,
+        "explication": "Elle s'écrit en 6 octets hexadécimaux. L'adresse IP, elle, dépend du réseau où l'on se trouve."
+      }
+    },
+    {
+      "id": "reseau-passerelle-trous", "matiere": "reseau", "notion": "Passerelle", "format": "trous",
+      "donnees": {
+        "texte": "Pour joindre une machine hors de son réseau, un ordinateur envoie le paquet à sa ___.",
+        "reponse": "passerelle par défaut",
+        "choix": [
+          "passerelle par défaut",
+          "adresse de diffusion",
+          "carte réseau",
+          "serveur DNS"
+        ],
+        "explication": "La passerelle par défaut est le routeur (souvent la box) qui fait sortir les paquets du réseau local."
+      }
+    },
+    {
+      "id": "reseau-ports-associer", "matiere": "reseau", "notion": "Ports", "format": "associer",
+      "donnees": {
+        "consigne": "Relie chaque service à son port par défaut.",
+        "paires": [
+          [
+            "SSH",
+            "22"
+          ],
+          [
+            "SMTP",
+            "25"
+          ],
+          [
+            "DNS",
+            "53"
+          ],
+          [
+            "HTTP",
+            "80"
+          ],
+          [
+            "HTTPS",
+            "443"
+          ]
+        ],
+        "explication": "Le port indique à quel programme d'une machine on s'adresse : la même adresse IP peut servir plusieurs services."
+      }
+    },
+    {
+      "id": "reseau-commandes-associer", "matiere": "reseau", "notion": "Commandes réseau", "format": "associer",
+      "donnees": {
+        "consigne": "Relie chaque commande à ce qu'elle permet.",
+        "paires": [
+          [
+            "ping",
+            "Tester si une machine répond"
+          ],
+          [
+            "ip addr",
+            "Afficher ses adresses IP (Linux)"
+          ],
+          [
+            "traceroute",
+            "Voir les routeurs traversés"
+          ],
+          [
+            "nslookup",
+            "Interroger un serveur DNS"
+          ]
+        ],
+        "explication": "ping envoie des messages ICMP ; sous Windows, ipconfig remplace ip addr et tracert remplace traceroute."
+      }
+    },
+    {
+      "id": "web-structure-fiche", "matiere": "web", "notion": "Structure HTML", "format": "fiche",
+      "donnees": {
+        "titre": "La structure d'une page HTML",
+        "paragraphes": [
+          "Une page commence par <!DOCTYPE html>, puis tout est rangé dans la balise <html>.",
+          "<head> contient les informations sur la page : titre de l'onglet, encodage, liens vers le CSS. Rien ne s'y affiche.",
+          "<body> contient tout ce qui s'affiche : textes, images, liens."
+        ],
+        "a_retenir": "<head> : les informations. <body> : le contenu visible."
+      }
+    },
+    {
+      "id": "web-structure-ordre", "matiere": "web", "notion": "Structure HTML", "format": "ordre",
+      "donnees": {
+        "consigne": "Remets dans l'ordre le début d'une page HTML.",
+        "etapes": [
+          "<!DOCTYPE html>",
+          "<html lang=\"fr\">",
+          "<head>",
+          "<title>Ma page</title>",
+          "</head>",
+          "<body>"
+        ],
+        "explication": "Le doctype d'abord, puis <html>, qui contient <head> (fermé avant d'ouvrir <body>)."
+      }
+    },
+    {
+      "id": "web-head-vf", "matiere": "web", "notion": "Structure HTML", "format": "vrai_faux",
+      "donnees": {
+        "affirmation": "Le texte écrit dans la balise <head> s'affiche en haut de la page.",
+        "reponse": false,
+        "explication": "<head> ne contient que des informations sur la page (dont le titre de l'onglet). Un en-tête visible se met dans <body>, avec <header>."
+      }
+    },
+    {
+      "id": "web-semantique-associer", "matiere": "web", "notion": "HTML sémantique", "format": "associer",
+      "donnees": {
+        "consigne": "Relie chaque balise sémantique à son rôle.",
+        "paires": [
+          [
+            "<header>",
+            "L'en-tête de la page"
+          ],
+          [
+            "<nav>",
+            "Le menu de navigation"
+          ],
+          [
+            "<main>",
+            "Le contenu principal"
+          ],
+          [
+            "<footer>",
+            "Le pied de page"
+          ],
+          [
+            "<article>",
+            "Un contenu autonome, comme un billet"
+          ]
+        ],
+        "explication": "Ces balises décrivent le sens du contenu : utiles pour les lecteurs d'écran et les moteurs de recherche."
+      }
+    },
+    {
+      "id": "web-href-trous", "matiere": "web", "notion": "Balises HTML", "format": "trous",
+      "donnees": {
+        "texte": "Dans <a href=\"page.html\">Suite</a>, l'attribut ___ donne l'adresse du lien.",
+        "reponse": "href",
+        "choix": [
+          "href",
+          "src",
+          "alt",
+          "link"
+        ],
+        "explication": "href pour les liens ; src indique le fichier d'une image ou d'un script."
+      }
+    },
+    {
+      "id": "web-alt-vf", "matiere": "web", "notion": "Balises HTML", "format": "vrai_faux",
+      "donnees": {
+        "affirmation": "L'attribut alt d'une image sert d'abord à afficher une infobulle au survol.",
+        "reponse": false,
+        "explication": "alt est le texte de remplacement : lu par les lecteurs d'écran et affiché si l'image ne se charge pas."
+      }
+    },
+    {
+      "id": "web-selecteurs-associer", "matiere": "web", "notion": "Sélecteurs CSS", "format": "associer",
+      "donnees": {
+        "consigne": "Relie chaque sélecteur CSS à ce qu'il cible.",
+        "paires": [
+          [
+            "p",
+            "Tous les paragraphes"
+          ],
+          [
+            ".menu",
+            "Les éléments de classe menu"
+          ],
+          [
+            "#logo",
+            "L'élément d'id logo"
+          ],
+          [
+            "nav a",
+            "Les liens situés dans un <nav>"
+          ],
+          [
+            "*",
+            "Tous les éléments"
+          ]
+        ],
+        "explication": "Point pour une classe, dièse pour un id ; une espace entre deux sélecteurs veut dire « à l'intérieur de »."
+      }
+    },
+    {
+      "id": "web-selecteur-erreur", "matiere": "web", "notion": "Sélecteurs CSS", "format": "erreur",
+      "donnees": {
+        "consigne": "On veut écrire en rouge l'élément <p id=\"alerte\">. Quelle ligne est fausse ?",
+        "lignes": [
+          ".alerte {",
+          "  color: red;",
+          "  font-weight: bold;",
+          "}"
+        ],
+        "ligne_fausse": 0,
+        "correction": "#alerte {",
+        "explication": "Un id se cible avec # ; le point cible une classe, et aucun élément n'a la classe alerte."
+      }
+    },
+    {
+      "id": "web-specificite-vf", "matiere": "web", "notion": "Spécificité CSS", "format": "vrai_faux",
+      "donnees": {
+        "affirmation": "Pour une même propriété, un sélecteur d'id (#titre) l'emporte sur un sélecteur de classe (.titre).",
+        "reponse": true,
+        "explication": "L'id est plus spécifique que la classe, elle-même plus spécifique que la balise : l'ordre dans le fichier ne compte qu'à égalité."
+      }
+    },
+    {
+      "id": "web-boite-fiche", "matiere": "web", "notion": "Modèle de boîte", "format": "fiche",
+      "donnees": {
+        "titre": "Le modèle de boîte",
+        "paragraphes": [
+          "En CSS, chaque élément est une boîte : le contenu, puis la marge intérieure (padding), la bordure (border) et la marge extérieure (margin).",
+          "Par défaut, width ne compte que le contenu : padding et bordure s'ajoutent autour.",
+          "Avec box-sizing: border-box, width inclut le padding et la bordure, ce qui simplifie les calculs."
+        ],
+        "a_retenir": "Du dedans vers le dehors : content, padding, border, margin."
+      }
+    },
+    {
+      "id": "web-boite-ordre", "matiere": "web", "notion": "Modèle de boîte", "format": "ordre",
+      "donnees": {
+        "consigne": "Range les couches d'une boîte CSS, de l'intérieur vers l'extérieur.",
+        "etapes": [
+          "Le contenu",
+          "padding",
+          "border",
+          "margin"
+        ],
+        "explication": "Le padding est dans la bordure (il prend la couleur de fond), la margin est en dehors."
+      }
+    },
+    {
+      "id": "web-boite-trous", "matiere": "web", "notion": "Modèle de boîte", "format": "trous",
+      "donnees": {
+        "texte": "Une boîte a width: 200px, padding: 10px et border: 2px, sans box-sizing. Sa largeur affichée est ___.",
+        "reponse": "224px",
+        "choix": [
+          "224px",
+          "200px",
+          "212px",
+          "220px"
+        ],
+        "explication": "200 de contenu + 2 × 10 de padding + 2 × 2 de bordure (à gauche et à droite) = 224 px."
+      }
+    },
+    {
+      "id": "web-flex-trous", "matiere": "web", "notion": "Flexbox", "format": "trous",
+      "donnees": {
+        "texte": "Pour aligner des éléments en ligne avec Flexbox, on écrit display: ___ sur leur parent.",
+        "reponse": "flex",
+        "choix": [
+          "flex",
+          "block",
+          "inline",
+          "table"
+        ],
+        "explication": "display: flex se met sur le conteneur ; ses enfants directs deviennent des éléments flexibles, en ligne par défaut."
+      }
+    },
+    {
+      "id": "web-http-fiche", "matiere": "web", "notion": "HTTP", "format": "fiche",
+      "donnees": {
+        "titre": "Requête et réponse HTTP",
+        "paragraphes": [
+          "Le navigateur envoie une requête au serveur, qui renvoie une réponse avec un code de statut.",
+          "GET demande une ressource ; les paramètres passent dans l'URL.",
+          "POST envoie des données dans le corps de la requête, par exemple un formulaire d'inscription."
+        ],
+        "a_retenir": "GET : lire (données dans l'URL). POST : envoyer (données dans le corps)."
+      }
+    },
+    {
+      "id": "web-codes-associer", "matiere": "web", "notion": "HTTP", "format": "associer",
+      "donnees": {
+        "consigne": "Relie chaque code HTTP à sa signification.",
+        "paires": [
+          [
+            "200",
+            "Tout s'est bien passé"
+          ],
+          [
+            "301",
+            "Page déplacée définitivement"
+          ],
+          [
+            "403",
+            "Accès interdit"
+          ],
+          [
+            "404",
+            "Ressource introuvable"
+          ],
+          [
+            "500",
+            "Erreur interne du serveur"
+          ]
+        ],
+        "explication": "2xx : succès, 3xx : redirection, 4xx : erreur du client, 5xx : erreur du serveur."
+      }
+    },
+    {
+      "id": "web-get-vf", "matiere": "web", "notion": "HTTP", "format": "vrai_faux",
+      "donnees": {
+        "affirmation": "Avec la méthode GET, les données d'un formulaire apparaissent dans l'URL.",
+        "reponse": true,
+        "explication": "Elles sont ajoutées après un ? (ex. recherche?q=chat). On évite donc GET pour un mot de passe."
+      }
+    },
+    {
+      "id": "maths-hexa-fiche", "matiere": "maths", "notion": "Hexadécimal", "format": "fiche",
+      "donnees": {
+        "titre": "L'hexadécimal",
+        "paragraphes": [
+          "La base 16 utilise 16 chiffres : 0 à 9, puis A (10), B, C, D, E et F (15).",
+          "Un chiffre hexadécimal vaut exactement 4 bits : un octet s'écrit donc avec 2 chiffres.",
+          "Exemple : 2A = 2 × 16 + 10 = 42."
+        ],
+        "a_retenir": "1 chiffre hexa = 4 bits. FF = 255, le plus grand octet."
+      }
+    },
+    {
+      "id": "maths-hexa-trous", "matiere": "maths", "notion": "Hexadécimal", "format": "trous",
+      "donnees": {
+        "texte": "En hexadécimal, le nombre décimal 255 s'écrit ___.",
+        "reponse": "FF",
+        "choix": [
+          "FF",
+          "F0",
+          "EF",
+          "100"
+        ],
+        "explication": "255 = 15 × 16 + 15, soit F et F. 100 en hexadécimal vaut 256."
+      }
+    },
+    {
+      "id": "maths-hexa-trous-2", "matiere": "maths", "notion": "Hexadécimal", "format": "trous",
+      "donnees": {
+        "texte": "Le nombre hexadécimal 2A vaut ___ en décimal.",
+        "reponse": "42",
+        "choix": [
+          "42",
+          "32",
+          "26",
+          "210"
+        ],
+        "explication": "2 × 16 + A, et A vaut 10 : 32 + 10 = 42."
+      }
+    },
+    {
+      "id": "maths-binaire-associer", "matiere": "maths", "notion": "Binaire", "format": "associer",
+      "donnees": {
+        "consigne": "Relie chaque nombre binaire à sa valeur décimale.",
+        "paires": [
+          [
+            "0110",
+            "6"
+          ],
+          [
+            "1010",
+            "10"
+          ],
+          [
+            "1111",
+            "15"
+          ],
+          [
+            "10000",
+            "16"
+          ]
+        ],
+        "explication": "On additionne les puissances de 2 des bits à 1 : 1010 = 8 + 2 = 10."
+      }
+    },
+    {
+      "id": "maths-addition-binaire-trous", "matiere": "maths", "notion": "Binaire", "format": "trous",
+      "donnees": {
+        "texte": "En binaire, 0111 + 0001 = ___.",
+        "reponse": "1000",
+        "choix": [
+          "1000",
+          "1001",
+          "1111",
+          "0110"
+        ],
+        "explication": "7 + 1 = 8 : la retenue se propage sur les trois 1 et donne 1000."
+      }
+    },
+    {
+      "id": "maths-logique-fiche", "matiere": "maths", "notion": "Tables de vérité", "format": "fiche",
+      "donnees": {
+        "titre": "ET, OU, NON et l'implication",
+        "paragraphes": [
+          "A ET B est vrai seulement si A et B sont vrais. A OU B est vrai dès que l'un des deux est vrai.",
+          "NON A inverse la valeur de A.",
+          "L'implication A ⇒ B n'est fausse que dans un cas : A vrai et B faux."
+        ],
+        "a_retenir": "A ⇒ B est faux seulement si A est vrai et B est faux."
+      }
+    },
+    {
+      "id": "maths-ou-vf", "matiere": "maths", "notion": "Tables de vérité", "format": "vrai_faux",
+      "donnees": {
+        "affirmation": "A OU B est faux seulement quand A et B sont tous les deux faux.",
+        "reponse": true,
+        "explication": "Il suffit d'un seul vrai pour que le OU soit vrai."
+      }
+    },
+    {
+      "id": "maths-implication-vf", "matiere": "maths", "notion": "Implication", "format": "vrai_faux",
+      "donnees": {
+        "affirmation": "Quand A est faux, l'implication A ⇒ B est vraie, quelle que soit la valeur de B.",
+        "reponse": true,
+        "explication": "A ⇒ B n'est fausse que si A est vrai et B faux. Avec A faux, elle est toujours vraie."
+      }
+    },
+    {
+      "id": "maths-contraposee-trous", "matiere": "maths", "notion": "Implication", "format": "trous",
+      "donnees": {
+        "texte": "La contraposée de A ⇒ B est ___.",
+        "reponse": "non B ⇒ non A",
+        "choix": [
+          "non B ⇒ non A",
+          "B ⇒ A",
+          "non A ⇒ non B",
+          "A ⇒ non B"
+        ],
+        "explication": "La contraposée a toujours la même valeur de vérité que l'implication. B ⇒ A est la réciproque, qui n'est pas équivalente."
+      }
+    },
+    {
+      "id": "maths-ensembles-associer", "matiere": "maths", "notion": "Ensembles", "format": "associer",
+      "donnees": {
+        "consigne": "Relie chaque opération sur les ensembles à sa définition.",
+        "paires": [
+          [
+            "A ∪ B",
+            "Les éléments de A ou de B"
+          ],
+          [
+            "A ∩ B",
+            "Les éléments à la fois dans A et dans B"
+          ],
+          [
+            "A \\ B",
+            "Les éléments de A qui ne sont pas dans B"
+          ],
+          [
+            "A × B",
+            "Les couples (a, b) avec a dans A et b dans B"
+          ]
+        ],
+        "explication": "Union, intersection, différence et produit cartésien."
+      }
+    },
+    {
+      "id": "maths-intersection-trous", "matiere": "maths", "notion": "Ensembles", "format": "trous",
+      "donnees": {
+        "texte": "Si A = {1, 2, 3} et B = {2, 3, 4}, alors A ∩ B = ___.",
+        "reponse": "{2, 3}",
+        "choix": [
+          "{2, 3}",
+          "{1, 2, 3, 4}",
+          "{1}",
+          "{1, 4}"
+        ],
+        "explication": "L'intersection garde les éléments communs. {1, 2, 3, 4} serait l'union."
+      }
+    },
+    {
+      "id": "maths-parties-trous", "matiere": "maths", "notion": "Ensembles", "format": "trous",
+      "donnees": {
+        "texte": "Un ensemble à 3 éléments possède ___ sous-ensembles.",
+        "reponse": "8",
+        "choix": [
+          "8",
+          "6",
+          "9",
+          "3"
+        ],
+        "explication": "Chaque élément est dedans ou non : 2³ = 8, en comptant l'ensemble vide et l'ensemble entier."
+      }
+    },
+    {
+      "id": "maths-cardinal-vf", "matiere": "maths", "notion": "Ensembles", "format": "vrai_faux",
+      "donnees": {
+        "affirmation": "Pour deux ensembles finis, |A ∪ B| = |A| + |B| − |A ∩ B|.",
+        "reponse": true,
+        "explication": "Les éléments communs sont comptés deux fois dans |A| + |B| : on les retire une fois."
+      }
+    },
+    {
+      "id": "bd-jointure-fiche", "matiere": "bd", "notion": "Jointure", "format": "fiche",
+      "donnees": {
+        "titre": "La jointure",
+        "paragraphes": [
+          "Une jointure relie deux tables en faisant correspondre une clé étrangère à la clé primaire qu'elle référence.",
+          "SELECT e.nom, g.libelle FROM etudiant e JOIN groupe g ON e.id_groupe = g.id donne chaque étudiant avec son groupe.",
+          "Sans condition de jointure, on obtient le produit cartésien : chaque ligne de la première table avec chaque ligne de la seconde."
+        ],
+        "a_retenir": "JOIN … ON clé étrangère = clé primaire."
+      }
+    },
+    {
+      "id": "bd-jointure-erreur", "matiere": "bd", "notion": "Jointure", "format": "erreur",
+      "donnees": {
+        "consigne": "On veut chaque étudiant avec le nom de son groupe. Quelle ligne est fausse ?",
+        "lignes": [
+          "SELECT e.nom, g.libelle",
+          "FROM etudiant e",
+          "JOIN groupe g",
+          "ON e.id_groupe = e.id;"
+        ],
+        "ligne_fausse": 3,
+        "correction": "ON e.id_groupe = g.id;",
+        "explication": "La condition doit relier les deux tables : la clé étrangère de etudiant avec la clé primaire de groupe."
+      }
+    },
+    {
+      "id": "bd-produit-cartesien-vf", "matiere": "bd", "notion": "Jointure", "format": "vrai_faux",
+      "donnees": {
+        "affirmation": "Sans condition de jointure, une requête sur deux tables de 10 lignes renvoie 100 lignes.",
+        "reponse": true,
+        "explication": "C'est le produit cartésien : 10 × 10 combinaisons, presque toujours une erreur."
+      }
+    },
+    {
+      "id": "bd-null-trous", "matiere": "bd", "notion": "Valeur NULL", "format": "trous",
+      "donnees": {
+        "texte": "Pour trouver les clients sans e-mail, on écrit WHERE email ___.",
+        "reponse": "IS NULL",
+        "choix": [
+          "IS NULL",
+          "= NULL",
+          "== NULL",
+          "IS EMPTY"
+        ],
+        "explication": "NULL veut dire « inconnu » : une comparaison avec = NULL n'est jamais vraie. On teste avec IS NULL."
+      }
+    },
+    {
+      "id": "bd-count-vf", "matiere": "bd", "notion": "Valeur NULL", "format": "vrai_faux",
+      "donnees": {
+        "affirmation": "COUNT(*) et COUNT(email) donnent toujours le même résultat.",
+        "reponse": false,
+        "explication": "COUNT(*) compte toutes les lignes ; COUNT(email) ignore celles où email est NULL."
+      }
+    },
+    {
+      "id": "bd-agregats-associer", "matiere": "bd", "notion": "Fonctions d'agrégat", "format": "associer",
+      "donnees": {
+        "consigne": "Relie chaque fonction SQL à ce qu'elle calcule.",
+        "paires": [
+          [
+            "COUNT",
+            "Le nombre de lignes"
+          ],
+          [
+            "SUM",
+            "La somme"
+          ],
+          [
+            "AVG",
+            "La moyenne"
+          ],
+          [
+            "MIN",
+            "La plus petite valeur"
+          ],
+          [
+            "MAX",
+            "La plus grande valeur"
+          ]
+        ],
+        "explication": "Ces fonctions résument plusieurs lignes en une valeur, souvent avec GROUP BY."
+      }
+    },
+    {
+      "id": "bd-distinct-trous", "matiere": "bd", "notion": "Requête SELECT", "format": "trous",
+      "donnees": {
+        "texte": "Pour n'afficher qu'une fois chaque ville, on écrit SELECT ___ ville FROM client.",
+        "reponse": "DISTINCT",
+        "choix": [
+          "DISTINCT",
+          "UNIQUE",
+          "ONLY",
+          "SINGLE"
+        ],
+        "explication": "DISTINCT retire les doublons du résultat. UNIQUE est une contrainte qu'on pose sur une colonne, pas dans un SELECT."
+      }
+    },
+    {
+      "id": "bd-order-vf", "matiere": "bd", "notion": "Requête SELECT", "format": "vrai_faux",
+      "donnees": {
+        "affirmation": "ORDER BY note DESC trie de la plus petite note à la plus grande.",
+        "reponse": false,
+        "explication": "DESC trie en ordre décroissant, de la plus grande à la plus petite. ASC (par défaut) fait l'inverse."
+      }
+    },
+    {
+      "id": "bd-like-trous", "matiere": "bd", "notion": "Requête SELECT", "format": "trous",
+      "donnees": {
+        "texte": "WHERE nom LIKE 'Ma%' garde les noms qui ___.",
+        "reponse": "commencent par Ma",
+        "choix": [
+          "commencent par Ma",
+          "finissent par Ma",
+          "valent exactement Ma%",
+          "font 3 lettres"
+        ],
+        "explication": "% remplace n'importe quelle suite de caractères (même vide) ; _ remplace exactement un caractère."
+      }
+    },
+    {
+      "id": "bd-cardinalites-fiche", "matiere": "bd", "notion": "Cardinalités", "format": "fiche",
+      "donnees": {
+        "titre": "Les cardinalités (MCD)",
+        "paragraphes": [
+          "Dans un MCD, les cardinalités disent combien de fois une entité participe au minimum et au maximum à une association.",
+          "Un étudiant appartient à un et un seul groupe : (1,1) côté étudiant. Un groupe contient un ou plusieurs étudiants : (1,n) côté groupe.",
+          "Au passage en tables, l'entité du côté (1,1) reçoit une clé étrangère vers l'autre."
+        ],
+        "a_retenir": "(1,1) d'un côté, (x,n) de l'autre : clé étrangère du côté (1,1)."
+      }
+    },
+    {
+      "id": "bd-cle-etrangere-vf", "matiere": "bd", "notion": "Cardinalités", "format": "vrai_faux",
+      "donnees": {
+        "affirmation": "Pour une association (1,1)–(1,n), la clé étrangère va dans la table du côté (1,n).",
+        "reponse": false,
+        "explication": "Elle va du côté (1,1) : chaque étudiant porte l'identifiant de son unique groupe."
+      }
+    },
+    {
+      "id": "bd-association-n-n-trous", "matiere": "bd", "notion": "Cardinalités", "format": "trous",
+      "donnees": {
+        "texte": "Une association avec un maximum n des deux côtés devient ___ dans le modèle relationnel.",
+        "reponse": "une nouvelle table",
+        "choix": [
+          "une nouvelle table",
+          "une clé étrangère",
+          "une clé primaire simple",
+          "une colonne en plus"
+        ],
+        "explication": "Par exemple « étudiant suit cours » : une table suivre(id_etudiant, id_cours), dont la clé primaire réunit les deux clés étrangères."
+      }
+    },
+    {
+      "id": "eco-phases-ordre", "matiere": "eco", "notion": "Phases de la mondialisation", "format": "ordre",
+      "donnees": {
+        "consigne": "Remets dans l'ordre les grandes phases de la mondialisation.",
+        "etapes": [
+          "Première mondialisation (avant 1914)",
+          "Repli protectionniste des années 1930",
+          "Signature du GATT (1947)",
+          "Traité de Rome et CEE (1957)",
+          "Révolution libérale des années 1980",
+          "Arrivée des pays émergents (années 1990)",
+          "Retour du protectionnisme (aujourd'hui)"
+        ],
+        "explication": "Coupée par les guerres et la crise de 1929, la mondialisation repart après 1945, devient financière dans les années 80 puis s'élargit aux émergents."
+      }
+    },
+    {
+      "id": "eco-gatt-fiche", "matiere": "eco", "notion": "GATT et OMC", "format": "fiche",
+      "donnees": {
+        "titre": "Du GATT à l'OMC",
+        "paragraphes": [
+          "Après 1945, l'idée domine que plus de commerce et de coopération, c'est plus de paix.",
+          "Le GATT (1947), accord général sur les tarifs douaniers et le commerce, vise la libéralisation des échanges : supprimer les droits de douane et les quotas des années 1930.",
+          "Aujourd'hui, le commerce international est encadré par l'OMC, l'Organisation mondiale du commerce."
+        ],
+        "a_retenir": "GATT 1947 : libéralisation des échanges. OMC : Organisation mondiale du commerce (≠ OMS)."
+      }
+    },
+    {
+      "id": "eco-gatt-trous", "matiere": "eco", "notion": "GATT et OMC", "format": "trous",
+      "donnees": {
+        "texte": "Le GATT, signé en 1947, a pour objectif la ___ des échanges.",
+        "reponse": "libéralisation",
+        "choix": [
+          "libéralisation",
+          "régulation",
+          "nationalisation",
+          "taxation"
+        ],
+        "explication": "Il s'agit de retirer les barrières (droits de douane, quotas) dressées pendant la crise des années 1930."
+      }
+    },
+    {
+      "id": "eco-omc-vf", "matiere": "eco", "notion": "GATT et OMC", "format": "vrai_faux",
+      "donnees": {
+        "affirmation": "L'OMC, c'est l'Organisation mondiale de la santé.",
+        "reponse": false,
+        "explication": "OMC = Organisation mondiale du commerce. La santé, c'est l'OMS : un piège classique."
+      }
+    },
+    {
+      "id": "eco-ide-fiche", "matiere": "eco", "notion": "IDE", "format": "fiche",
+      "donnees": {
+        "titre": "Les IDE",
+        "paragraphes": [
+          "Des deux facteurs de production, le travail reste peu mobile, mais le capital circule très facilement.",
+          "Un IDE (investissement direct à l'étranger), c'est une entreprise qui crée ou rachète une usine, une filiale ou des points de vente dans un autre pays.",
+          "Ce n'est pas un placement financier : c'est un investissement productif et durable."
+        ],
+        "a_retenir": "IDE = créer ou racheter une unité de production à l'étranger, ≠ placement en bourse."
+      }
+    },
+    {
+      "id": "eco-ide-vf", "matiere": "eco", "notion": "IDE", "format": "vrai_faux",
+      "donnees": {
+        "affirmation": "Acheter quelques actions d'une entreprise étrangère en bourse est un IDE.",
+        "reponse": false,
+        "explication": "C'est un placement financier. Un IDE, c'est créer ou racheter une usine, une filiale ou des points de vente à l'étranger."
+      }
+    },
+    {
+      "id": "eco-mobilite-vf", "matiere": "eco", "notion": "IDE", "format": "vrai_faux",
+      "donnees": {
+        "affirmation": "Dans la mondialisation, le travail circule plus facilement que le capital.",
+        "reponse": false,
+        "explication": "C'est l'inverse : le travail reste peu mobile (frontières, attaches), alors que le capital circule très facilement."
+      }
+    },
+    {
+      "id": "eco-mondialisation-associer", "matiere": "eco", "notion": "Mondialisation", "format": "associer",
+      "donnees": {
+        "consigne": "Relie chaque notion à sa définition.",
+        "paires": [
+          [
+            "Délocalisation",
+            "Fermer une usine ici pour produire là où c'est moins cher"
+          ],
+          [
+            "Relocalisation",
+            "Rapatrier la production dans le pays d'origine"
+          ],
+          [
+            "IDE",
+            "Créer ou racheter une usine à l'étranger"
+          ],
+          [
+            "DIPP",
+            "Fabriquer un produit par étapes dans plusieurs pays"
+          ]
+        ],
+        "explication": "Toutes traduisent la déterritorialisation de la production : une entreprise n'est plus attachée à un seul territoire."
+      }
+    },
+    {
+      "id": "eco-prix-transfert-trous", "matiere": "eco", "notion": "Optimisation fiscale", "format": "trous",
+      "donnees": {
+        "texte": "Vendre à bas prix à sa propre filiale irlandaise pour y loger le bénéfice, c'est la technique des ___.",
+        "reponse": "prix de transfert",
+        "choix": [
+          "prix de transfert",
+          "prix plancher",
+          "prix d'équilibre",
+          "prix de revient"
+        ],
+        "explication": "Le bénéfice imposable fond dans le pays d'origine et apparaît là où l'impôt est faible : de l'optimisation fiscale légale."
+      }
+    },
+    {
+      "id": "eco-fabless-vf", "matiere": "eco", "notion": "Fabless", "format": "vrai_faux",
+      "donnees": {
+        "affirmation": "Une entreprise fabless conçoit ses puces mais en confie la fabrication à un fondeur.",
+        "reponse": true,
+        "explication": "Fabless veut dire « sans usine ». Nvidia ou Apple conçoivent, TSMC (Taïwan) fabrique."
+      }
+    },
+    {
+      "id": "eco-liberale-trous", "matiere": "eco", "notion": "Phases de la mondialisation", "format": "trous",
+      "donnees": {
+        "texte": "Dans les années 1980, Thatcher et Reagan libéralisent notamment la ___, ce qui accélère la mondialisation.",
+        "reponse": "finance",
+        "choix": [
+          "finance",
+          "santé",
+          "éducation",
+          "agriculture"
+        ],
+        "explication": "Moins d'État, tout libéraliser, en particulier la finance : les places financières s'interconnectent."
+      }
+    },
+    {
+      "id": "eco-chine-ordre", "matiere": "eco", "notion": "Insertion de l'Asie", "format": "ordre",
+      "donnees": {
+        "consigne": "Remets dans l'ordre les étapes de l'insertion de la Chine dans la mondialisation.",
+        "etapes": [
+          "Début de l'ouverture (1978-1979)",
+          "Accélération sous Deng Xiaoping (1992)",
+          "Apparition de méga-entreprises chinoises (2012-2013)",
+          "Plan « Made in China 2025 » (2015)"
+        ],
+        "explication": "D'abord l'ouverture aux IDE et les transferts de technologie, puis la montée en gamme jusqu'au leadership sur les batteries."
+      }
     }
   ]
 }
