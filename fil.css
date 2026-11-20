@@ -317,7 +317,13 @@ h1, h2, h3 { font-family: var(--police); }
 .f-compte-msg { font-size: 15px; font-weight: 600; color: #B0003A; }
 .f-compte-msg:empty { display: none; }
 .f-compte-note { font-size: 14px; }
-.f-turnstile { min-height: 65px; }   /* place réservée au widget anti-robot, pour éviter un saut */
+.f-turnstile { min-height: 65px; }
+.f-donnees-ouvrir { text-align: center; font-weight: 600; }
+
+/* ---------- Tes données ---------- */
+.f-donnees { display: grid; gap: 12px; font-size: 16px; line-height: 1.45; }
+.f-donnees a { color: var(--encre); font-weight: 700; }
+.f-donnees-export { text-align: center; font-weight: 700; margin-top: 4px; }   /* place réservée au widget anti-robot, pour éviter un saut */
 .f-compte .f-danger { margin-top: 0; }
 .f-lien { justify-self: start; padding: 0; border: 0; background: none; font: 600 15px var(--police); color: var(--encre); text-decoration: underline; cursor: pointer; }
 @media (max-width: 380px) { .f-compte-form { grid-template-columns: minmax(0, 1fr); } }

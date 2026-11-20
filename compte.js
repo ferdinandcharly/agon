@@ -265,6 +265,8 @@ const Compte = (() => {
           el("button", { class: "f-option", type: "button",
             onclick: () => deconnecter().catch((err) => { message.textContent = messageErreur(err); }) }, "Se déconnecter")),
         message,
+        el("button", { class: "f-option f-donnees-ouvrir", type: "button",
+          onclick: () => { if (typeof Donnees !== "undefined") Donnees.ouvrir(); } }, "Tes données et export"),
         el("p", { class: "f-discret f-compte-note" },
           "Supprimer le compte efface ta progression en ligne. Celle de cet appareil reste."),
         supprimerBtn);
@@ -328,5 +330,7 @@ const Compte = (() => {
     programmer,
     synchroniser,
     afficherDans(element) { conteneur = element; dessiner(); },
+    client: () => sb,
+    utilisateur: () => utilisateur,
   };
 })();
