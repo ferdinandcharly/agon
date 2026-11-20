@@ -645,6 +645,35 @@ h1, h2, h3 { font-family: var(--police); }
   background: #FFFFFF; color: var(--encre); font: 700 15px var(--police); box-shadow: 3px 3px 0 #7B4DFF; cursor: pointer;
 }
 .f-arbre-intro { color: #CFC9E8; font-size: 15px; line-height: 1.4; }
+
+/* ---------- Classement ---------- */
+.f-classement-onglets { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.f-classement-onglet {
+  padding: 10px; border: 2.5px solid #FFFFFF; border-radius: 999px; background: none; color: #FFFFFF;
+  font: 700 16px var(--police); cursor: pointer;
+}
+.f-classement-onglet[aria-selected="true"] { background: #FFFFFF; color: var(--encre); box-shadow: 3px 3px 0 #FF5FA2; }
+.f-classement-bandeau { color: #FFC21A; font-size: 14px; font-weight: 600; }
+.f-classement-vide, .f-classement-invitation p { color: #CFC9E8; font-size: 16px; line-height: 1.4; }
+.f-classement-invitation { display: grid; gap: 12px; }
+.f-classement-connexion { text-align: center; font-weight: 700; }
+.f-classement-rendu { display: grid; gap: 10px; }
+.f-classement-liste { list-style: none; display: grid; gap: 8px; padding: 0; margin: 0; }
+.f-classement-ligne {
+  display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; align-items: center; gap: 10px;
+  padding: 10px 14px; border: var(--trait); border-radius: 14px; background: #FFFFFF; color: var(--encre);
+  box-shadow: 3px 3px 0 #7B4DFF; font-size: 17px;
+}
+.f-classement-rang { font-weight: 800; font-size: 20px; font-stretch: 80%; }
+.f-classement-pseudo { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.f-classement-pseudo small { font-weight: 500; color: var(--gris); }
+.f-classement-score { font-weight: 800; font-size: 20px; }
+.f-classement-ligne.or { background: #FFC21A; }
+.f-classement-ligne.rose { background: #FF5FA2; }
+.f-classement-ligne.bleu { background: #8FA3FF; }
+.f-classement-ligne.moi { outline: 3px solid #00C08B; outline-offset: 2px; box-shadow: 3px 3px 0 #00C08B; }
+.f-classement-sep { text-align: center; color: #CFC9E8; font-weight: 800; letter-spacing: .2em; }
+.f-survie-rang { font-weight: 800; font-size: 18px; color: var(--encre); }
 .f-legende { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13px; color: #CFC9E8; }
 .f-legende .f-feuille { display: inline-flex; align-items: center; gap: 6px; }
 

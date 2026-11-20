@@ -27,8 +27,12 @@ try {
   assert.match(depart, /Toutes les matières/, "scénario 1 : le départ ne dit pas « Toutes les matières »");
   assert.match(depart, new RegExp(`\\b${rapides.length} questions`), `scénario 1 : ${rapides.length} questions attendues`);
   await a.cliquer(".f-ecran[data-matiere='survie'] .f-lancer");
-  await a.cliquer(".f-ecran[data-matiere='survie'] .f-choix .f-option");
-  await attendre(800);
+  // On répond jusqu'à la fin de la partie (une erreur ou le chrono à zéro)
+  for (let i = 0; i < 80 && !(await a.evaluer("!!document.querySelector('.f-survie-fin')")); i++) {
+    await a.evaluer(`document.querySelector(".f-ecran[data-matiere='survie'] .f-choix .f-option")?.click()`);
+    await attendre(400);
+  }
+  assert.equal(await a.evaluer("!!document.querySelector('.f-survie-fin')"), true, "scénario 1 : la partie ne s'est pas terminée");
   assert.equal(await a.evaluer(`localStorage.getItem("agon.parties")`), null, "scénario 1 : sans compte, aucune partie en file");
   console.log(`1 : Survie sur toutes les matières (${rapides.length} questions), rien en file sans compte`);
 
@@ -40,6 +44,45 @@ try {
   assert.equal(await a.evaluer(`Compte.messagePseudo("Ferdi")`), null, "pseudo valide");
   assert.equal(await a.evaluer(`Compte.messagePseudo("Ferdi", { code: "23505" })`), "Déjà pris : essaie un autre pseudo.", "pseudo pris");
   console.log("2 : messages du pseudo");
+
+  // Scénario 3 : sans compte, l'écran invite à se connecter et ouvre les réglages
+  await a.cliquer("#btn-accueil");
+  await a.cliquer(".f-bouton-classement");
+  assert.equal(await a.evaluer("document.getElementById('classement').classList.contains('cache')"), false, "scénario 3 : écran caché");
+  assert.match(await a.evaluer("document.getElementById('classement').innerText"), /Connecte-toi pour apparaître/, "scénario 3 : invitation absente");
+  await a.cliquer("#classement .f-classement-connexion");
+  assert.equal(await a.evaluer("document.getElementById('reglages').open"), true, "scénario 3 : les réglages ne s'ouvrent pas");
+  await a.cliquer("#btn-fermer-reglages");
+  console.log("3 : sans compte → invitation et réglages");
+
+  // Scénario 4 : rendu hors ligne (podium, ta place hors du top 50, bandeau)
+  const lignes = [
+    { rang: 1, pseudo: "Ferdi", score: 42, moi: false }, { rang: 2, pseudo: "Bastien", score: 40, moi: false },
+    { rang: 3, pseudo: "Lou", score: 31, moi: false }, { rang: 63, pseudo: "Moi", score: 4, moi: true }];
+  const rendu = await a.evaluer(`(() => {
+    const n = Classement.rendre(${JSON.stringify(lignes)}, { periode: "semaine", date: new Date().toISOString(),
+      debut: Classement.lundiCourant(), horsLigne: true });
+    const z = document.getElementById("classement"); z.querySelector(".f-classement-zone").replaceChildren(n);
+    const li = [...n.querySelectorAll(".f-classement-ligne")];
+    return { n: li.length, premier: li[0].className, dernier: li.at(-1).className, texteDernier: li.at(-1).innerText,
+      sep: !!n.querySelector(".f-classement-sep"), bandeau: n.querySelector(".f-classement-bandeau")?.innerText || "" };
+  })()`);
+  assert.equal(rendu.n, 4, "scénario 4 : 4 lignes attendues");
+  assert.ok(rendu.premier.split(" ").includes("or"), "scénario 4 : le 1er n’a pas la classe or");
+  assert.ok(rendu.dernier.split(" ").includes("moi"), "scénario 4 : ta ligne n’est pas mise en avant");
+  assert.match(rendu.texteDernier, /63/, "scénario 4 : ton rang manque");
+  assert.ok(rendu.sep, "scénario 4 : séparateur « … » absent");
+  assert.match(rendu.bandeau, /Hors ligne/, "scénario 4 : bandeau hors ligne absent");
+  await a.capture("tests/captures/classement-iPhone.png");
+  console.log("4 : rendu hors ligne (podium, ta place, bandeau)");
+
+  // Scénario 5 : cache d'une autre semaine
+  const ancien = await a.evaluer(`(() => {
+    const lundi = new Date(Classement.lundiCourant()); lundi.setDate(lundi.getDate() - 7);
+    const n = Classement.rendre(${JSON.stringify(lignes)}, { periode: "semaine", date: lundi.toISOString(), debut: lundi.toISOString(), horsLigne: true });
+    return n.querySelector(".f-classement-bandeau")?.innerText || ""; })()`);
+  assert.match(ancien, /semaine dernière/, "scénario 5 : « semaine dernière » absent");
+  console.log("5 : cache de la semaine précédente signalé");
 
   assert.deepEqual(a.violationsCsp, [], "violations CSP");
   assert.deepEqual(a.erreurs, [], "erreurs");
