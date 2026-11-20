@@ -50,6 +50,21 @@ Sans compte, tout reste en local. Avec un compte, `app/compte.js` fusionne : car
 récente gagne, collection et record le plus grand gagne, une remise à zéro vaut pour tous les appareils.
 `supabase-js` est auto-hébergé dans `app/vendor/` (version figée) pour marcher hors ligne.
 
+## Sécurité et données
+
+Règles et décisions : `docs/superpowers/specs/2026-11-20-securite-rgpd-design.md` (à suivre pour toute nouvelle
+table ou fonctionnalité ; sa section 5 liste ce qui est obligatoire avant d'ouvrir au grand public).
+
+- **CSP** stricte dans `index.html` : seuls nos fichiers, Supabase et Turnstile. Pas de style ni de script en ligne.
+- **Turnstile** (Cloudflare) protège « Recevoir un code » ; la clé secrète est dans Supabase (Attack Protection),
+  jamais dans le dépôt.
+- **RGPD** : page « Tes données » (réglages) avec export JSON ; suppression de compte ; comptes sans connexion
+  depuis 2 ans purgés chaque lundi (`pg_cron`, schéma `private`).
+- **Tests** (racine du dépôt, Edge installé) :
+  `node tests/csp.test.mjs`, `node tests/turnstile.test.mjs`,
+  `TEST_EMAIL=… TEST_MDP=… node tests/donnees.test.mjs` (compte de test créé en SQL puis supprimé),
+  et les blocs SQL de `tests/sql/` (annulés, résultat dans le message d'erreur).
+
 ## Contenus
 
 `app/data/contenus.json` : une carte = `id`, `matiere`, `notion`, `format`, `donnees`.
