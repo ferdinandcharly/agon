@@ -80,6 +80,9 @@
   <p class="f-version" id="version">Version inconnue (hors ligne ou premier lancement)</p>
 </dialog>
 
+<!-- Tes données (RGPD) : rempli par donnees.js -->
+<dialog class="f-reglages" id="donnees" aria-labelledby="titre-donnees"></dialog>
+
 <!-- Le fil : un écran par carte, on fait défiler verticalement (scroll-snap) -->
 <!-- Accueil (mosaïque) : rempli par app.js -->
 <section class="f-accueil" id="accueil" aria-label="Accueil"></section>
@@ -96,5 +99,6 @@
 <!-- supabase-js 2.119.2 auto-hébergé (version figée, marche hors ligne) ; compte.js s'en passe s'il manque -->
 <script src="vendor/supabase-2.119.2.js"></script>
 <script src="compte.js"></script>
+<script src="donnees.js"></script>
 </body>
 </html>
