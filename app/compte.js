@@ -93,16 +93,23 @@ const Compte = (() => {
     return tout;
   }
 
+  // Réglages : les derniers modifiés gagnent en bloc, cases des notions comprises (à égalité, ceux de cet appareil) ;
+  // la remise à zéro la plus récente vaut partout
+  function fusionReglages(local, rd) {
+    const remise = [local.remise, rd.remise].filter(Boolean).sort().pop() || null;
+    const distantPlusRecent = Array.isArray(rd.matieresExclues) && Array.isArray(rd.formatsExclus)
+      && (rd.maj || "") > (local.maj || "");
+    const fusion = distantPlusRecent
+      ? { matieresExclues: rd.matieresExclues, formatsExclus: rd.formatsExclus, maj: rd.maj,
+          notions: rd.notions && typeof rd.notions === "object" ? rd.notions : {} }
+      : { ...local, notions: local.notions || {} };
+    fusion.remise = remise;
+    return fusion;
+  }
+
   function fusionner(local, distant) {
-    const rd = distant.reglages || {};
-    const remise = [local.reglages.remise, rd.remise].filter(Boolean).sort().pop() || null;
-    // Réglages : les derniers modifiés gagnent (à égalité, ceux de cet appareil)
-    const reglagesDistants = Array.isArray(rd.matieresExclues) && Array.isArray(rd.formatsExclus)
-      && (rd.maj || "") > (local.reglages.maj || "");
-    const reglagesFusion = reglagesDistants
-      ? { matieresExclues: rd.matieresExclues, formatsExclus: rd.formatsExclus, maj: rd.maj }
-      : { ...local.reglages };
-    reglagesFusion.remise = remise;
+    const reglagesFusion = fusionReglages(local.reglages, distant.reglages || {});
+    const remise = reglagesFusion.remise;
 
     const cd = distant.collection || {};
     const total = (c) => (Number(c.disquesOr) || 0) * VINYLES_PAR_DISQUE + (Number(c.vinyles) || 0);
@@ -464,6 +471,7 @@ const Compte = (() => {
     profil: () => profil,
     messagePseudo,
     fileDe,
+    fusionReglages,
     client: () => sb,
     utilisateur: () => utilisateur,
   };
