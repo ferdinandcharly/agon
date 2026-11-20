@@ -50,6 +50,15 @@ Sans compte, tout reste en local. Avec un compte, `app/compte.js` fusionne : car
 récente gagne, collection et record le plus grand gagne, une remise à zéro vaut pour tous les appareils.
 `supabase-js` est auto-hébergé dans `app/vendor/` (version figée) pour marcher hors ligne.
 
+## Discothèque et cases
+
+« Ta discothèque » (toucher la boule de l'accueil) remplace l'arbre : un bac à disques où chaque matière est un
+album et chaque notion une piste. Les albums les plus urgents viennent d'abord ; le vinyle sort selon la part de
+notions maîtrisées (doré quand tout l'est). Chaque piste : « ▶ » (réviser cette notion seule) et deux cases,
+« À venir » (pas encore vue en cours : sort du fil) et « DS passé » (reste, mais en fin de fil). « Réviser l'album »
+lance toute la matière. Les cases sont dans les réglages (`notions`), donc synchronisées ; la Survie les ignore.
+Spec et plan : `docs/superpowers/specs/2026-11-20-discotheque-design.md`, `docs/superpowers/plans/2026-11-20-discotheque.md`.
+
 ## Classement Survie
 
 Pseudo (Réglages → Compte), parties de Survie publiées (file locale `agon.parties`, envoyée à la synchro),
@@ -71,7 +80,7 @@ table ou fonctionnalité ; sa section 5 liste ce qui est obligatoire avant d'ouv
   depuis 2 ans purgés chaque lundi (`pg_cron`, schéma `private`).
 - **Tests** (racine du dépôt, Edge installé) :
   `node tests/csp.test.mjs`, `node tests/turnstile.test.mjs`,
-  `node tests/donnees.test.mjs`, `node tests/classement.test.mjs`,
+  `node tests/donnees.test.mjs`, `node tests/classement.test.mjs`, `node tests/discotheque.test.mjs`,
   et les blocs SQL de `tests/sql/` (annulés, résultat dans le message d'erreur).
   Le CAPTCHA étant actif, aucun test ne connecte de compte : la logique serveur est testée en SQL (rôles simulés),
   le parcours connecté se vérifie à la main sur l'iPhone.
