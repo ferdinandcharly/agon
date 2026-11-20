@@ -1,6 +1,6 @@
 # Classement Survie (projet 1/3 : profil + classement général) — design
 
-Date : 20/11/2026 · Statut : validé à l'oral, à relire par Ferdinand
+Date : 20/11/2026 · Statut : validé à l'oral, à relire par Ferdinand · Prérequis : `2026-11-20-securite-rgpd-design.md` (ses règles générales s'appliquent ici)
 
 ## Contexte et objectif
 
@@ -28,6 +28,12 @@ sans compte ou hors ligne.
   plus tard à une fonction serveur de contrôle (approche C) sans changer le reste.
 - Préparation au grand public : chaque partie porte un **parcours** (`but-info-1` pour l'instant) ; les
   classements sont filtrés par parcours.
+
+### Données personnelles
+
+- Le pseudo et le meilleur score sont visibles des autres comptes connectés ; rien d'autre. La page
+  « Tes données » et l'export (socle RGPD) incluent le profil et les parties ; la suppression de compte les
+  efface et vide la file locale `agon.parties`.
 
 ### Hors périmètre
 
@@ -64,16 +70,22 @@ Le trigger de date est une fonction `security invoker`, `search_path = ''`, dans
 ### Droits et RLS
 
 - RLS activée sur les deux tables ; `revoke all` à `anon` et `authenticated`, puis droits minimaux.
-- `profils` : `select` pour `authenticated` (tous les profils), `insert` et `update` de **sa** ligne
-  (`using` + `with check` sur `auth.uid() = user_id`). Pas de `delete` (la suppression de compte cascade).
-- `parties_survie` : `select` pour `authenticated` (toutes les parties), `insert` de **ses** parties
-  seulement. Ni `update` ni `delete`.
+- `profils` : `select`, `insert` et `update` de **sa** ligne seulement (`using` + `with check` sur
+  `auth.uid() = user_id`) ; `update` limité à la colonne `pseudo` (droit par colonne). Pas de `delete`
+  (la suppression de compte cascade). Les pseudos des autres ne se lisent qu'à travers `classement`.
+- `parties_survie` : `select` et `insert` de **ses** parties seulement. Ni `update` ni `delete`. Les dates
+  de jeu des autres ne sont jamais exposées.
+- Limite anti-abus (trigger `before insert`, schéma `private`, avec la vérification de date) : au plus une
+  partie toutes les 10 secondes et 300 par jour et par compte.
 - `anon` : aucun accès.
 
 ### Fonction de classement
 
-`public.classement(periode text, p_parcours text default 'but-info-1')`, `security invoker`,
-`search_path = ''`, exécutable par `authenticated` seulement.
+`public.classement(periode text, p_parcours text default 'but-info-1')`, **`security definer`** (seul
+moyen de calculer un classement sans donner accès aux parties des autres), `search_path = ''`, `revoke` à
+`public` et `anon`, `grant` à `authenticated`, refuse un appel sans `auth.uid()`. Elle ne renvoie que
+rang, pseudo, meilleur score et le drapeau `moi` ; `periode` hors de `semaine`/`record` → exception.
+Avertissement Supabase « fonction security definer appelable » attendu et voulu.
 
 - `periode = 'semaine'` : parties depuis `date_trunc('week', now() at time zone 'Europe/Paris')`
   (lundi 0 h, heure de Paris) ; `periode = 'record'` : toutes.
@@ -129,12 +141,15 @@ Le trigger de date est une fonction `security invoker`, `search_path = ''`, dans
 
 ### SQL (bloc `do $$ … raise exception` annulé)
 
-- Un compte ne peut pas créer une partie ou un profil pour un autre ; pas d'`update`/`delete` de parties.
+- Un compte ne peut pas créer une partie ou un profil pour un autre ; pas d'`update`/`delete` de parties ;
+  un compte ne lit ni les parties ni les profils des autres en direct ; `update` d'une autre colonne que
+  `pseudo` refusé.
+- Limite anti-abus : deux parties à moins de 10 s d'écart → la seconde refusée.
 - Pseudo en double refusé, y compris avec une autre casse ; pseudo hors format refusé.
 - Score 301 refusé ; date dans le futur ou de plus de 30 jours refusée.
 - `classement('semaine')` ignore les parties d'avant lundi ; `classement('record')` les compte ; un joueur
   n'apparaît qu'une fois ; égalité départagée par la date ; ligne de l'appelant ajoutée hors top 50.
-- `anon` ne lit rien et ne peut pas appeler `classement`.
+- `anon` ne lit rien et ne peut pas appeler `classement` ; `classement` ne renvoie aucune date ni `user_id`.
 - Conseillers Supabase (sécurité, performance) sans nouvel avertissement inattendu.
 
 ### Navigateur (Edge headless, CDP, deux contextes)
