@@ -9,6 +9,10 @@ const Donnees = (() => {
   // Un paragraphe « Titre : texte »
   const point = (titre, ...texte) => el("p", {}, el("b", {}, titre), `${NB}: `, ...texte);
 
+  function partiesEnAttente() {
+    try { const v = JSON.parse(localStorage.getItem("agon.parties")); return Array.isArray(v) ? v : []; } catch { return []; }
+  }
+
   function sessionGardee() {
     try { return JSON.parse(localStorage.getItem("agon.session")); } catch { return null; }
   }
@@ -17,6 +21,8 @@ const Donnees = (() => {
     const sb = typeof Compte !== "undefined" ? Compte.client() : null;
     let compte = null;
     let enLigne = null;
+    let profil = null;
+    let parties = null;
     // L'utilisateur vient de la mémoire ou de la session gardée sur l'appareil : jamais d'appel réseau ici
     // (getSession essaierait de rafraîchir un jeton expiré et bloquerait jusqu'à 30 s hors ligne)
     const utilisateur = typeof Compte !== "undefined" ? Compte.utilisateur() || sessionGardee()?.user : null;
@@ -26,14 +32,20 @@ const Donnees = (() => {
         const { data: ligne, error } = await sb.from("progression")
           .select("resultats, reglages, collection, survie, maj").maybeSingle();
         if (!error) enLigne = ligne;
+        const p = await sb.from("profils").select("pseudo, cree_le").maybeSingle();
+        if (!p.error) profil = p.data;
+        const q = await sb.from("parties_survie").select("score, parcours, joue_le").order("joue_le");
+        if (!q.error) parties = q.data;
       } catch { /* réseau perdu en route : on exporte ce qu'il y a sur l'appareil */ }
     }
     const contenu = {
       exporte_le: new Date().toISOString(),
       compte,
       progression_en_ligne: enLigne,
+      profil,
+      parties,
       appareil: { resultats: lireResultats(), reglages: lireReglages(), collection: lireCollection(),
-                  survie: { record: lireRecordSurvie() } },
+                  survie: { record: lireRecordSurvie() }, parties_en_attente: partiesEnAttente() },
     };
     return contenu;
   }
@@ -76,8 +88,8 @@ const Donnees = (() => {
     dialogue.replaceChildren(
       el("div", { class: "f-reglages-haut" }, el("h2", { id: "titre-donnees", tabindex: "-1" }, "Tes données"), fermer),
       el("section", { class: "f-donnees" },
-        point("Ce qu'on garde", "ton adresse e-mail, ta progression (réponses, réglages), ta collection de vinyles et ton record. Sans compte, rien ne quitte ton appareil."),
-        point("Pourquoi", "retrouver ta progression sur tous tes appareils. Pas de publicité, pas de mesure d'audience, pas de revente."),
+        point("Ce qu'on garde", "ton adresse e-mail, ta progression (réponses, réglages), ta collection de vinyles, ton record, ton pseudo et tes parties de Survie (score et date). Ton pseudo et ton meilleur score sont visibles des autres joueurs connectés, rien d'autre. Sans compte, rien ne quitte ton appareil."),
+        point("Pourquoi", "retrouver ta progression sur tous tes appareils et te classer en mode Survie. Pas de publicité, pas de mesure d'audience, pas de revente."),
         point("Où", "chez Supabase, sur des serveurs à Paris. Les codes de connexion sont envoyés par e-mail ; une vérification anti-robot de Cloudflare protège leur envoi."),
         point("Combien de temps", `tant que ton compte existe. Un compte inutilisé pendant 2${NB}ans est supprimé automatiquement.`),
         point("Tes droits", "exporter tes données avec le bouton ci-dessous, ou tout supprimer avec « Supprimer mon compte » dans les réglages. Pour toute autre demande : ",

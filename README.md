@@ -50,6 +50,15 @@ Sans compte, tout reste en local. Avec un compte, `app/compte.js` fusionne : car
 récente gagne, collection et record le plus grand gagne, une remise à zéro vaut pour tous les appareils.
 `supabase-js` est auto-hébergé dans `app/vendor/` (version figée) pour marcher hors ligne.
 
+## Classement Survie
+
+Pseudo (Réglages → Compte), parties de Survie publiées (file locale `agon.parties`, envoyée à la synchro),
+écran « Classement » : « Cette semaine » (depuis lundi, heure de Paris) et « Record ». La Survie tire toujours dans
+toutes les matières pour que les scores se comparent. Base : `profils`, `parties_survie` (lisibles par leur seul
+auteur), `classement()` qui ne renvoie que rang, pseudo et score ; limites anti-abus par trigger.
+Spec et plan : `docs/superpowers/specs/2026-11-20-classement-survie-design.md`, `docs/superpowers/plans/2026-11-20-classement-survie.md`.
+Suite prévue : amis, puis arène par code ; plus tard un portail d'accueil (compte, pseudo, import de fiches).
+
 ## Sécurité et données
 
 Règles et décisions : `docs/superpowers/specs/2026-11-20-securite-rgpd-design.md` (à suivre pour toute nouvelle
@@ -62,8 +71,10 @@ table ou fonctionnalité ; sa section 5 liste ce qui est obligatoire avant d'ouv
   depuis 2 ans purgés chaque lundi (`pg_cron`, schéma `private`).
 - **Tests** (racine du dépôt, Edge installé) :
   `node tests/csp.test.mjs`, `node tests/turnstile.test.mjs`,
-  `TEST_EMAIL=… TEST_MDP=… node tests/donnees.test.mjs` (compte de test créé en SQL puis supprimé),
+  `node tests/donnees.test.mjs`, `node tests/classement.test.mjs`,
   et les blocs SQL de `tests/sql/` (annulés, résultat dans le message d'erreur).
+  Le CAPTCHA étant actif, aucun test ne connecte de compte : la logique serveur est testée en SQL (rôles simulés),
+  le parcours connecté se vérifie à la main sur l'iPhone.
 
 ## Contenus
 
