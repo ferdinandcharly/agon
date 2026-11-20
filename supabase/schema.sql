@@ -62,3 +62,7 @@ grant execute on function public.supprimer_mon_compte() to authenticated;
 -- score 0-300, parcours), lisibles et modifiables par leur seul auteur ; trigger private.verifier_partie
 -- (date plausible, 5 s entre deux parties, 300 par 24 h) ; public.classement(periode, p_parcours) en
 -- security definer : top 50 + la ligne de l'appelant, sans aucune date ni identifiant.
+
+-- Livret de cours (migration « livret », détail dans migrations/2026-11-20-livret.sql) : bucket privé « cours »
+-- (20 Mo, PDF et photos) et table documents (matière, nom, chemin, statut a_traiter/traite, lot), le tout réservé
+-- à l'admin (raw_app_meta_data.admin = true, lu par private.est_admin()). L'outil du PC passe par la clé secrète.
