@@ -41,6 +41,15 @@ Chaque jeu a une boîte de 1 à 5 (raté → boîte 1, réussi → boîte suivan
 0, 1, 3, 7 ou 14 jours selon sa boîte ; le fil commence par les jeux dus, les ratés en premier
 (pastille « À revoir »).
 
+## Compte et synchro (Supabase)
+
+Projet Supabase `facettes` (Paris, offre gratuite). Une table `progression` (une ligne par compte, RLS),
+une fonction `supprimer_mon_compte` ; schéma de référence dans `supabase/schema.sql`.
+Connexion par code à 6 chiffres reçu par e-mail (un lien s'ouvrirait dans Safari, pas dans l'appli installée).
+Sans compte, tout reste en local. Avec un compte, `app/compte.js` fusionne : carte par carte la réponse la plus
+récente gagne, collection et record le plus grand gagne, une remise à zéro vaut pour tous les appareils.
+`supabase-js` est auto-hébergé dans `app/vendor/` (version figée) pour marcher hors ligne.
+
 ## Contenus
 
 `app/data/contenus.json` : une carte = `id`, `matiere`, `notion`, `format`, `donnees`.

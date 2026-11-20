@@ -1,5 +1,5 @@
 // Facettes (ex-Agon) — fil vertical de fiches et de jeux, contenus dans data/contenus.json.
-// Pas encore de compte ni de Supabase : résultats et réglages restent dans ce navigateur (localStorage).
+// Résultats et réglages vivent dans ce navigateur (localStorage) ; avec un compte, compte.js les synchronise.
 "use strict";
 
 const NOMS_FORMATS = {
@@ -67,6 +67,9 @@ function melangerVraiment(liste) {
   return resultat;
 }
 
+// Toute écriture locale prévient compte.js, qui l'enverra au compte (si connecté)
+function changementLocal() { if (typeof Compte !== "undefined") Compte.programmer(); }
+
 // localStorage peut être indisponible (navigation privée, données bloquées) : l'appli marche quand même
 function lireResultats() {
   try {
@@ -88,20 +91,25 @@ function enregistrerResultat(id, reussi) {
   r.dernier = new Date().toISOString();
   resultats[id] = r;
   try { localStorage.setItem(CLE_RESULTATS, JSON.stringify(resultats)); } catch { /* tant pis */ }
+  changementLocal();
 }
 
-// Réglages : on stocke ce qui est EXCLU, pour qu'une nouvelle matière ou un nouveau jeu soit actif par défaut
+// Réglages : on stocke ce qui est EXCLU, pour qu'une nouvelle matière ou un nouveau jeu soit actif par défaut.
+// maj : date du dernier choix (le plus récent gagne entre appareils) ; remise : date de la dernière remise à zéro.
 function lireReglages() {
   try {
     const v = JSON.parse(localStorage.getItem(CLE_REGLAGES));
     return {
       matieresExclues: Array.isArray(v?.matieresExclues) ? v.matieresExclues : [],
       formatsExclus: Array.isArray(v?.formatsExclus) ? v.formatsExclus : [],
+      maj: typeof v?.maj === "string" ? v.maj : null,
+      remise: typeof v?.remise === "string" ? v.remise : null,
     };
-  } catch { return { matieresExclues: [], formatsExclus: [] }; }
+  } catch { return { matieresExclues: [], formatsExclus: [], maj: null, remise: null }; }
 }
 function ecrireReglages(r) {
   try { localStorage.setItem(CLE_REGLAGES, JSON.stringify(r)); } catch { /* tant pis */ }
+  changementLocal();
 }
 let reglages = lireReglages();
 
@@ -124,6 +132,7 @@ function lireCollection() {
 }
 function ecrireCollection(c) {
   try { localStorage.setItem(CLE_COLLECTION, JSON.stringify(c)); } catch { /* tant pis */ }
+  changementLocal();
 }
 
 // Vitrine : 7 emplacements de vinyles + le compte de disques d'or. gagne = "vinyle" | "or" anime la dernière arrivée.
@@ -197,6 +206,7 @@ function lireRecordSurvie() {
 }
 function ecrireRecordSurvie(record) {
   try { localStorage.setItem(CLE_SURVIE, JSON.stringify({ record })); } catch { /* tant pis */ }
+  changementLocal();
 }
 
 function creerEcranSurvie() {
@@ -1164,6 +1174,7 @@ function pastille(texte, active, couleur, basculer) {
     }
     b.setAttribute("aria-pressed", String(devient));
     basculer(devient);
+    reglages.maj = new Date().toISOString();
     ecrireReglages(reglages);
     reglagesModifies = true;
     remplirProgression();
@@ -1211,7 +1222,17 @@ function remplirReglages() {
       (actif) => basculerDans(reglages.formatsExclus, id, actif))));
   remplirProgression();
   document.getElementById("collection").replaceChildren(vitrine(lireCollection()));
+  if (typeof Compte !== "undefined") Compte.afficherDans(document.getElementById("compte"));
 }
+
+// Une synchro a rapporté du nouveau (autre appareil) : on redessine ce qui est à l'écran.
+// Le fil en cours n'est pas reconstruit, pour ne pas couper une partie.
+window.apresSynchro = () => {
+  if (!donnees) return;
+  if (dialogue.open) remplirReglages();
+  else if (!accueil.classList.contains("cache")) remplirAccueil();
+  else if (!arbre.classList.contains("cache")) remplirArbre();
+};
 
 function ouvrirReglages() {
   if (!donnees) return;
@@ -1247,6 +1268,9 @@ btnZero.addEventListener("click", () => {
   }
   clearTimeout(minuteurZero);
   try { localStorage.removeItem(CLE_RESULTATS); } catch { /* tant pis */ }
+  // La date de remise voyage avec les réglages : les autres appareils effacent aussi leurs anciens résultats
+  reglages.remise = new Date().toISOString();
+  ecrireReglages(reglages);
   session.joues = session.reussis = 0;
   afficherScore();
   btnZero.classList.remove("confirmer");

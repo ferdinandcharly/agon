@@ -303,6 +303,23 @@ h1, h2, h3 { font-family: var(--police); }
 .f-prog-barre i[style="width: 0%;"] { border-right: 0; }
 
 .f-danger { text-align: center; font-weight: 700; margin-top: 12px; width: 100%; }
+
+/* ---------- Compte ---------- */
+.f-compte { display: grid; gap: 10px; margin-top: 10px; }
+.f-compte-form { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; }
+.f-champ {
+  min-width: 0; padding: 12px 14px; border: var(--trait); border-radius: 14px; background: var(--papier);
+  font: 500 17px/1.3 var(--police); color: var(--encre);
+}
+.f-champ:focus-visible { outline: 3px solid var(--c, #7B4DFF); outline-offset: 2px; }
+.f-compte-valider { text-align: center; font-weight: 700; }
+.f-compte-actions .f-option { text-align: center; font-weight: 600; }
+.f-compte-msg { font-size: 15px; font-weight: 600; color: #B0003A; }
+.f-compte-msg:empty { display: none; }
+.f-compte-note { font-size: 14px; }
+.f-compte .f-danger { margin-top: 0; }
+.f-lien { justify-self: start; padding: 0; border: 0; background: none; font: 600 15px var(--police); color: var(--encre); text-decoration: underline; cursor: pointer; }
+@media (max-width: 380px) { .f-compte-form { grid-template-columns: minmax(0, 1fr); } }
 .f-danger.confirmer { background: var(--rate); }
 
 /* ---------- Texte à trous ---------- */

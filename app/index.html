@@ -65,8 +65,12 @@
     <div id="collection"></div>
   </section>
   <section>
+    <h3>Compte</h3>
+    <div class="f-compte" id="compte"></div>
+  </section>
+  <section>
     <h3>Remettre à zéro</h3>
-    <p class="f-discret">Efface tes résultats sur cet appareil. Les réglages et ta collection de vinyles sont gardés.</p>
+    <p class="f-discret">Efface tes résultats (sur tous tes appareils si tu es connecté). Les réglages et ta collection de vinyles sont gardés.</p>
     <button class="f-option f-danger" id="btn-zero" type="button">Effacer ma progression</button>
   </section>
   <p class="f-version" id="version">Version inconnue (hors ligne ou premier lancement)</p>
@@ -85,5 +89,8 @@
 
 <script src="validation.js"></script>
 <script src="app.js"></script>
+<!-- supabase-js 2.119.2 auto-hébergé (version figée, marche hors ligne) ; compte.js s'en passe s'il manque -->
+<script src="vendor/supabase-2.119.2.js"></script>
+<script src="compte.js"></script>
 </body>
 </html>
