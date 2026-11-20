@@ -306,7 +306,15 @@ function creerEcranSurvie() {
       rate ? el("div", { class: "f-recap" }, el("b", {}, "La bonne réponse"), el("p", {}, reponseEnClair(rate)))
         : el("div", { class: "f-recap" }, el("b", {}, "Temps écoulé"), el("p", {}, "Le chrono est tombé à zéro.")),
       el("button", { class: "f-option f-lancer", type: "button", onclick: construireFil }, "Rejouer"),
+      el("button", { class: "f-option f-retour-survie", type: "button", onclick: () => Classement.ouvrir("semaine") }, "Voir le classement"),
       el("button", { class: "f-option f-retour-survie", type: "button", onclick: afficherAccueil }, "Retour au menu"));
+    // Connecté : une fois la partie envoyée, on annonce un top 10 de la semaine
+    if (typeof Compte !== "undefined" && Compte.profil()) {
+      Compte.synchroniser().then(() => Classement.rangCetteSemaine()).then((rang) => {
+        if (rang && rang <= 10 && carte.isConnected)
+          carte.querySelector(".f-survie-fin")?.append(el("p", { class: "f-survie-rang" }, `${Classement.rangTexte(rang)} cette semaine !`));
+      }).catch(() => { /* hors ligne : rien à annoncer */ });
+    }
     fil.classList.remove("verrouille");
   }
 
@@ -931,12 +939,14 @@ const accueil = document.getElementById("accueil");
 const COULEUR_NUIT = "#16112B";
 
 const arbre = document.getElementById("arbre");
+const ecranClassement = document.getElementById("classement");
 
 function afficherAccueil() {
   if (fil.classList.contains("verrouille")) return;   // pas de fuite pendant une Prise d'otage
   observateurEcrans.disconnect();
   fil.classList.add("cache");
   arbre.classList.add("cache");
+  ecranClassement.classList.add("cache");
   accueil.classList.remove("cache");
   zoneScore.classList.add("cache");
   metaTheme.setAttribute("content", COULEUR_NUIT);
@@ -949,6 +959,7 @@ function montrerFil(mode) {
   modeFil = mode;
   accueil.classList.add("cache");
   arbre.classList.add("cache");
+  ecranClassement.classList.add("cache");
   fil.classList.remove("cache");
   construireFil();
   afficherScore();
@@ -1068,7 +1079,9 @@ function remplirAccueil() {
       el("button", { class: "f-bouton-survie", type: "button", onclick: () => montrerFil("survie") },
         el("b", {}, "Mode survie"),
         el("span", {}, lireRecordSurvie() ? `Record : ${lireRecordSurvie()}` : "Pas encore joué")),
-      el("p", { class: "f-ligne-info discret" }, "Bientôt : Top scores, Défis"))));
+      el("button", { class: "f-bouton-survie f-bouton-classement", type: "button", onclick: () => Classement.ouvrir() },
+        el("b", {}, "Classement"), el("span", {}, "Cette semaine et record")),
+      el("p", { class: "f-ligne-info discret" }, "Bientôt : amis, arène"))));
 }
 
 // ---------- Ton arbre : ce qu'on a vu, matière par matière ----------
