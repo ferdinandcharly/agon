@@ -59,7 +59,7 @@ connue, mais on ferme la porte :
     (une règle `:nth-child` par tuile). Les styles posés par JavaScript via `element.style` restent permis.
   - Pendant l'implémentation : console vide de toute violation CSP, sur l'accueil, le fil, la Survie, les
     réglages et le formulaire de connexion.
-- **Référent** : `<meta name="referrer" content="no-referrer">`.
+- **Référent** : `<meta name="referrer" content="strict-origin-when-cross-origin">` (origine seulement vers les autres sites ; `no-referrer` risquait d'empêcher Turnstile de reconnaître le domaine).
 - Règle pour la suite : jamais d'`innerHTML` avec une donnée venant d'un utilisateur ou de la base.
 
 ## 3. Base de données : règles générales

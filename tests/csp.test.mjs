@@ -40,6 +40,9 @@ try {
 
     const sansStyleEnLigne = await a.evaluer(`fetch("index.html").then((r) => r.text()).then((t) => !/class="tuile"[^>]*style=/.test(t))`);
     assert.equal(sansStyleEnLigne, true, `${nom} : des tuiles du lancement ont encore un attribut style`);
+    // Turnstile doit pouvoir reconnaître le site (origine seulement, jamais le chemin) : pas de no-referrer
+    assert.equal(await a.evaluer(`document.querySelector('meta[name=referrer]').content`), "strict-origin-when-cross-origin",
+      `${nom} : politique de referrer inattendue`);
     assert.deepEqual(a.violationsCsp, [], `${nom} : violations CSP`);
     assert.deepEqual(a.erreurs, [], `${nom} : erreurs`);
     console.log(`${nom} : 0 violation CSP, 0 erreur`);

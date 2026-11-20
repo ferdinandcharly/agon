@@ -9,22 +9,24 @@ const Donnees = (() => {
   // Un paragraphe « Titre : texte »
   const point = (titre, ...texte) => el("p", {}, el("b", {}, titre), `${NB}: `, ...texte);
 
+  function sessionGardee() {
+    try { return JSON.parse(localStorage.getItem("agon.session")); } catch { return null; }
+  }
+
   async function exporter() {
     const sb = typeof Compte !== "undefined" ? Compte.client() : null;
     let compte = null;
     let enLigne = null;
-    if (sb) {
-      // getSession lit la session locale : l'e-mail reste disponible hors ligne
-      const { data } = await sb.auth.getSession();
-      const utilisateur = data.session?.user;
-      if (utilisateur) {
-        compte = { email: utilisateur.email, cree_le: utilisateur.created_at };
-        try {
-          const { data: ligne, error } = await sb.from("progression")
-            .select("resultats, reglages, collection, survie, maj").maybeSingle();
-          if (!error) enLigne = ligne;
-        } catch { /* hors ligne : on exporte ce qu'il y a sur l'appareil */ }
-      }
+    // L'utilisateur vient de la mémoire ou de la session gardée sur l'appareil : jamais d'appel réseau ici
+    // (getSession essaierait de rafraîchir un jeton expiré et bloquerait jusqu'à 30 s hors ligne)
+    const utilisateur = typeof Compte !== "undefined" ? Compte.utilisateur() || sessionGardee()?.user : null;
+    if (utilisateur) compte = { email: utilisateur.email, cree_le: utilisateur.created_at };
+    if (sb && utilisateur && navigator.onLine !== false) {
+      try {
+        const { data: ligne, error } = await sb.from("progression")
+          .select("resultats, reglages, collection, survie, maj").maybeSingle();
+        if (!error) enLigne = ligne;
+      } catch { /* réseau perdu en route : on exporte ce qu'il y a sur l'appareil */ }
     }
     const contenu = {
       exporte_le: new Date().toISOString(),
@@ -33,23 +35,41 @@ const Donnees = (() => {
       appareil: { resultats: lireResultats(), reglages: lireReglages(), collection: lireCollection(),
                   survie: { record: lireRecordSurvie() } },
     };
-    const lien = el("a", { href: URL.createObjectURL(new Blob([JSON.stringify(contenu, null, 2)], { type: "application/json" })),
-      download: "facettes-mes-donnees.json" });
+    return contenu;
+  }
+
+  // Appelée directement au toucher (sans attente avant) : l'iPhone n'ouvre la feuille de partage que pendant un geste.
+  // Une appli installée sur l'écran d'accueil d'iPhone télécharge mal : on partage le fichier quand c'est possible.
+  function enregistrer(contenu) {
+    const fichier = new File([JSON.stringify(contenu, null, 2)], "facettes-mes-donnees.json", { type: "application/json" });
+    if (navigator.canShare?.({ files: [fichier] })) {
+      return navigator.share({ files: [fichier], title: "Mes données Facettes" })
+        .catch((err) => { if (err?.name !== "AbortError") throw err; });   // partage annulé : pas une erreur
+    }
+    const lien = el("a", { href: URL.createObjectURL(fichier), download: fichier.name });
     document.body.append(lien);
     lien.click();
     lien.remove();
-    setTimeout(() => URL.revokeObjectURL(lien.href), 1000);
-    return contenu;
+    setTimeout(() => URL.revokeObjectURL(lien.href), 60000);   // laisser au navigateur le temps de lire le fichier
+    return Promise.resolve();
   }
 
   function ouvrir() {
     const message = el("p", { class: "f-compte-msg", role: "status" });
+    const echec = (err) => { message.textContent = `L'export a échoué (${err?.message || "erreur inconnue"}).`; };
+    // En deux temps : préparer (lecture en ligne possible), puis enregistrer au toucher suivant
+    const boutonEnregistrer = el("button", { class: "f-option f-donnees-enregistrer cache", type: "button" }, "Enregistrer le fichier");
+    let pret = null;
+    boutonEnregistrer.addEventListener("click", () => { if (pret) enregistrer(pret).catch(echec); });
     const boutonExport = el("button", { class: "f-option f-donnees-export", type: "button" }, "Exporter mes données");
     boutonExport.addEventListener("click", async () => {
       boutonExport.disabled = true;
       message.textContent = "";
-      try { await exporter(); }
-      catch (err) { message.textContent = `L'export a échoué (${err?.message || "erreur inconnue"}).`; }
+      try {
+        pret = await exporter();
+        boutonEnregistrer.classList.remove("cache");
+        message.textContent = "Fichier prêt.";
+      } catch (err) { echec(err); }
       finally { boutonExport.disabled = false; }
     });
     const fermer = el("button", { class: "f-option f-fermer", type: "button", onclick: () => dialogue.close() }, "Fermer");
@@ -63,11 +83,11 @@ const Donnees = (() => {
         point("Tes droits", "exporter tes données avec le bouton ci-dessous, ou tout supprimer avec « Supprimer mon compte » dans les réglages. Pour toute autre demande : ",
           el("a", { href: "mailto:facettes.app@gmail.com" }, "facettes.app@gmail.com"), " (responsable : Ferdinand Charly)."),
         el("p", { class: "f-discret" }, `Facettes s'adresse aux étudiants. Avant 15${NB}ans, demande l'accord d'un parent.`),
-        boutonExport, message));
+        boutonExport, boutonEnregistrer, message));
     dialogue.showModal();
   }
 
   dialogue.addEventListener("click", (e) => { if (e.target === dialogue) dialogue.close(); });
 
-  return { ouvrir, exporter };
+  return { ouvrir, exporter, enregistrer };
 })();

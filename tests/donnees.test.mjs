@@ -40,9 +40,27 @@ try {
   assert.deepEqual(enLigne.appareil.resultats, RESULTATS, "export : données de l'appareil");
   console.log("1, 2 : dialogue complet, export en ligne correct");
 
-  // Connecté, hors ligne
+  // Enregistrement : feuille de partage si l'appareil sait partager un fichier (iPhone), sinon téléchargement
+  await a.evaluer(`(() => { navigator.canShare = () => true;
+    navigator.share = (d) => { window.__partage = d.files[0].name + "|" + d.files[0].type; return Promise.resolve(); }; })()`);
+  await a.cliquer("#donnees .f-donnees-export");
+  await a.cliquer("#donnees .f-donnees-enregistrer");
+  assert.equal(await a.evaluer("window.__partage"), "facettes-mes-donnees.json|application/json", "partage : fichier non transmis à la feuille de partage");
+  await a.evaluer(`(() => { navigator.canShare = undefined; window.__telechargement = null;
+    const clic = HTMLAnchorElement.prototype.click;
+    HTMLAnchorElement.prototype.click = function () { window.__telechargement = this.download; return clic.call(this); }; })()`);
+  await a.cliquer("#donnees .f-donnees-export");
+  await a.cliquer("#donnees .f-donnees-enregistrer");
+  assert.equal(await a.evaluer("window.__telechargement"), "facettes-mes-donnees.json", "repli : pas de téléchargement");
+  console.log("2b : partage (iPhone) puis repli téléchargement");
+
+  // Connecté, hors ligne, jeton expiré (plus d'une heure) : pas d'attente du réseau, e-mail quand même
   await a.couperReseau(true);
+  await a.evaluer(`(() => { const s = JSON.parse(localStorage.getItem("agon.session"));
+    s.expires_at = Math.floor(Date.now() / 1000) - 60; localStorage.setItem("agon.session", JSON.stringify(s)); })()`);
+  const debut = Date.now();
   const horsLigne = await a.evaluer("Donnees.exporter()");
+  assert.ok(Date.now() - debut < 3000, `hors ligne : export trop lent (${Date.now() - debut} ms)`);
   assert.equal(horsLigne.progression_en_ligne, null, "hors ligne : progression_en_ligne devrait être null");
   assert.equal(horsLigne.compte?.email, TEST_EMAIL, "hors ligne : l'e-mail vient de la session locale");
   assert.deepEqual(horsLigne.appareil.resultats, RESULTATS, "hors ligne : données de l'appareil");
@@ -63,7 +81,7 @@ try {
 
   assert.deepEqual([...a.violationsCsp, ...b.violationsCsp], [], "violations CSP");
   assert.deepEqual([...a.erreurs, ...b.erreurs].filter((e) => !/Failed to fetch|NetworkError|ERR_INTERNET_DISCONNECTED/.test(e)), [], "erreurs");
-  console.log("OK — Tes données (4 scénarios)");
+  console.log("OK — Tes données (5 scénarios)");
 } catch (err) {
   echec = err;
 } finally {
