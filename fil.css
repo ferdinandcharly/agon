@@ -674,42 +674,92 @@ h1, h2, h3 { font-family: var(--police); }
 .f-classement-ligne.moi { outline: 3px solid #00C08B; outline-offset: 2px; box-shadow: 3px 3px 0 #00C08B; }
 .f-classement-sep { text-align: center; color: #CFC9E8; font-weight: 800; letter-spacing: .2em; }
 .f-survie-rang { font-weight: 800; font-size: 18px; color: var(--encre); }
-.f-legende { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13px; color: #CFC9E8; }
-.f-legende .f-feuille { display: inline-flex; align-items: center; gap: 6px; }
-
-.f-tronc { position: relative; display: grid; gap: 12px; padding-left: 18px; margin-top: 4px; }
-.f-tronc::before { content: ""; position: absolute; left: 4px; top: 6px; bottom: 6px; width: 4px; border-radius: 4px; background: #3A3260; }
-
-.f-branche { position: relative; border: var(--trait); border-radius: 18px; background: #FFFFFF; color: var(--encre); box-shadow: 4px 4px 0 var(--c); }
-.f-branche::before { content: ""; position: absolute; left: -16px; top: 26px; width: 16px; height: 4px; background: #3A3260; }
-.f-branche summary {
-  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 10px; align-items: center;
-  padding: 12px 14px; cursor: pointer; list-style: none;
+/* ---------- Ta discothèque : le bac à disques ---------- */
+/* Une pochette par matière (couleur --c de la matière), la pochette centrée sort son vinyle : --sortie = 0,15 à 1 */
+.f-bac-cadre { position: relative; margin-inline: -18px; }
+.f-bac {
+  display: flex; gap: 6px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none;
+  padding: 18px calc(50% - 80px) 22px; overscroll-behavior-x: contain;
 }
-.f-branche summary::-webkit-details-marker { display: none; }
-.f-branche-nom { font-size: 19px; font-weight: 800; letter-spacing: -0.01em; }
-.f-branche-nom::before { content: "▸"; display: inline-block; margin-right: 6px; color: var(--gris); transition: transform .2s; }
-.f-branche[open] .f-branche-nom::before { transform: rotate(90deg); }
-.f-branche-detail { font-size: 13px; font-weight: 600; color: var(--gris); }
-.f-branche-barre { grid-column: span 2; height: 8px; border: 2px solid var(--encre); border-radius: 999px; overflow: hidden; background: #F4F2FA; }
-.f-branche-barre i { display: block; height: 100%; background: var(--c); }
+.f-bac::-webkit-scrollbar { display: none; }
+.f-pochette {
+  position: relative; flex: none; width: 160px; aspect-ratio: 1; padding: 0; border: 0; background: none;
+  scroll-snap-align: center; cursor: pointer; font-family: var(--police);
+  transform: scale(.78) rotate(-4deg); opacity: .55; transition: transform .3s var(--ressort), opacity .3s;
+}
+.f-pochette:nth-child(even) { transform: scale(.78) rotate(4deg); }
+.f-pochette { z-index: 2; }   /* les voisines passent devant le vinyle qui sort */
+.f-pochette.courante { transform: none; opacity: 1; z-index: 1; }
+.f-pochette-face {
+  position: relative; z-index: 1; display: flex; flex-direction: column; justify-content: space-between; align-items: flex-start;
+  width: 100%; height: 100%; padding: 10px; border: var(--trait); border-radius: 12px; background: var(--c);
+  color: var(--encre); box-shadow: 4px 4px 0 #FFFFFF; text-align: left; overflow: hidden;
+}
+.f-pochette-face::after {   /* cercles décoratifs de pochette */
+  content: ""; position: absolute; right: -30px; bottom: -30px; width: 110px; height: 110px; border-radius: 50%;
+  border: 14px solid rgb(22 17 43 / .14);
+}
+.f-pochette-titre { position: relative; z-index: 1; display: grid; gap: 2px; }
+.f-pochette-titre b { font-size: 20px; font-weight: 800; font-stretch: 80%; line-height: .95; letter-spacing: -0.02em; }
+.f-pochette-titre small { font-size: 12px; font-weight: 700; }
+.f-pochette-pastille {
+  position: relative; z-index: 1; padding: 2px 8px; border-radius: 999px; background: var(--encre); color: #FFFFFF;
+  font-size: 11px; font-weight: 800;
+}
+.f-vinyle-sort {
+  position: absolute; z-index: 0; top: 5%; left: 5%; width: 90%; aspect-ratio: 1; border-radius: 50%;
+  border: 2px solid #000000;
+  background: radial-gradient(circle, #FF5FA2 0 13%, var(--encre) 14% 16%, #2B2450 17% 60%, #241D42 61% 63%, #2B2450 64% 100%);
+  transition: transform .45s var(--ressort);
+}
+/* Le vinyle sort d'un tiers au minimum, des deux tiers quand l'album est maîtrisé */
+.f-pochette.courante .f-vinyle-sort { transform: translateX(calc((.3 + var(--sortie, .15) * .38) * 100%)) rotate(calc(var(--sortie, .15) * 200deg)); }
+.f-pochette.or .f-vinyle-sort {
+  background: radial-gradient(circle, #16112B 0 6%, #FFE27A 7% 14%, #B8860B 15% 17%, #FFC21A 18% 60%, #E0A800 61% 63%, #FFC21A 64% 100%);
+}
+.f-bac-prec, .f-bac-suiv {
+  position: absolute; z-index: 3; top: 50%; translate: 0 -50%; width: 38px; height: 38px; border: var(--trait);
+  border-radius: 50%; background: #FFFFFF; color: var(--encre); font: 800 22px/1 var(--police); cursor: pointer;
+  box-shadow: 2px 2px 0 #7B4DFF;
+}
+.f-bac-prec { left: 10px; } .f-bac-suiv { right: 10px; }
+@media (hover: none) { .f-bac-prec, .f-bac-suiv { display: none; } }   /* au doigt, on glisse */
+.f-bac-points { display: flex; justify-content: center; gap: 6px; margin-top: -6px; }
+.f-bac-points i { width: 8px; height: 8px; border-radius: 50%; background: #3A3260; }
+.f-bac-points i.actif { background: #FFFFFF; }
 
-.f-feuilles { display: grid; gap: 2px; padding: 0 14px 12px 30px; position: relative; }
-.f-feuilles::before { content: ""; position: absolute; left: 21px; top: 0; bottom: 22px; width: 2px; background: #E3DFF0; }
-.f-feuille { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 0 10px; align-items: center; position: relative; padding: 6px 0; }
-.f-feuilles .f-feuille::before { content: ""; position: absolute; left: -9px; top: 50%; width: 9px; height: 2px; background: #E3DFF0; }
-.f-feuille-nom { font-size: 15px; font-weight: 700; }
-.f-feuille-detail { grid-column: 2; font-size: 12px; color: var(--gris); }
-
-/* La feuille est une facette : un carré arrondi penché, comme la tuile qui saute du logo */
-.f-facette { width: 18px; height: 18px; border-radius: 5px; rotate: 15deg; border: 2px solid var(--encre); background: #FFFFFF; grid-row: span 2; }
-.f-feuille.maitrisee .f-facette { background: var(--c, #00C08B); }
-.f-feuille.en_cours .f-facette { background: color-mix(in srgb, var(--c, #7B4DFF) 35%, #FFFFFF); }
-.f-feuille.a_revoir .f-facette { background: #FFC9D2; border-color: #D61F3B; }
-.f-feuille.pas_vue .f-facette { border-style: dashed; border-color: #B9B3D1; }
-.f-legende .f-facette { width: 14px; height: 14px; }
-.f-legende .f-feuille.maitrisee .f-facette { background: #00C08B; }
-.f-legende .f-feuille.en_cours .f-facette { background: #C9B8FF; }
+/* Pistes de l'album courant */
+.f-album { display: grid; gap: 10px; padding: 14px; border: var(--trait); border-radius: 18px; background: #FFFFFF;
+  color: var(--encre); box-shadow: 4px 4px 0 var(--c); }
+.f-album-haut h2 { font-size: 24px; font-weight: 800; font-stretch: 80%; letter-spacing: -0.02em; line-height: 1; }
+.f-album-haut p { font-size: 13px; color: var(--gris); margin-top: 2px; }
+.f-album-jouer { text-align: center; font-weight: 800; background: var(--encre); color: #FFFFFF; }
+.f-pistes { list-style: none; display: grid; padding: 0; margin: 0; }
+.f-piste {
+  display: grid; grid-template-columns: 18px 14px minmax(0, 1fr) auto; gap: 4px 8px; align-items: center;
+  padding: 8px 0; border-top: 2px dashed #E3DFF0;
+}
+.f-piste:first-child { border-top: 0; }
+.f-piste-num { font-size: 13px; font-weight: 700; color: var(--gris); text-align: right; }
+.f-piste-etat { width: 14px; height: 14px; border-radius: 4px; rotate: 15deg; border: 2px solid var(--encre); background: #FFFFFF; }
+.f-piste-etat.maitrisee { background: #00C08B; }
+.f-piste-etat.en_cours { background: #8FA3FF; }
+.f-piste-etat.a_revoir { background: #FF5FA2; }
+.f-piste-etat.pas_vue { border-style: dashed; border-color: #B9B3D1; }
+.f-piste-nom { font-size: 15px; font-weight: 700; display: grid; }
+.f-piste-nom small { font-size: 12px; font-weight: 500; color: var(--gris); }
+.f-piste-jouer {
+  width: 34px; height: 34px; border: var(--trait); border-radius: 50%; background: var(--c); color: var(--encre);
+  font-size: 13px; cursor: pointer; box-shadow: 2px 2px 0 var(--encre);
+}
+.f-cases { grid-column: 3 / -1; display: flex; gap: 6px; }
+.f-case {
+  padding: 3px 10px; border: 2px solid var(--encre); border-radius: 999px; background: #FFFFFF; color: var(--encre);
+  font: 700 12px var(--police); cursor: pointer;
+}
+.f-case[aria-pressed="true"][data-cas="a_venir"] { background: #E6E3F5; box-shadow: 2px 2px 0 var(--encre); }
+.f-case[aria-pressed="true"][data-cas="ds_passe"] { background: #FFC21A; box-shadow: 2px 2px 0 var(--encre); }
+.f-piste.grise .f-piste-nom, .f-piste.grise .f-piste-etat, .f-piste.grise .f-piste-jouer { opacity: .4; }
 
 /* ---------- Mode Survie ---------- */
 .f-survie-record { font-size: 16px; font-weight: 700; }

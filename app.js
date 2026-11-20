@@ -992,14 +992,14 @@ function carteRetourMenu() {
 const accueil = document.getElementById("accueil");
 const COULEUR_NUIT = "#16112B";
 
-const arbre = document.getElementById("arbre");
+const ecranDiscotheque = document.getElementById("discotheque");
 const ecranClassement = document.getElementById("classement");
 
 function afficherAccueil() {
   if (fil.classList.contains("verrouille")) return;   // pas de fuite pendant une Prise d'otage
   observateurEcrans.disconnect();
   fil.classList.add("cache");
-  arbre.classList.add("cache");
+  ecranDiscotheque.classList.add("cache");
   ecranClassement.classList.add("cache");
   accueil.classList.remove("cache");
   zoneScore.classList.add("cache");
@@ -1013,7 +1013,7 @@ function montrerFil(mode, cible = null) {
   modeFil = mode;
   cibleFil = cible;
   accueil.classList.add("cache");
-  arbre.classList.add("cache");
+  ecranDiscotheque.classList.add("cache");
   ecranClassement.classList.add("cache");
   fil.classList.remove("cache");
   construireFil();
@@ -1101,8 +1101,8 @@ function remplirAccueil() {
   const pluriel = (n, mot) => `${n} ${mot}${n > 1 ? "s" : ""}`;
   const jour = new Date().toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" });
 
-  const boule = el("button", { class: "f-boule", type: "button", onclick: ouvrirArbre,
-    "aria-label": `Ta boule : ${allumees} notions maîtrisées sur ${notions.length}. Ouvrir ton arbre.` },
+  const boule = el("button", { class: "f-boule", type: "button", onclick: () => Discotheque.ouvrir(),
+    "aria-label": `Ta boule : ${allumees} notions maîtrisées sur ${notions.length}. Ouvrir ta discothèque.` },
     dessinerBoule(notions));
 
   // Le tube du jour prend la place de la facette qui saute, sur le bord de la boule
@@ -1122,7 +1122,7 @@ function remplirAccueil() {
     el("div", { class: "f-scene" }, boule, bulle),
     el("p", { class: "f-boule-legende" },
       el("b", {}, `${allumees} notion${allumees > 1 ? "s" : ""} allumée${allumees > 1 ? "s" : ""} sur ${notions.length}`),
-      " Touche la boule pour voir ton arbre."),
+      " Touche la boule pour ouvrir ta discothèque."),
     el("div", { class: "f-accueil-bas" },
       el("button", { class: "f-lancer-session", type: "button", onclick: () => montrerFil("session") },
         el("span", { class: "f-tuile-rond", "aria-hidden": "true" }, icone("M7 4.5v15a1 1 0 0 0 1.5.86l12-7.5a1 1 0 0 0 0-1.72l-12-7.5A1 1 0 0 0 7 4.5Z")),
@@ -1139,15 +1139,7 @@ function remplirAccueil() {
       el("p", { class: "f-ligne-info discret" }, "Bientôt : amis, arène"))));
 }
 
-// ---------- Ton arbre : ce qu'on a vu, matière par matière ----------
-// Chaque matière est une branche, chaque notion une feuille-facette colorée selon son état.
-const ETATS_NOTION = {
-  maitrisee: "Maîtrisée",
-  en_cours: "En cours",
-  a_revoir: "À revoir",
-  pas_vue: "Pas encore vue",
-};
-
+// ---------- État d'une notion (accueil, discothèque) ----------
 // État d'une notion à partir de ses cartes : un jeu raté → à revoir ; tous les jeux réussis → maîtrisée
 function etatNotion(cartes, resultats) {
   const jeux = cartes.filter((c) => c.format !== "fiche");
@@ -1155,62 +1147,6 @@ function etatNotion(cartes, resultats) {
   if (jeux.length && jeux.every((c) => resultats[c.id]?.derniereOk === true)) return "maitrisee";
   if (cartes.some((c) => resultats[c.id]?.vu > 0)) return "en_cours";
   return "pas_vue";
-}
-
-function ouvrirArbre() {
-  accueil.classList.add("cache");
-  arbre.classList.remove("cache");
-  remplirArbre();
-  arbre.scrollTo({ top: 0 });
-}
-
-function remplirArbre() {
-  const resultats = lireResultats();
-  const cartes = donnees.contenus.filter((c) => contenuValide(c));
-  const totaux = { maitrisee: 0, en_cours: 0, a_revoir: 0, pas_vue: 0 };
-
-  const branches = donnees.matieres.map((m) => {
-    const cartesMatiere = cartes.filter((c) => c.matiere === m.id);
-    if (!cartesMatiere.length) return null;
-    // Notions dans l'ordre où elles apparaissent dans le fichier
-    const notions = [...new Set(cartesMatiere.map((c) => c.notion))].map((nom) => {
-      const cartesNotion = cartesMatiere.filter((c) => c.notion === nom);
-      const etat = etatNotion(cartesNotion, resultats);
-      totaux[etat]++;
-      const vues = cartesNotion.filter((c) => resultats[c.id]?.vu > 0).length;
-      return { nom, etat, vues, total: cartesNotion.length };
-    });
-    const maitrisees = notions.filter((n) => n.etat === "maitrisee").length;
-    const touchees = notions.filter((n) => n.etat !== "pas_vue").length;
-
-    const feuilles = el("ul", { class: "f-feuilles" }, ...notions.map((n) =>
-      el("li", { class: `f-feuille ${n.etat}` },
-        el("span", { class: "f-facette", "aria-hidden": "true" }),
-        el("span", { class: "f-feuille-nom" }, n.nom),
-        el("span", { class: "f-feuille-detail" }, n.etat === "pas_vue"
-          ? `${n.total} carte${n.total > 1 ? "s" : ""} à découvrir`
-          : `${ETATS_NOTION[n.etat]}, ${n.vues} carte${n.vues > 1 ? "s" : ""} vue${n.vues > 1 ? "s" : ""} sur ${n.total}`))));
-
-    const branche = el("details", { class: "f-branche", "data-matiere": m.id },
-      el("summary", {},
-        el("span", { class: "f-branche-nom" }, m.nom),
-        el("span", { class: "f-branche-detail" }, `${maitrisees}/${notions.length} maîtrisée${maitrisees > 1 ? "s" : ""}`),
-        el("span", { class: "f-branche-barre", "aria-hidden": "true" }, el("i"))),
-      feuilles);
-    branche.querySelector(".f-branche-barre i").style.width = `${(maitrisees / notions.length) * 100}%`;
-    if (touchees) branche.open = true;   // les matières déjà travaillées s'ouvrent d'elles-mêmes
-    return branche;
-  }).filter(Boolean);
-
-  const legende = el("div", { class: "f-legende" }, ...Object.entries(ETATS_NOTION).map(([etat, nom]) =>
-    el("span", { class: `f-feuille ${etat}` }, el("span", { class: "f-facette", "aria-hidden": "true" }), `${nom} (${totaux[etat]})`)));
-
-  arbre.replaceChildren(el("div", { class: "f-accueil-col" },
-    el("button", { class: "f-retour-menu", type: "button", onclick: afficherAccueil }, "← Retour au menu"),
-    el("h1", { class: "f-accueil-titre" }, "Ton arbre"),
-    el("p", { class: "f-arbre-intro" }, "Ce que tu as déjà vu, matière par matière. Touche une matière pour l'ouvrir ou la fermer."),
-    legende,
-    el("div", { class: "f-tronc" }, ...branches)));
 }
 
 // Petite icône pleine (un seul tracé), pour les tuiles
@@ -1301,7 +1237,7 @@ window.apresSynchro = () => {
   if (!donnees) return;
   if (dialogue.open) remplirReglages();
   else if (!accueil.classList.contains("cache")) remplirAccueil();
-  else if (!arbre.classList.contains("cache")) remplirArbre();
+  else if (!ecranDiscotheque.classList.contains("cache")) Discotheque.rafraichir();
 };
 
 function ouvrirReglages() {
@@ -1315,7 +1251,7 @@ function ouvrirReglages() {
 }
 dialogue.addEventListener("close", () => {
   if (!accueil.classList.contains("cache")) remplirAccueil();   // stats et compte de cartes à jour
-  else if (!arbre.classList.contains("cache")) remplirArbre();
+  else if (!ecranDiscotheque.classList.contains("cache")) Discotheque.rafraichir();
   else if (!ecranClassement.classList.contains("cache")) Classement.recharger();
   else if (reglagesModifies) construireFil();
 });
