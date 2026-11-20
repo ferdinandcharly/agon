@@ -31,7 +31,10 @@ const Compte = (() => {
   let aRefaire = false;
   let conteneur = null;      // section « Compte » des réglages, redessinée à chaque changement
   let emailEnAttente = null; // adresse à qui on vient d'envoyer un code
-  let profil = null;         // { pseudo } une fois lu en ligne ; sans pseudo, les parties attendent
+  let profil;               // undefined = pas encore lu, null = pas de pseudo, { pseudo } ; sans pseudo, les parties attendent
+  let recordAMoi = true;     // le record de cet appareil appartient-il au compte connecté (pas à un compte précédent) ?
+  const CLE_COMPTE = "agon.compte";        // dernier compte connecté sur cet appareil
+  const CLE_CLASSEMENT = "agon.classement"; // cache du classement (pseudos des autres) : propre à un compte
 
   // ---------- File des parties de Survie (agon.parties) ----------
   // Chaque partie a un id créé ici : renvoyée deux fois, elle n'est comptée qu'une fois.
@@ -43,15 +46,17 @@ const Compte = (() => {
     try { file.length ? localStorage.setItem(CLE_PARTIES, JSON.stringify(file)) : localStorage.removeItem(CLE_PARTIES); }
     catch { /* tant pis */ }
   }
+  // Chaque partie porte son compte : sur un appareil partagé, on n'envoie jamais celles d'un autre
+  const fileDe = (file, id) => file.filter((p) => p.user_id === id);
   function publierPartie(score, joueLe = new Date()) {
     if (!utilisateur) return;   // sans compte, seul le record local existe
-    ecrireFile([...lireFile(), { id: crypto.randomUUID(), score, joue_le: joueLe.toISOString() }]);
+    ecrireFile([...lireFile(), { id: crypto.randomUUID(), user_id: utilisateur.id, score, joue_le: joueLe.toISOString() }]);
     programmer();
   }
 
   // Envoie la file ; une partie quitte la file une fois reçue, ou refusée pour de bon (date, rafale, score)
   async function envoyerParties() {
-    const file = lireFile();
+    const file = fileDe(lireFile(), utilisateur.id);
     if (!profil || !file.length) return;
     const { error } = await sb.from("parties_survie").upsert(file, { onConflict: "id", ignoreDuplicates: true });
     if (!error) { ecrireFile(lireFile().filter((p) => !file.some((f) => f.id === p.id))); return; }
@@ -141,6 +146,8 @@ const Compte = (() => {
     enCours = (async () => {
       changerEtat("synchro");
       try {
+        // Le profil d'abord : un échec ailleurs ne doit pas laisser croire qu'il n'y a pas de pseudo
+        try { await lireProfil(); } catch { /* on réessaiera à la prochaine synchro */ }
         const { data, error } = await sb.from("progression")
           .select("resultats, reglages, collection, survie").maybeSingle();
         if (error) throw error;
@@ -151,7 +158,6 @@ const Compte = (() => {
         const { error: e2 } = await sb.from("progression")
           .upsert({ user_id: utilisateur.id, ...fusion, maj: new Date().toISOString() });
         if (e2) throw e2;
-        await lireProfil();
         await envoyerParties();
         derniereSynchro = new Date();
         changerEtat("ok");
@@ -187,8 +193,25 @@ const Compte = (() => {
   sb?.auth.onAuthStateChange((evenement, session) => {
     const avant = utilisateur?.id;
     utilisateur = session?.user ?? null;
-    if (!utilisateur) { profil = null; changerEtat("deconnecte"); return; }
-    if (utilisateur.id !== avant) setTimeout(synchroniser, 0);
+    if (!utilisateur) {
+      profil = undefined;
+      try { localStorage.removeItem(CLE_CLASSEMENT); } catch { /* tant pis */ }
+      changerEtat("deconnecte");
+      return;
+    }
+    if (utilisateur.id !== avant) {
+      profil = undefined;
+      // Un autre compte que le précédent sur cet appareil : ni ses parties ni son record ne passent à celui-ci
+      let precedent = null;
+      try { precedent = localStorage.getItem(CLE_COMPTE); } catch { /* tant pis */ }
+      recordAMoi = !precedent || precedent === utilisateur.id;
+      if (!recordAMoi) {
+        ecrireFile(fileDe(lireFile(), utilisateur.id));
+        try { localStorage.removeItem(CLE_CLASSEMENT); } catch { /* tant pis */ }
+      }
+      try { localStorage.setItem(CLE_COMPTE, utilisateur.id); } catch { /* tant pis */ }
+      setTimeout(synchroniser, 0);
+    }
     else dessiner();
   });
 
@@ -198,6 +221,9 @@ const Compte = (() => {
   function messagePseudo(pseudo, erreur) {
     if (!FORMAT_PSEUDO.test(pseudo)) return "3 à 20 caractères : lettres, chiffres, _ et -.";
     if (!erreur) return null;
+    // 23505 sur la clé primaire = ce compte a déjà un profil (lu trop tôt), pas un pseudo pris
+    if (erreur.code === "23505" && /profils_pkey/.test(`${erreur.message} ${erreur.details || ""}`))
+      return "Tu as déjà un pseudo : il va s'afficher.";
     if (erreur.code === "23505") return "Déjà pris : essaie un autre pseudo.";
     return messageErreur(erreur);
   }
@@ -210,10 +236,15 @@ const Compte = (() => {
       ? sb.from("profils").update({ pseudo }).eq("user_id", utilisateur.id)
       : sb.from("profils").insert({ pseudo });
     const { error } = await requete;
+    if (error?.code === "23505" && /profils_pkey/.test(`${error.message} ${error.details || ""}`)) {
+      await lireProfil();   // le profil existait déjà : on l'affiche au lieu de dire « Déjà pris »
+      return;
+    }
     if (error) throw Object.assign(error, { messageAffiche: messagePseudo(pseudo, error) });
     const premier = !profil;
     profil = { pseudo };
-    if (premier && lireRecordSurvie() > 0) publierPartie(lireRecordSurvie());
+    // Le record de l'appareil n'est publié que s'il appartient à ce compte
+    if (premier && recordAMoi && lireRecordSurvie() > 0) publierPartie(lireRecordSurvie());
     await synchroniser();
   }
 
@@ -269,8 +300,9 @@ const Compte = (() => {
     minuteur = null;
     const { error } = await sb.rpc("supprimer_mon_compte");
     if (error) throw error;
-    ecrireFile([]);   // les parties en attente appartenaient au compte supprimé
-    profil = null;
+    ecrireFile(lireFile().filter((p) => p.user_id !== utilisateur?.id));   // les parties du compte supprimé
+    try { localStorage.removeItem(CLE_CLASSEMENT); localStorage.removeItem(CLE_COMPTE); } catch { /* tant pis */ }
+    profil = undefined;
     await sb.auth.signOut({ scope: "local" }).catch(() => {});
   }
 
@@ -301,6 +333,7 @@ const Compte = (() => {
   // Sans pseudo : le formulaire (obligatoire pour le classement). Avec : le pseudo et « Changer ».
   let changementPseudo = false;
   function blocPseudo(message) {
+    if (profil === undefined) return el("p", { class: "f-discret f-pseudo" }, "Chargement de ton pseudo…");
     if (profil && !changementPseudo) {
       return el("p", { class: "f-pseudo" }, "Pseudo : ", el("b", {}, profil.pseudo), " ",
         el("button", { class: "f-lien", type: "button", onclick: () => { changementPseudo = true; dessiner(); } }, "Changer"));
@@ -315,7 +348,19 @@ const Compte = (() => {
       formulaire);
   }
 
+  // Un redessin (à chaque synchro) ne doit pas effacer ce qu'on est en train de taper
   function dessiner() {
+    const champ = conteneur?.querySelector("input");
+    const garde = champ && { label: champ.getAttribute("aria-label"), valeur: champ.value, focus: document.activeElement === champ };
+    dessinerSection();
+    if (!garde) return;
+    const nouveau = [...conteneur.querySelectorAll("input")].find((c) => c.getAttribute("aria-label") === garde.label);
+    if (!nouveau) return;
+    if (garde.valeur && !nouveau.value) nouveau.value = garde.valeur;
+    if (garde.focus) nouveau.focus();
+  }
+
+  function dessinerSection() {
     if (!conteneur) return;
     const message = el("p", { class: "f-compte-msg", role: "status" });
     if (!sb) {
@@ -418,6 +463,7 @@ const Compte = (() => {
     publierPartie,
     profil: () => profil,
     messagePseudo,
+    fileDe,
     client: () => sb,
     utilisateur: () => utilisateur,
   };
