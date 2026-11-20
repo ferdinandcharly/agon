@@ -2,8 +2,8 @@
 // Coquille (HTML/CSS/JS/police) : cache d'abord. Données (data/*.json) : réseau d'abord avec un délai
 // maximal, cache en secours, sinon les nouvelles cartes n'apparaîtraient jamais. Seules les réponses OK
 // sont mises en cache. Changer VERSION à chaque livraison de la coquille pour invalider l'ancien cache.
-const VERSION = "facettes-v17";
-const COQUILLE = [".", "index.html", "theme.css", "fil.css", "validation.js", "app.js", "manifest.webmanifest",
+const VERSION = "facettes-v18";
+const COQUILLE = [".", "index.html", "theme.css", "fil.css", "validation.js", "app.js", "compte.js", "vendor/supabase-2.119.2.js", "manifest.webmanifest",
   "favicon.svg", "icone-180.png", "icone-192.png", "icone-512.png", "polices/bricolage-grotesque.woff2", "data/contenus.json"];
 const DELAI_RESEAU = 4000;   // ms : au-delà, on sert les cartes en cache
 
@@ -48,6 +48,8 @@ function reseauPuisCache(requete) {
 
 self.addEventListener("fetch", (evt) => {
   if (evt.request.method !== "GET") return;
+  // Appels à Supabase (autre origine) : jamais de cache, le navigateur s'en occupe
+  if (new URL(evt.request.url).origin !== location.origin) return;
   const estDonnee = new URL(evt.request.url).pathname.includes("/data/");
   evt.respondWith(
     estDonnee
