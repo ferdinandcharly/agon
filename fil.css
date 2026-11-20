@@ -317,6 +317,8 @@ h1, h2, h3 { font-family: var(--police); }
 .f-compte-msg { font-size: 15px; font-weight: 600; color: #B0003A; }
 .f-compte-msg:empty { display: none; }
 .f-compte-note { font-size: 14px; }
+.f-pseudo { display: grid; gap: 8px; }
+.f-pseudo .f-lien { display: inline; margin-left: 4px; }
 .f-turnstile { min-height: 65px; }
 .f-donnees-ouvrir { text-align: center; font-weight: 600; }
 
