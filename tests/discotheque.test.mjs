@@ -93,6 +93,86 @@ try {
   await a.evaluer("afficherAccueil()");
   console.log("5 : fil ciblé vide propre");
 
+  // 6 : ordre des albums, pastilles, vinyle doré (résultats préparés)
+  const prep = await a.evaluer(`(() => {
+    const valides = donnees.contenus.filter((c) => contenuValide(c));
+    const notionsDe = (m) => [...new Set(valides.filter((c) => c.matiere === m).map((c) => c.notion))];
+    const res = {};
+    const jouer = (m, notion, ok) => valides.filter((c) => c.matiere === m && c.notion === notion && c.format !== "fiche")
+      .forEach((c) => { res[c.id] = { vu: 1, ok: ok ? 1 : 0, ko: ok ? 0 : 1, derniereOk: ok, boite: ok ? 2 : 1, dernier: "2026-11-20T08:00:00Z" }; });
+    const sys = notionsDe("sys"), eco = notionsDe("eco"), dev = notionsDe("dev"), res2 = notionsDe("reseau");
+    jouer("sys", sys[0], false); jouer("sys", sys[1], false);
+    jouer("eco", eco[0], false);
+    dev.forEach((n) => jouer("dev", n, true));
+    return { res, notions: { ["reseau/" + res2[0]]: "a_venir", ["reseau/" + res2[1]]: "a_venir" } }; })()`);
+  await a.evaluer(`localStorage.setItem("agon.resultats", ${JSON.stringify(JSON.stringify(prep.res))})`);
+  await avecReglages(a, { notions: prep.notions });
+  await a.cliquer(".f-boule");
+  await a.attendreQue("!!document.querySelector('#discotheque .f-pochette')");
+  const r6 = await a.evaluer(`(() => {
+    const p = [...document.querySelectorAll("#discotheque .f-pochette")];
+    const pastille = (m) => p.find((x) => x.dataset.matiere === m)?.querySelector(".f-pochette-pastille")?.innerText ?? "";
+    return { ordre: p.map((x) => x.dataset.matiere).slice(0, 2), sys: pastille("sys"), eco: pastille("eco"), reseau: pastille("reseau"),
+             devOr: p.find((x) => x.dataset.matiere === "dev")?.classList.contains("or"),
+             courant: Discotheque.albumCourant() }; })()`);
+  assert.deepEqual(r6.ordre, ["sys", "eco"], "scénario 6 : ordre des albums");
+  assert.match(r6.sys, /2 à revoir/, "scénario 6 : pastille Systèmes");
+  assert.match(r6.eco, /1 à revoir/, "scénario 6 : pastille Économie");
+  assert.match(r6.reseau, /2 à venir/, "scénario 6 : pastille Réseaux");
+  assert.equal(r6.devOr, true, "scénario 6 : vinyle doré pour un album maîtrisé");
+  assert.equal(r6.courant, "sys", "scénario 6 : le bac ne s'ouvre pas sur l'album le plus urgent");
+  await attendre(500);
+  await a.capture("tests/captures/discotheque-iPhone.png");
+  console.log("6 : ordre, pastilles, vinyle doré");
+
+  // 7 : le bac se parcourt (bouton, clavier, glissement rapide)
+  await a.cliquer("#discotheque .f-bac-suiv");
+  await attendre(600);
+  assert.equal(await a.evaluer("Discotheque.albumCourant()"), "eco", "scénario 7 : « › » ne passe pas à l'album suivant");
+  await a.evaluer("document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }))");
+  await attendre(600);
+  const apresFleche = await a.evaluer("Discotheque.albumCourant()");
+  assert.notEqual(apresFleche, "eco", "scénario 7 : la flèche droite ne change pas d'album");
+  const viseur = await a.evaluer(`(() => { const bac = document.querySelector("#discotheque .f-bac");
+    const p = [...bac.querySelectorAll(".f-pochette")]; const cible = p[Math.min(5, p.length - 1)];
+    bac.scrollTo({ left: cible.offsetLeft - (bac.clientWidth - cible.offsetWidth) / 2, behavior: "instant" });
+    return cible.dataset.matiere; })()`);
+  await attendre(700);
+  assert.equal(await a.evaluer("Discotheque.albumCourant()"), viseur, "scénario 7 : l'album courant ne suit pas le glissement");
+  assert.equal(await a.evaluer("document.querySelector('#discotheque .f-pistes').dataset.matiere"), viseur, "scénario 7 : pistes d'un autre album");
+  console.log("7 : bouton, clavier et glissement");
+
+  // 8 : cases d'une piste, « ▶ » et « Réviser l'album »
+  await a.evaluer("Discotheque.ouvrir('reseau')");
+  await attendre(500);
+  const piste = await a.evaluer(`(() => { const p = document.querySelector("#discotheque .f-piste:not(.grise)"); return p.dataset.notion; })()`);
+  const sel = (cas) => `#discotheque .f-piste[data-notion="${piste}"] .f-case[data-cas="${cas}"]`;
+  await a.cliquer(sel("a_venir"));
+  assert.equal(await a.evaluer(`document.querySelector('${sel("a_venir")}').getAttribute("aria-pressed")`), "true", "scénario 8 : case À venir non cochée");
+  assert.equal(await a.evaluer(`document.querySelector('#discotheque .f-piste[data-notion="${piste}"]').classList.contains("grise")`), true, "scénario 8 : piste À venir non grisée");
+  assert.equal(await a.evaluer(`etatCase("reseau", ${JSON.stringify(piste)})`), "a_venir", "scénario 8 : réglage non enregistré");
+  await a.cliquer(sel("ds_passe"));
+  assert.equal(await a.evaluer(`document.querySelector('${sel("a_venir")}').getAttribute("aria-pressed")`), "false", "scénario 8 : les cases ne s'excluent pas");
+  assert.equal(await a.evaluer(`etatCase("reseau", ${JSON.stringify(piste)})`), "ds_passe", "scénario 8 : DS passé non enregistré");
+  await a.cliquer(`#discotheque .f-piste[data-notion="${piste}"] .f-piste-jouer`);
+  assert.equal(await a.evaluer(`modeFil + "|" + cibleFil?.notion + "|" + document.getElementById("fil").classList.contains("cache")`), `notion|${piste}|false`, "scénario 8 : « ▶ » ne lance pas la piste");
+  await a.evaluer("Discotheque.ouvrir('reseau')");
+  await attendre(400);
+  await a.cliquer("#discotheque .f-album-jouer");
+  assert.equal(await a.evaluer(`modeFil + "|" + cibleFil?.matiere`), "album|reseau", "scénario 8 : « Réviser l'album » ne lance pas l'album");
+  console.log("8 : cases, piste et album");
+
+  // 9 : PC
+  const pc = await edge.nouvelAppareil({ largeur: 1280, hauteur: 800, mobile: false });
+  await pc.aller(serveur.url);
+  await pc.attendreQue("!document.getElementById('lancement')", 8000);
+  await pc.cliquer(".f-boule");
+  await attendre(700);
+  await pc.capture("tests/captures/discotheque-PC.png");
+  assert.deepEqual(pc.violationsCsp, [], "scénario 9 : violations CSP (PC)");
+  assert.deepEqual(pc.erreurs, [], "scénario 9 : erreurs (PC)");
+  console.log("9 : PC");
+
   assert.deepEqual(a.violationsCsp, [], "violations CSP");
   assert.deepEqual(a.erreurs, [], "erreurs");
   console.log("OK — discothèque");
