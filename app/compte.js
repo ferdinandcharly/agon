@@ -31,6 +31,45 @@ const Compte = (() => {
   let aRefaire = false;
   let conteneur = null;      // section « Compte » des réglages, redessinée à chaque changement
   let emailEnAttente = null; // adresse à qui on vient d'envoyer un code
+  let profil = null;         // { pseudo } une fois lu en ligne ; sans pseudo, les parties attendent
+
+  // ---------- File des parties de Survie (agon.parties) ----------
+  // Chaque partie a un id créé ici : renvoyée deux fois, elle n'est comptée qu'une fois.
+  const CLE_PARTIES = "agon.parties";
+  function lireFile() {
+    try { const v = JSON.parse(localStorage.getItem(CLE_PARTIES)); return Array.isArray(v) ? v : []; } catch { return []; }
+  }
+  function ecrireFile(file) {
+    try { file.length ? localStorage.setItem(CLE_PARTIES, JSON.stringify(file)) : localStorage.removeItem(CLE_PARTIES); }
+    catch { /* tant pis */ }
+  }
+  function publierPartie(score, joueLe = new Date()) {
+    if (!utilisateur) return;   // sans compte, seul le record local existe
+    ecrireFile([...lireFile(), { id: crypto.randomUUID(), score, joue_le: joueLe.toISOString() }]);
+    programmer();
+  }
+
+  // Envoie la file ; une partie quitte la file une fois reçue, ou refusée pour de bon (date, rafale, score)
+  async function envoyerParties() {
+    const file = lireFile();
+    if (!profil || !file.length) return;
+    const { error } = await sb.from("parties_survie").upsert(file, { onConflict: "id", ignoreDuplicates: true });
+    if (!error) { ecrireFile(lireFile().filter((p) => !file.some((f) => f.id === p.id))); return; }
+    if (error.code !== "P0001" && error.code !== "23514") throw error;   // réseau ou autre : on réessaiera
+    // Refus définitif d'une partie : on les renvoie une par une pour ne perdre que la fautive
+    for (const partie of file) {
+      const { error: e } = await sb.from("parties_survie").upsert([partie], { onConflict: "id", ignoreDuplicates: true });
+      if (e && e.code !== "P0001" && e.code !== "23514") throw e;
+      if (e) console.warn("[Facettes] partie refusée :", e.message);
+      ecrireFile(lireFile().filter((p) => p.id !== partie.id));
+    }
+  }
+
+  async function lireProfil() {
+    const { data, error } = await sb.from("profils").select("pseudo").maybeSingle();
+    if (error) throw error;
+    profil = data;
+  }
 
   // ---------- Fusion ----------
   function lireLocal() {
@@ -112,6 +151,8 @@ const Compte = (() => {
         const { error: e2 } = await sb.from("progression")
           .upsert({ user_id: utilisateur.id, ...fusion, maj: new Date().toISOString() });
         if (e2) throw e2;
+        await lireProfil();
+        await envoyerParties();
         derniereSynchro = new Date();
         changerEtat("ok");
         if (change) window.apresSynchro?.();
@@ -146,7 +187,7 @@ const Compte = (() => {
   sb?.auth.onAuthStateChange((evenement, session) => {
     const avant = utilisateur?.id;
     utilisateur = session?.user ?? null;
-    if (!utilisateur) { changerEtat("deconnecte"); return; }
+    if (!utilisateur) { profil = null; changerEtat("deconnecte"); return; }
     if (utilisateur.id !== avant) setTimeout(synchroniser, 0);
     else dessiner();
   });
@@ -330,6 +371,8 @@ const Compte = (() => {
     programmer,
     synchroniser,
     afficherDans(element) { conteneur = element; dessiner(); },
+    publierPartie,
+    profil: () => profil,
     client: () => sb,
     utilisateur: () => utilisateur,
   };
