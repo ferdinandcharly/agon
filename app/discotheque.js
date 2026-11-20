@@ -14,18 +14,20 @@ const Discotheque = (() => {
   // ---------- Données (fonctions pures) ----------
   // album = { id, nom, rang (ordre des matières), notions: [{ nom, etat, cas, vues, total }] }
   const compte = (album, test) => album.notions.filter(test).length;
+  // Une notion « À venir » n'est pas « à revoir » : elle n'a pas encore été vue en cours
+  const aRevoir = (n) => n.etat === "a_revoir" && n.cas !== "a_venir";
 
   // Les plus urgents d'abord : notions à revoir, puis en cours, puis l'ordre habituel des matières
   function ordreAlbums(liste) {
     return [...liste].sort((a, b) =>
-      compte(b, (n) => n.etat === "a_revoir") - compte(a, (n) => n.etat === "a_revoir")
+      compte(b, aRevoir) - compte(a, aRevoir)
       || compte(b, (n) => n.etat === "en_cours") - compte(a, (n) => n.etat === "en_cours")
       || a.rang - b.rang);
   }
 
   function pastilleAlbum(album) {
-    const aRevoir = compte(album, (n) => n.etat === "a_revoir");
-    if (aRevoir) return `${aRevoir} à revoir`;
+    const nRevoir = compte(album, aRevoir);
+    if (nRevoir) return `${nRevoir} à revoir`;
     const aVenir = compte(album, (n) => n.cas === "a_venir");
     if (aVenir) return `${aVenir} à venir`;
     if (album.notions.some((n) => n.cas === "ds_passe")) return "DS passé";
@@ -60,7 +62,8 @@ const Discotheque = (() => {
     const pastille = pastilleAlbum(album);
     const maitrisees = compte(album, (n) => n.etat === "maitrisee");
     const b = el("button", { class: "f-pochette" + (fractionVinyle(album) === 1 ? " or" : ""), type: "button",
-      "data-matiere": album.id, "aria-label": `${album.nom}, ${maitrisees} pistes maîtrisées sur ${album.notions.length}` },
+      "data-matiere": album.id,
+      "aria-label": `${album.nom}, ${maitrisees} pistes maîtrisées sur ${album.notions.length}` + (pastille ? `, ${pastille}` : "") },
       el("span", { class: "f-vinyle-sort", "aria-hidden": "true" }),
       el("span", { class: "f-pochette-face" },
         pastille ? el("span", { class: "f-pochette-pastille" }, pastille) : el("span"),
@@ -73,8 +76,9 @@ const Discotheque = (() => {
 
   function piste(album, notion, i) {
     const cases = ["a_venir", "ds_passe"].map((cas) => {
-      const c = el("button", { class: "f-case", type: "button", "data-cas": cas, "aria-pressed": String(notion.cas === cas) },
-        cas === "a_venir" ? "À venir" : "DS passé");
+      const libelle = cas === "a_venir" ? "À venir" : "DS passé";
+      const c = el("button", { class: "f-case", type: "button", "data-cas": cas, "aria-pressed": String(notion.cas === cas),
+        "aria-label": `${libelle}\u00a0: ${notion.nom}` }, libelle);
       c.addEventListener("click", () => {
         basculerCase(album.id, notion.nom, cas);
         rafraichir();
@@ -106,8 +110,12 @@ const Discotheque = (() => {
       el("button", { class: "f-option f-album-jouer", type: "button",
         onclick: () => montrerFil("album", { matiere: album.id }) }, `▶${NB}Réviser l'album`),
       el("ol", { class: "f-pistes", "data-matiere": album.id }, ...album.notions.map((n, i) => piste(album, n, i)))));
-    ecran.querySelectorAll(".f-pochette").forEach((p) => p.classList.toggle("courante", p.dataset.matiere === courant));
-    ecran.querySelectorAll(".f-bac-points i").forEach((p, i) => p.classList.toggle("actif", albums[i]?.id === courant));
+    ecran.querySelectorAll(".f-pochette").forEach((p) => {
+      p.classList.toggle("courante", p.dataset.matiere === courant);
+      if (p.dataset.matiere === courant) p.setAttribute("aria-current", "true"); else p.removeAttribute("aria-current");
+    });
+    const ordre = [...ecran.querySelectorAll(".f-pochette")].map((p) => p.dataset.matiere);
+    ecran.querySelectorAll(".f-bac-points i").forEach((p, i) => p.classList.toggle("actif", ordre[i] === courant));
   }
 
   // Album le plus proche du centre du bac (après un glissement)
@@ -147,9 +155,16 @@ const Discotheque = (() => {
     albums = ordreAlbums(construireAlbums());
     const maitrisees = albums.reduce((s, a) => s + compte(a, (n) => n.etat === "maitrisee"), 0);
     const total = albums.reduce((s, a) => s + a.notions.length, 0);
-    const leBac = el("div", { class: "f-bac", role: "listbox", "aria-label": "Albums" }, ...albums.map(pochette));
-    // Fin de glissement : l'album centré devient l'album courant (scrollend, sinon 120 ms sans défilement)
-    const fin = () => choisir(albumAuCentre());
+    const leBac = el("div", { class: "f-bac", role: "group", "aria-roledescription": "carrousel", "aria-label": "Albums" },
+      ...albums.map(pochette));
+    // Fin de glissement : l'album centré devient l'album courant (scrollend, sinon 120 ms sans défilement).
+    // Une synchro arrivée pendant le glissement est appliquée à ce moment-là.
+    const fin = () => {
+      clearTimeout(attenteFin);
+      attenteFin = null;
+      choisir(albumAuCentre());
+      if (rafraichirApres) { rafraichirApres = false; rafraichir(); }
+    };
     leBac.addEventListener("scroll", () => { clearTimeout(attenteFin); attenteFin = setTimeout(fin, 120); }, { passive: true });
     leBac.addEventListener("scrollend", fin);
     ecran.replaceChildren(el("div", { class: "f-accueil-col" },
@@ -168,9 +183,26 @@ const Discotheque = (() => {
     choisir(id);
   }
 
-  // Après une case cochée ou une synchro : on redessine en restant sur le même album
+  // Après une case cochée ou une synchro : mise à jour sur place (pochettes dans le même ordre, même position,
+  // même album), pour ne couper ni un glissement ni le focus du clavier ou du lecteur d'écran
+  let rafraichirApres = false;
   function rafraichir() {
-    if (!ecran.classList.contains("cache")) dessiner(courant);
+    if (ecran.classList.contains("cache") || !bac()) return;
+    if (attenteFin) { rafraichirApres = true; return; }   // glissement en cours : on attend son arrêt
+    const nouveaux = construireAlbums();
+    for (const ancienne of ecran.querySelectorAll(".f-pochette")) {
+      const album = nouveaux.find((a) => a.id === ancienne.dataset.matiere);
+      if (album) ancienne.replaceWith(pochette(album));
+    }
+    albums = [...ecran.querySelectorAll(".f-pochette")].map((p) => nouveaux.find((a) => a.id === p.dataset.matiere));
+    const actif = document.activeElement;
+    const garde = actif?.closest?.(".f-piste") && { notion: actif.closest(".f-piste").dataset.notion,
+      cas: actif.dataset.cas, jouer: actif.classList.contains("f-piste-jouer") };
+    dessinerPistes();
+    if (garde) {
+      const piste = [...ecran.querySelectorAll(".f-piste")].find((p) => p.dataset.notion === garde.notion);
+      (garde.jouer ? piste?.querySelector(".f-piste-jouer") : piste?.querySelector(`.f-case[data-cas="${garde.cas}"]`))?.focus();
+    }
   }
 
   function ouvrir(matiere) {

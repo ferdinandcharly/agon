@@ -906,7 +906,8 @@ function contenusRetenus() {
 function ajouterChronos(liste) {
   if (reglages.formatsExclus.includes("chrono")) return liste;
   const rapides = donnees.contenus.filter((c) => (c.format === "vrai_faux" || c.format === "trous")
-    && contenuValide(c) && !reglages.matieresExclues.includes(c.matiere));
+    && contenuValide(c) && !reglages.matieresExclues.includes(c.matiere)
+    && etatCase(c.matiere, c.notion) !== "a_venir");   // pas de question sur ce qui n'est pas encore vu en cours
   if (rapides.length < QUESTIONS_CHRONO) return liste;
   const resultat = [];
   liste.forEach((c, i) => {
@@ -937,7 +938,7 @@ function construireFil() {
     // Choix explicite : on ignore les matières exclues et les cases, mais pas les formats non cochés
     const cible = donnees.contenus.filter((c) => contenuValide(c) && c.matiere === cibleFil.matiere
       && (modeFil === "album" || c.notion === cibleFil.notion) && !reglages.formatsExclus.includes(c.format));
-    ecrans = cible.length ? [...ordonner(cible).map(creerCarte), carteFinCiblee()] : [carteVideCiblee()];
+    ecrans = cible.length ? [...ordonnerSans(cible).map(creerCarte), carteFinCiblee()] : [carteVideCiblee()];
   } else {
     ecrans = retenus.length ? [...ajouterChronos(ordonner(retenus)).map(creerCarte), carteFin()] : [carteVide()];
   }

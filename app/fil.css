@@ -678,6 +678,7 @@ h1, h2, h3 { font-family: var(--police); }
 /* Une pochette par matière (couleur --c de la matière), la pochette centrée sort son vinyle : --sortie = 0,15 à 1 */
 .f-bac-cadre { position: relative; margin-inline: -18px; }
 .f-bac {
+  position: relative;   /* offsetLeft des pochettes mesuré par rapport au bac */
   display: flex; gap: 6px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none;
   padding: 18px calc(50% - 80px) 22px; overscroll-behavior-x: contain;
 }

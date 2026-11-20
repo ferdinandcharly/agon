@@ -58,7 +58,13 @@ try {
   assert.deepEqual(localGagne.notions, { "a/b": "a_venir" }, "scénario 3 : la fusion perd les cases locales plus récentes");
   const distantGagne = await a.evaluer(`Compte.fusionReglages(${JSON.stringify({ ...base, maj: "2026-11-20T10:00:00Z", notions: { "a/b": "a_venir" } })},
     ${JSON.stringify({ ...base, maj: "2026-11-21T10:00:00Z" })})`);
-  assert.deepEqual(distantGagne.notions, {}, "scénario 3 : réglages distants plus récents sans cases");
+  assert.deepEqual(distantGagne.notions, { "a/b": "a_venir" }, "scénario 3 : une ancienne version (sans cases) efface les cases");
+  const distantTableau = await a.evaluer(`Compte.fusionReglages(${JSON.stringify({ ...base, maj: "2026-11-20T10:00:00Z", notions: { "a/b": "a_venir" } })},
+    ${JSON.stringify({ ...base, maj: "2026-11-21T10:00:00Z", notions: ["x"] })})`);
+  assert.deepEqual(distantTableau.notions, {}, "scénario 3 : cases distantes invalides acceptées");
+  const distantValide = await a.evaluer(`Compte.fusionReglages(${JSON.stringify({ ...base, maj: "2026-11-20T10:00:00Z", notions: { "a/b": "a_venir" } })},
+    ${JSON.stringify({ ...base, maj: "2026-11-21T10:00:00Z", notions: { "c/d": "ds_passe", "e/f": "n_importe" } })})`);
+  assert.deepEqual(distantValide.notions, { "c/d": "ds_passe" }, "scénario 3 : cases distantes plus récentes mal filtrées");
   const toutReseau = await a.evaluer(`(() => { for (const n of new Set(donnees.contenus.filter((c) => c.matiere === "reseau").map((c) => c.notion)))
     basculerCase("reseau", n, "a_venir"); const r = contenusRetenus();
     return { reseau: r.filter((c) => c.matiere === "reseau").length, total: r.length }; })()`);
@@ -172,6 +178,76 @@ try {
   assert.deepEqual(pc.violationsCsp, [], "scénario 9 : violations CSP (PC)");
   assert.deepEqual(pc.erreurs, [], "scénario 9 : erreurs (PC)");
   console.log("9 : PC");
+
+  // 10 (relecture) : la Prise d'otage ne pioche pas dans les notions « À venir »
+  await avecReglages(a, {});
+  const r10 = await a.evaluer(`(() => {
+    for (const n of new Set(donnees.contenus.filter((c) => c.matiere === "reseau").map((c) => c.notion))) basculerCase("reseau", n, "a_venir");
+    let fautives = 0, total = 0;
+    for (let k = 0; k < 15; k++) for (const c of ajouterChronos(ordonner(contenusRetenus())))
+      if (c.format === "chrono") for (const q of c.donnees.questions) { total++; if (q.matiere === "reseau") fautives++; }
+    return { fautives, total }; })()`);
+  assert.ok(r10.total > 0, "scénario 10 : aucune Prise d'otage générée");
+  assert.equal(r10.fautives, 0, "scénario 10 : la Prise d'otage pose des questions de notions À venir");
+  console.log("10 : Prise d'otage sans les notions À venir");
+
+  // 11 (relecture) : les fils ciblés ignorent aussi « DS passé » (pas de mise en fin de fil)
+  await avecReglages(a, {});
+  const r11 = await a.evaluer(`(() => {
+    const notions = [...new Set(donnees.contenus.filter((c) => c.matiere === "dev" && contenuValide(c)).map((c) => c.notion))];
+    basculerCase("dev", notions[0], "ds_passe");
+    let melange = false;
+    for (let k = 0; k < 6 && !melange; k++) {
+      montrerFil("album", { matiere: "dev" });
+      const n = [...document.querySelectorAll("#fil > .f-ecran")].filter((e) => e.dataset.notion).map((e) => e.dataset.notion);
+      const premierDs = n.indexOf(notions[0]), dernierAutre = n.map((x, i) => (x !== notions[0] ? i : -1)).reduce((m, i) => Math.max(m, i), -1);
+      if (premierDs >= 0 && premierDs < dernierAutre) melange = true;
+    }
+    afficherAccueil();
+    return melange; })()`);
+  assert.equal(r11, true, "scénario 11 : « Réviser l'album » met encore les DS passé en fin de fil");
+  console.log("11 : fil ciblé sans ordre DS passé");
+
+  // 12 (relecture) : une notion « À venir » ne compte pas comme « à revoir »
+  const r12 = await a.evaluer(`Discotheque.pastilleAlbum({ id: "x", nom: "X", rang: 0, notions: [
+    { nom: "a", etat: "a_revoir", cas: "a_venir" }, { nom: "b", etat: "en_cours", cas: null }] })`);
+  assert.equal(r12, "1 à venir", "scénario 12 : une notion À venir compte dans « à revoir »");
+  const r12b = await a.evaluer(`Discotheque.ordreAlbums([
+    { id: "x", nom: "X", rang: 0, notions: [{ nom: "a", etat: "a_revoir", cas: "a_venir" }] },
+    { id: "y", nom: "Y", rang: 1, notions: [{ nom: "b", etat: "en_cours", cas: null }] }]).map((al) => al.id)`);
+  assert.deepEqual(r12b, ["y", "x"], "scénario 12 : un album rendu urgent par une notion À venir");
+  console.log("12 : À venir hors du compte à revoir");
+
+  // 13 (relecture) : cocher une case garde le focus ; une synchro pendant un glissement ne ramène pas le bac en arrière
+  await a.evaluer("Discotheque.ouvrir('reseau')");
+  await attendre(500);
+  const sel13 = await a.evaluer(`(() => { const p = document.querySelector("#discotheque .f-piste"); return p.dataset.notion; })()`);
+  const case13 = `#discotheque .f-piste[data-notion="${sel13}"] .f-case[data-cas="ds_passe"]`;
+  await a.evaluer(`document.querySelector('${case13}').focus(); document.querySelector('${case13}').click()`);
+  await attendre(300);
+  assert.equal(await a.evaluer(`document.activeElement === document.querySelector('${case13}')`), true, "scénario 13 : focus perdu après une case");
+  const vise = await a.evaluer(`(() => { const bac = document.querySelector("#discotheque .f-bac");
+    const p = [...bac.querySelectorAll(".f-pochette")]; const cible = p.at(-1);
+    bac.scrollTo({ left: cible.offsetLeft - (bac.clientWidth - cible.offsetWidth) / 2, behavior: "instant" });
+    Discotheque.rafraichir();   // une synchro arrive pendant le glissement
+    return cible.dataset.matiere; })()`);
+  await attendre(700);
+  assert.equal(await a.evaluer("Discotheque.albumCourant()"), vise, "scénario 13 : la synchro ramène le bac en arrière");
+  console.log("13 : focus gardé, synchro sans retour en arrière");
+
+  // 14 (relecture) : accessibilité du bac
+  const r14 = await a.evaluer(`(() => { const bac = document.querySelector("#discotheque .f-bac");
+    const c = bac.querySelector(".f-pochette.courante");
+    return { role: bac.getAttribute("role"), desc: bac.getAttribute("aria-roledescription"),
+             courant: c?.getAttribute("aria-current"), autres: bac.querySelectorAll('[aria-current="true"]').length,
+             label: [...bac.querySelectorAll(".f-pochette")].find((p) => p.querySelector(".f-pochette-pastille"))?.getAttribute("aria-label") || "",
+             pastille: bac.querySelector(".f-pochette-pastille")?.innerText || "" }; })()`);
+  assert.equal(r14.role, "group", "scénario 14 : rôle du bac");
+  assert.equal(r14.desc, "carrousel", "scénario 14 : aria-roledescription");
+  assert.equal(r14.courant, "true", "scénario 14 : album courant non signalé");
+  assert.equal(r14.autres, 1, "scénario 14 : plusieurs albums courants");
+  assert.ok(r14.label.includes(r14.pastille), "scénario 14 : la pastille n'est pas lue");
+  console.log("14 : accessibilité du bac");
 
   assert.deepEqual(a.violationsCsp, [], "violations CSP");
   assert.deepEqual(a.erreurs, [], "erreurs");
