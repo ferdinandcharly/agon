@@ -762,6 +762,20 @@ h1, h2, h3 { font-family: var(--police); }
 .f-case[aria-pressed="true"][data-cas="ds_passe"] { background: #FFC21A; box-shadow: 2px 2px 0 var(--encre); }
 .f-piste.grise .f-piste-nom, .f-piste.grise .f-piste-etat, .f-piste.grise .f-piste-jouer { opacity: .4; }
 
+/* Livret de cours (admin) */
+.f-livret { display: grid; gap: 8px; padding-top: 10px; border-top: 2px dashed #E3DFF0; }
+.f-livret h3 { font-size: 17px; font-weight: 800; }
+.f-livret-ajouter { width: 100%; text-align: center; font-weight: 700; }
+.f-livret-bouton-zone:empty { display: none; }
+.f-livret-bouton-zone { display: grid; gap: 6px; }
+.f-livret-msg { font-size: 14px; font-weight: 600; color: var(--gris); }
+.f-livret-msg:empty { display: none; }
+.f-livret-liste { list-style: none; display: grid; gap: 6px; padding: 0; margin: 0; }
+.f-livret-doc { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 10px; align-items: center; font-size: 14px; }
+.f-livret-nom { display: grid; font-weight: 600; overflow-wrap: anywhere; }
+.f-livret-nom small { font-weight: 500; color: var(--gris); }
+.f-livret-suppr.confirmer { color: #B0003A; }
+
 /* ---------- Mode Survie ---------- */
 .f-survie-record { font-size: 16px; font-weight: 700; }
 .f-survie-points { font-size: 15px; font-weight: 700; }
