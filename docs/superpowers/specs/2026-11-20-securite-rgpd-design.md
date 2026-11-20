@@ -88,7 +88,7 @@ d'audience, pas de cookie tiers (Turnstile n'en dépose pas à des fins publicit
   - pourquoi : retrouver sa progression sur plusieurs appareils, (bientôt) les classements ;
   - où : Supabase, serveurs à Paris ; e-mails envoyés via le fournisseur d'envoi ;
   - combien de temps : tant que le compte existe ; compte supprimé automatiquement après **2 ans sans
-    connexion** ;
+    utilisation** ;
   - droits : exporter, supprimer (boutons), et contact pour tout le reste ;
   - responsable : Ferdinand Charly, contact facettes.app@gmail.com ;
   - sans compte : rien ne quitte l'appareil.
@@ -98,7 +98,9 @@ d'audience, pas de cookie tiers (Turnstile n'en dépose pas à des fins publicit
 - **Suppression** : existe ; elle devra couvrir chaque nouvelle table (cascade sur `auth.users`). La
   suppression de compte doit aussi vider la file locale de parties.
 - **Purge des comptes inactifs** : tâche `pg_cron` hebdomadaire dans le schéma `private`, qui supprime les
-  comptes dont `last_sign_in_at` date de plus de 2 ans (la cascade efface leurs données).
+  comptes inutilisés depuis plus de 2 ans : la plus récente de création, connexion, synchro
+  (`progression.maj`) et session rafraîchie (`last_sign_in_at` seul ne suffit pas : la session reste ouverte).
+  La cascade efface leurs données.
 - **Mineurs** : l'appli vise des étudiants ; la page « Tes données » indique que l'appli ne doit pas être
   utilisée par des moins de 15 ans sans accord d'un parent. À revoir avec un public lycéen.
 

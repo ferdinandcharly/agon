@@ -59,7 +59,7 @@ const Donnees = (() => {
         point("Ce qu'on garde", "ton adresse e-mail, ta progression (réponses, réglages), ta collection de vinyles et ton record. Sans compte, rien ne quitte ton appareil."),
         point("Pourquoi", "retrouver ta progression sur tous tes appareils. Pas de publicité, pas de mesure d'audience, pas de revente."),
         point("Où", "chez Supabase, sur des serveurs à Paris. Les codes de connexion sont envoyés par e-mail ; une vérification anti-robot de Cloudflare protège leur envoi."),
-        point("Combien de temps", `tant que ton compte existe. Un compte sans connexion pendant 2${NB}ans est supprimé automatiquement.`),
+        point("Combien de temps", `tant que ton compte existe. Un compte inutilisé pendant 2${NB}ans est supprimé automatiquement.`),
         point("Tes droits", "exporter tes données avec le bouton ci-dessous, ou tout supprimer avec « Supprimer mon compte » dans les réglages. Pour toute autre demande : ",
           el("a", { href: "mailto:facettes.app@gmail.com" }, "facettes.app@gmail.com"), " (responsable : Ferdinand Charly)."),
         el("p", { class: "f-discret" }, `Facettes s'adresse aux étudiants. Avant 15${NB}ans, demande l'accord d'un parent.`),
