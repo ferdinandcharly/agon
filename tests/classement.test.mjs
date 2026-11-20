@@ -32,6 +32,15 @@ try {
   assert.equal(await a.evaluer(`localStorage.getItem("agon.parties")`), null, "scénario 1 : sans compte, aucune partie en file");
   console.log(`1 : Survie sur toutes les matières (${rapides.length} questions), rien en file sans compte`);
 
+  // Scénario 2 : messages du pseudo (règles identiques à celles de la base)
+  const FORMAT = "3 à 20 caractères : lettres, chiffres, _ et -.";
+  assert.equal(await a.evaluer(`Compte.messagePseudo("ab")`), FORMAT, "pseudo trop court");
+  assert.equal(await a.evaluer(`Compte.messagePseudo("a b")`), FORMAT, "pseudo avec espace");
+  assert.equal(await a.evaluer(`Compte.messagePseudo("x".repeat(21))`), FORMAT, "pseudo trop long");
+  assert.equal(await a.evaluer(`Compte.messagePseudo("Ferdi")`), null, "pseudo valide");
+  assert.equal(await a.evaluer(`Compte.messagePseudo("Ferdi", { code: "23505" })`), "Déjà pris : essaie un autre pseudo.", "pseudo pris");
+  console.log("2 : messages du pseudo");
+
   assert.deepEqual(a.violationsCsp, [], "violations CSP");
   assert.deepEqual(a.erreurs, [], "erreurs");
   console.log("OK — classement (appli)");

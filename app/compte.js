@@ -193,6 +193,30 @@ const Compte = (() => {
   });
 
   // ---------- Actions ----------
+  // Mêmes règles que la base (profils.pseudo) : 3 à 20 caractères, lettres, chiffres, _ et -
+  const FORMAT_PSEUDO = /^[A-Za-z0-9_-]{3,20}$/;
+  function messagePseudo(pseudo, erreur) {
+    if (!FORMAT_PSEUDO.test(pseudo)) return "3 à 20 caractères : lettres, chiffres, _ et -.";
+    if (!erreur) return null;
+    if (erreur.code === "23505") return "Déjà pris : essaie un autre pseudo.";
+    return messageErreur(erreur);
+  }
+
+  // Crée le profil (et publie le record déjà fait sur cet appareil) ou change le pseudo
+  async function enregistrerPseudo(pseudo) {
+    const invalide = messagePseudo(pseudo);
+    if (invalide) throw Object.assign(new Error(invalide), { messageAffiche: invalide });
+    const requete = profil
+      ? sb.from("profils").update({ pseudo }).eq("user_id", utilisateur.id)
+      : sb.from("profils").insert({ pseudo });
+    const { error } = await requete;
+    if (error) throw Object.assign(error, { messageAffiche: messagePseudo(pseudo, error) });
+    const premier = !profil;
+    profil = { pseudo };
+    if (premier && lireRecordSurvie() > 0) publierPartie(lireRecordSurvie());
+    await synchroniser();
+  }
+
   function messageErreur(err) {
     const code = err?.code || "";
     if (navigator.onLine === false || err?.name === "AuthRetryableFetchError") return "Pas de connexion. Réessaie quand tu as du réseau.";
@@ -267,9 +291,26 @@ const Compte = (() => {
       try { await action(); dessiner(); }
       catch (err) {
         boutons.forEach((b) => { b.disabled = false; });
-        message.textContent = messageErreur(err);
+        message.textContent = err?.messageAffiche || messageErreur(err);
       }
     });
+  }
+
+  // Sans pseudo : le formulaire (obligatoire pour le classement). Avec : le pseudo et « Changer ».
+  let changementPseudo = false;
+  function blocPseudo(message) {
+    if (profil && !changementPseudo) {
+      return el("p", { class: "f-pseudo" }, "Pseudo : ", el("b", {}, profil.pseudo), " ",
+        el("button", { class: "f-lien", type: "button", onclick: () => { changementPseudo = true; dessiner(); } }, "Changer"));
+    }
+    const champ = el("input", { class: "f-champ", type: "text", autocomplete: "nickname", required: "", maxlength: "20",
+      placeholder: "Ton pseudo", "aria-label": "Pseudo", value: profil?.pseudo || "" });
+    const formulaire = el("form", { class: "f-compte-form" }, champ,
+      el("button", { class: "f-option f-compte-valider", type: "submit" }, "Valider"));
+    surEnvoi(formulaire, message, async () => { await enregistrerPseudo(champ.value.trim()); changementPseudo = false; });
+    return el("div", { class: "f-pseudo" },
+      el("p", { class: "f-discret" }, profil ? "Ton nouveau pseudo :" : "Choisis ton pseudo pour apparaître dans le classement. Il sera visible des autres joueurs."),
+      formulaire);
   }
 
   function dessiner() {
@@ -300,6 +341,7 @@ const Compte = (() => {
       });
       conteneur.replaceChildren(
         el("p", {}, "Connecté avec ", el("b", {}, utilisateur.email || "ton adresse")),
+        blocPseudo(message),
         el("p", { class: "f-discret" }, texteEtat()),
         el("div", { class: "f-choix deux f-compte-actions" },
           el("button", { class: "f-option", type: "button", onclick: () => synchroniser() }, "Synchroniser"),
@@ -373,6 +415,7 @@ const Compte = (() => {
     afficherDans(element) { conteneur = element; dessiner(); },
     publierPartie,
     profil: () => profil,
+    messagePseudo,
     client: () => sb,
     utilisateur: () => utilisateur,
   };
