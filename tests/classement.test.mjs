@@ -84,6 +84,31 @@ try {
   assert.match(ancien, /semaine dernière/, "scénario 5 : « semaine dernière » absent");
   console.log("5 : cache de la semaine précédente signalé");
 
+  // Scénario 6 (relecture) : la file ne garde que les parties du compte connecté
+  const file = await a.evaluer(`Compte.fileDe([{ id: "1", user_id: "A", score: 3 }, { id: "2", user_id: "B", score: 9 }, { id: "3", score: 5 }], "A")`);
+  assert.deepEqual(file.map((p) => p.id), ["1"], "scénario 6 : parties d'un autre compte gardées");
+  // Scénario 7 : profil déjà existant (clé primaire) ≠ pseudo pris
+  const dejaProfil = await a.evaluer(`Compte.messagePseudo("Ferdi", { code: "23505", message: 'duplicate key value violates unique constraint "profils_pkey"' })`);
+  assert.ok(!/Déjà pris/.test(dejaProfil), "scénario 7 : « Déjà pris » pour un profil déjà existant");
+  // Scénario 8 : un redessin de la section Compte garde la saisie en cours
+  await a.cliquer("#btn-reglages");
+  await a.evaluer(`(() => { const c = document.querySelector("#compte input[type=email]"); c.focus(); c.value = "en-cours@ex.fr"; })()`);
+  await a.evaluer(`Compte.afficherDans(document.getElementById("compte"))`);
+  assert.equal(await a.evaluer(`document.querySelector("#compte input[type=email]").value`), "en-cours@ex.fr", "scénario 8 : saisie perdue au redessin");
+  assert.equal(await a.evaluer(`document.activeElement === document.querySelector("#compte input[type=email]")`), true, "scénario 8 : focus perdu");
+  await a.cliquer("#btn-fermer-reglages");
+  // Scénario 9 : fermer les réglages recharge l'écran Classement s'il est affiché
+  await a.evaluer(`Classement.ouvrir()`);
+  await a.evaluer(`document.querySelector("#classement .f-classement-zone").append(Object.assign(document.createElement("i"), { className: "temoin" }))`);
+  await a.cliquer("#btn-reglages");
+  await a.cliquer("#btn-fermer-reglages");
+  assert.equal(await a.evaluer(`!!document.querySelector("#classement .temoin")`), false, "scénario 9 : classement non rechargé");
+  // Scénario 10 : erreurs réseau reconnues, y compris celle de Safari
+  assert.equal(await a.evaluer(`Classement.estErreurReseau({ message: "Load failed" })`), true, "scénario 10 : « Load failed » (Safari)");
+  assert.equal(await a.evaluer(`Classement.estErreurReseau({ message: "TypeError: Failed to fetch" })`), true, "scénario 10 : Failed to fetch");
+  assert.equal(await a.evaluer(`Classement.estErreurReseau({ message: "permission denied", code: "42501" })`), false, "scénario 10 : erreur serveur prise pour réseau");
+  console.log("6 à 10 : corrections de la relecture");
+
   assert.deepEqual(a.violationsCsp, [], "violations CSP");
   assert.deepEqual(a.erreurs, [], "erreurs");
   console.log("OK — classement (appli)");

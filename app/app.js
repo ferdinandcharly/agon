@@ -1261,6 +1261,7 @@ function ouvrirReglages() {
 dialogue.addEventListener("close", () => {
   if (!accueil.classList.contains("cache")) remplirAccueil();   // stats et compte de cartes à jour
   else if (!arbre.classList.contains("cache")) remplirArbre();
+  else if (!ecranClassement.classList.contains("cache")) Classement.recharger();
   else if (reglagesModifies) construireFil();
 });
 document.getElementById("btn-reglages").addEventListener("click", ouvrirReglages);

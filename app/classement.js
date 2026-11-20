@@ -74,17 +74,30 @@ const Classement = (() => {
         : el("p", { class: "f-classement-vide" }, "Classement indisponible hors ligne."));
     };
     if (navigator.onLine === false) { depuisCache(); return; }
+    if (Compte.profil() === undefined) {   // pas encore lu : on attend la synchro au lieu de demander un pseudo
+      zone().replaceChildren(el("p", { class: "f-classement-vide" }, "Chargement…"));
+      await Compte.synchroniser();
+      if (Compte.profil() === undefined) { depuisCache(); return; }
+    }
     if (!Compte.profil()) { zone().replaceChildren(invitation("Choisis un pseudo pour apparaître dans le classement.")); return; }
     zone().replaceChildren(el("p", { class: "f-classement-vide" }, "Chargement…"));
     const demande = periode;
     const { data, error } = await sb.rpc("classement", { periode: demande });
     if (demande !== periode) return;   // l'onglet a changé entre-temps
     if (!error) { ecrireCache(demande, data); zone().replaceChildren(rendre(data, { periode: demande })); return; }
-    if (navigator.onLine === false || /fetch|network/i.test(error.message || "")) { depuisCache(); return; }
+    if (estErreurReseau(error)) { depuisCache(); return; }
     zone().replaceChildren(el("div", { class: "f-classement-invitation" },
       el("p", {}, `Le classement n'a pas pu être chargé (${error.message}).`),
       el("button", { class: "f-option", type: "button", onclick: charger }, "Réessayer")));
   }
+
+  // Erreur de connexion (Chrome : « Failed to fetch », Safari : « Load failed ») plutôt qu'un refus du serveur
+  function estErreurReseau(erreur) {
+    return navigator.onLine === false || /fetch|network|load failed/i.test(erreur?.message || "");
+  }
+
+  // Après un passage dans les réglages (connexion, pseudo) : l'écran reflète le nouvel état
+  function recharger() { if (!ecran.classList.contains("cache")) charger(); }
 
   function ouvrir(p = "semaine") {
     if (fil.classList.contains("verrouille")) return;   // pas pendant une partie en cours
@@ -122,5 +135,5 @@ const Classement = (() => {
     return data.find((l) => l.moi)?.rang ?? null;
   }
 
-  return { ouvrir, rendre, lundiCourant, rangCetteSemaine, rangTexte };
+  return { ouvrir, recharger, rendre, lundiCourant, rangCetteSemaine, rangTexte, estErreurReseau };
 })();
