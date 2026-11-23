@@ -84,6 +84,18 @@ try {
   assert.equal(css.selection, "none", "scénario 5 : texte des boutons sélectionnable");
   console.log("5 : réglages tactiles");
 
+  // 6 : l'accueil tient sur un écran, sans défiler (app installée : iPhone SE, standard, Pro Max)
+  for (const [largeur, hauteur] of [[375, 667], [390, 844], [430, 932]]) {
+    const k = await edge.nouvelAppareil({ largeur, hauteur });
+    await k.avantPage("Object.defineProperty(Navigator.prototype, 'standalone', { get: () => true })");
+    await k.aller(serveur.url);
+    await k.attendreQue("!document.getElementById('lancement')", 8000);
+    const d = await k.evaluer(`(() => { const acc = document.getElementById("accueil"); return [acc.scrollHeight, acc.clientHeight]; })()`);
+    assert.ok(d[0] <= d[1], `scénario 6 : l'accueil défile en ${largeur}×${hauteur} (${d[0]} > ${d[1]})`);
+    assert.deepEqual(k.erreurs, [], "scénario 6 : erreurs");
+  }
+  console.log("6 : accueil sur un seul écran");
+
   for (const x of [a, i, j]) {
     assert.deepEqual(x.violationsCsp, [], "violations CSP");
     assert.deepEqual(x.erreurs, [], "erreurs");
