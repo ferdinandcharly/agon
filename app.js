@@ -995,6 +995,7 @@ const COULEUR_NUIT = "#16112B";
 
 const ecranDiscotheque = document.getElementById("discotheque");
 const ecranClassement = document.getElementById("classement");
+const ecranAmis = document.getElementById("amis");
 
 function afficherAccueil() {
   if (fil.classList.contains("verrouille")) return;   // pas de fuite pendant une Prise d'otage
@@ -1002,7 +1003,9 @@ function afficherAccueil() {
   fil.classList.add("cache");
   ecranDiscotheque.classList.add("cache");
   ecranClassement.classList.add("cache");
+  ecranAmis.classList.add("cache");
   accueil.classList.remove("cache");
+  Nav.afficher("accueil");
   zoneScore.classList.add("cache");
   metaTheme.setAttribute("content", COULEUR_NUIT);
   document.documentElement.style.setProperty("--fond-actif", COULEUR_NUIT);
@@ -1016,6 +1019,8 @@ function montrerFil(mode, cible = null) {
   accueil.classList.add("cache");
   ecranDiscotheque.classList.add("cache");
   ecranClassement.classList.add("cache");
+  ecranAmis.classList.add("cache");
+  Nav.afficher(null);
   fil.classList.remove("cache");
   construireFil();
   afficherScore();
@@ -1125,8 +1130,7 @@ function remplirAccueil() {
           el("span", {}, lireRecordSurvie() ? `Record : ${lireRecordSurvie()}` : "Pas encore joué")),
         el("button", { class: "f-bouton-survie f-bouton-classement", type: "button", onclick: () => Classement.ouvrir() },
           el("b", {}, "Classement"), el("span", {}, "Semaine et record"))),
-      Installer.carte(),
-      el("p", { class: "f-ligne-info discret" }, "Bientôt : amis, arène"))));
+      Installer.carte())));
 }
 
 // ---------- État d'une notion (accueil, discothèque) ----------

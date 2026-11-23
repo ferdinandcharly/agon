@@ -115,12 +115,12 @@ const Classement = (() => {
         return b;
       }));
     ecran.replaceChildren(el("div", { class: "f-accueil-col" },
-      el("button", { class: "f-retour-menu", type: "button", onclick: afficherAccueil }, "← Retour au menu"),
       el("h1", { class: "f-accueil-titre" }, "Classement"),
       el("p", { class: "f-arbre-intro" }, "Mode survie, toutes les matières. Ton meilleur score compte."),
       onglets,
       el("div", { class: "f-classement-zone", role: "tabpanel", "aria-live": "polite" })));
     ecran.classList.remove("cache");
+    Nav.afficher("classement");
     ecran.scrollTo({ top: 0 });
     charger();
   }

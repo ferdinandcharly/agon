@@ -800,6 +800,32 @@ h1, h2, h3 { font-family: var(--police); }
 }
 .f-bouton-survie b { font-size: 20px; font-weight: 800; font-stretch: 80%; }
 .f-bouton-survie span { font-size: 14px; color: #CFC9E8; }
+/* ---------- Barre d'onglets du bas ---------- */
+:root { --hauteur-nav: 62px; }
+.f-nav {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 9;
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  height: calc(var(--hauteur-nav) + max(6px, env(safe-area-inset-bottom)));
+  padding: 6px max(12px, env(safe-area-inset-right)) max(6px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+  background: var(--encre); border-top: 2px solid #3A3260;
+}
+.f-nav button {
+  position: relative; display: grid; justify-items: center; align-content: center; gap: 2px;
+  padding: 0; border: 0; border-radius: 14px; background: none; color: #8A84A6; font: 700 12px var(--police); cursor: pointer;
+}
+.f-nav svg { width: 26px; height: 26px; }
+.f-nav button[aria-current="page"] { color: #FFFFFF; background: #2A2347; }
+.f-nav button[aria-current="page"] svg { color: #FFC21A; }
+.f-nav button:focus-visible { outline: 3px solid #FFC21A; outline-offset: -3px; }
+.f-nav-pastille {
+  position: absolute; top: 2px; left: calc(50% + 6px); min-width: 18px; height: 18px; padding: 0 5px;
+  border-radius: 999px; background: #FF5FA2; color: #16112B; font: 800 11px/18px var(--police); text-align: center;
+}
+/* Les écrans qui ont la barre lui réservent leur bas */
+body.avec-nav #accueil, body.avec-nav .f-accueil {
+  padding-bottom: calc(var(--hauteur-nav) + max(6px, env(safe-area-inset-bottom)) + 10px);
+}
+
 /* Survie et Classement côte à côte sous « Lancer la session » */
 .f-accueil-duo { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .f-accueil-duo .f-bouton-survie { flex-direction: column; align-items: flex-start; gap: 0; padding: 10px 14px; text-align: left; }
