@@ -137,6 +137,32 @@ try {
   assert.equal(await a.evaluer(visible("#portail .f-portail-relancer")), true, "scénario 13 : pas de bouton pour réessayer");
   console.log("13 : attente après connexion");
 
+  // 14 : un autre compte se connecte sur l'appareil → il ne récupère pas la progression du compte précédent ;
+  // le même compte, ou un appareil jamais connecté, la garde
+  const RES = JSON.stringify(JSON.stringify({ "bd-cle-primaire-vf": { vu: 3, ok: 3, ko: 0, derniereOk: true, boite: 2, dernier: "2026-11-20T08:00:00Z" } }));
+  const COL = JSON.stringify(JSON.stringify({ vinyles: 5, disquesOr: 1 }));
+  const MOI = "00000000-0000-4000-8000-000000000001";
+  const progressionApres = async (precedent) => {
+    const d = await edge.nouvelAppareil();
+    await d.avantPage(`if (!sessionStorage.getItem("posee")) { sessionStorage.setItem("posee", "1");
+      localStorage.setItem("agon.resultats", ${RES}); localStorage.setItem("agon.collection", ${COL});
+      ${precedent ? `localStorage.setItem("agon.compte", "${precedent}");` : ""} }`);
+    await d.aller(serveur.url);
+    await d.attendreQue("!document.getElementById('lancement') && typeof donnees !== 'undefined' && !!donnees", 8000);
+    await attendre(800);
+    const r = await d.evaluer(`({ res: Object.keys(lireResultats()).length, vinyles: lireCollection().vinyles,
+      allumees: document.querySelector("#accueil .f-boule-legende")?.innerText || "" })`);
+    assert.deepEqual(d.erreurs, [], "scénario 14 : erreurs");
+    return r;
+  };
+  const autre = await progressionApres("11111111-1111-4111-8111-111111111111");
+  assert.deepEqual([autre.res, autre.vinyles], [0, 0], `scénario 14 : le nouveau compte récupère la progression de l'ancien (${JSON.stringify(autre)})`);
+  const meme = await progressionApres(MOI);
+  assert.deepEqual([meme.res, meme.vinyles], [1, 5], "scénario 14 : le même compte perd sa progression");
+  const jamais = await progressionApres(null);
+  assert.deepEqual([jamais.res, jamais.vinyles], [1, 5], "scénario 14 : un appareil jamais connecté perd sa progression");
+  console.log("14 : progression d'un autre compte non reprise");
+
   for (const x of [a, b, c]) {
     assert.deepEqual(x.violationsCsp, [], "violations CSP");
     assert.deepEqual(x.erreurs, [], "erreurs");

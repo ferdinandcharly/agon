@@ -150,6 +150,13 @@ const Compte = (() => {
   }
 
   // Écriture directe (sans repasser par les fonctions de app.js, qui reprogrammeraient un envoi)
+  function viderProgressionLocale() {
+    for (const cle of [CLE_RESULTATS, CLE_REGLAGES, CLE_COLLECTION, CLE_SURVIE])
+      try { localStorage.removeItem(cle); } catch { /* tant pis */ }
+    reglages = lireReglages();
+    setTimeout(() => window.apresSynchro?.(), 0);   // l'écran affiché ne garde pas les chiffres de l'autre compte
+  }
+
   function ecrireLocal(p) {
     try {
       localStorage.setItem(CLE_RESULTATS, JSON.stringify(p.resultats));
@@ -239,6 +246,9 @@ const Compte = (() => {
       try { precedent = localStorage.getItem(CLE_COMPTE); } catch { /* tant pis */ }
       recordAMoi = !precedent || precedent === utilisateur.id;
       if (!recordAMoi) {
+        // Un autre compte que le précédent : sa progression (déjà en ligne) ne doit pas se mêler à celle-ci.
+        // On repart de zéro sur l'appareil ; la synchro rapporte la progression en ligne de ce compte.
+        viderProgressionLocale();
         ecrireFile(fileDe(lireFile(), utilisateur.id));
         oublierCachesDuCompte();
       }

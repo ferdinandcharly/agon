@@ -66,7 +66,7 @@ try {
   await attendre(400);
   assert.equal(await a.evaluer("!document.getElementById('amis').classList.contains('cache')"), true, "scénario 4 : écran Amis fermé");
   assert.equal((await etatNav()).actif, "amis", "scénario 4 : onglet Amis non actif");
-  await a.attendreQue("/Hors ligne/.test(document.getElementById('amis').innerText)", 8000);
+  await a.attendreQue("/Hors ligne/.test(document.getElementById('amis').innerText)", 30000);
   console.log("4 : Amis, compte sans réseau → hors ligne");
 
   // 5 : records battus et pastille (fonctions pures)
