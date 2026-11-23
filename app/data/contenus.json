@@ -2575,6 +2575,423 @@
         "reponse": false,
         "explication": "Ces lignes échangent seulement les pointeurs. Pour échanger les valeurs, il faut passer par *ptrc = *ptra, etc."
       }
+    },
+    {
+      "id": "dev-types-typedef-fiche", "matiere": "dev", "notion": "Types et typedef", "format": "fiche",
+      "donnees": {
+        "titre": "Types atomiques, types structurés, typedef",
+        "paragraphes": [
+          "Les caractères, entiers et flottants sont des types atomiques : leurs données sont indécomposables.",
+          "Les tableaux et les chaînes sont des types structurés : ils regroupent plusieurs informations atomiques dans une même entité.",
+          "typedef donne un nom à un type réutilisé souvent, ce qui facilite la lecture du code."
+        ],
+        "a_retenir": "typedef int TabEnt[MAX]; crée le type TabEnt : tableau de MAX entiers."
+      }
+    },
+    {
+      "id": "dev-types-typedef-vf", "matiere": "dev", "notion": "Types et typedef", "format": "vrai_faux",
+      "donnees": {
+        "affirmation": "Un tableau et une chaîne de caractères sont des types atomiques.",
+        "reponse": false,
+        "explication": "Ils regroupent plusieurs données : ce sont des types structurés. Les types atomiques sont les caractères, entiers et flottants."
+      }
+    },
+    {
+      "id": "dev-types-typedef-trous", "matiere": "dev", "notion": "Types et typedef", "format": "trous",
+      "donnees": {
+        "texte": "Après #define MAX 10, l'instruction ___ int TabEnt[MAX]; crée le type TabEnt.",
+        "reponse": "typedef",
+        "choix": [
+          "typedef",
+          "struct",
+          "#define",
+          "const"
+        ],
+        "explication": "typedef nomme un type : ici TabEnt désigne les tableaux de 10 entiers."
+      }
+    },
+    {
+      "id": "dev-structures-vf", "matiere": "dev", "notion": "Structures", "format": "vrai_faux",
+      "donnees": {
+        "affirmation": "Les champs d'une même structure peuvent être de types différents, et même être des tableaux ou d'autres structures.",
+        "reponse": true,
+        "explication": "C'est tout l'intérêt de struct : regrouper des informations hétérogènes, ce que ne permet pas un tableau."
+      }
+    },
+    {
+      "id": "dev-operations-structures-fiche", "matiere": "dev", "notion": "Opérations sur les structures", "format": "fiche",
+      "donnees": {
+        "titre": "Ce qu'on peut faire avec deux structures",
+        "paragraphes": [
+          "L'affectation = est possible entre deux structures du même type : elle copie les champs un par un.",
+          "On ne peut pas comparer deux structures avec == ou != : il faut tester chaque champ.",
+          "sizeof donne la taille d'une structure, qui n'est pas toujours la somme de la taille de ses champs."
+        ],
+        "a_retenir": "= oui, == non ; ranger les champs par taille décroissante."
+      }
+    },
+    {
+      "id": "dev-operations-structures-vf", "matiere": "dev", "notion": "Opérations sur les structures", "format": "vrai_faux",
+      "donnees": {
+        "affirmation": "Pour savoir si deux structures sont identiques, on peut écrire if (e1 == e2).",
+        "reponse": false,
+        "explication": "== ne s'applique pas aux structures : il faut comparer chaque champ séparément."
+      }
+    },
+    {
+      "id": "dev-operations-structures-vf-2", "matiere": "dev", "notion": "Opérations sur les structures", "format": "vrai_faux",
+      "donnees": {
+        "affirmation": "Si pirate et capitaine sont deux Etudiant, capitaine = pirate; copie tous les champs de pirate dans capitaine.",
+        "reponse": true,
+        "explication": "L'affectation entre deux structures du même type copie les champs un par un."
+      }
+    },
+    {
+      "id": "dev-operations-structures-trous", "matiere": "dev", "notion": "Opérations sur les structures", "format": "trous",
+      "donnees": {
+        "texte": "La taille d'une structure n'est pas toujours la somme de ses champs : pour la connaître, on utilise ___.",
+        "reponse": "sizeof",
+        "choix": [
+          "sizeof",
+          "strlen",
+          "typedef",
+          "malloc"
+        ],
+        "explication": "sizeof() renvoie la taille en octets d'un type ou d'une variable, structures comprises."
+      }
+    },
+    {
+      "id": "dev-tableaux-structures-erreur", "matiere": "dev", "notion": "Tableaux de structures", "format": "erreur",
+      "donnees": {
+        "consigne": "On veut mettre tous les étudiants du tableau dans le groupe 3. Quelle ligne est fausse ?",
+        "lignes": [
+          "Etudiant groupe[26];",
+          "for (int i=0; i<26; i++)",
+          "  groupe.num_groupe[i] = 3;"
+        ],
+        "ligne_fausse": 2,
+        "correction": "  groupe[i].num_groupe = 3;",
+        "explication": "On choisit d'abord la case du tableau, groupe[i], puis son champ : groupe[i].num_groupe."
+      }
+    },
+    {
+      "id": "dev-compilation-separee-associer", "matiere": "dev", "notion": "Compilation séparée", "format": "associer",
+      "donnees": {
+        "consigne": "Associe chaque fichier du projet à son contenu.",
+        "paires": [
+          [
+            "main.c",
+            "le programme principal"
+          ],
+          [
+            "fonctions.c",
+            "la définition des fonctions"
+          ],
+          [
+            "fonctions.h",
+            "les prototypes des fonctions"
+          ],
+          [
+            "types.h",
+            "la déclaration des nouveaux types"
+          ]
+        ],
+        "explication": "Les .c contiennent le code, les .h les déclarations, incluses avec #include \"types.h\"."
+      }
+    },
+    {
+      "id": "dev-compilation-separee-vf", "matiere": "dev", "notion": "Compilation séparée", "format": "vrai_faux",
+      "donnees": {
+        "affirmation": "La compilation séparée permet de ne recompiler que les fichiers modifiés.",
+        "reponse": true,
+        "explication": "Chaque fichier .c est compilé à part : un changement dans un fichier n'oblige pas à tout recompiler."
+      }
+    },
+    {
+      "id": "dev-structure-fonctions-fiche", "matiere": "dev", "notion": "Structure et fonctions", "format": "fiche",
+      "donnees": {
+        "titre": "Une structure passée à une fonction",
+        "paragraphes": [
+          "Par défaut, une structure est passée par valeur : la fonction travaille sur une copie de tous ses champs.",
+          "Modifier cette copie ne change pas la variable d'origine : pas d'effet de bord.",
+          "Une fonction peut aussi renvoyer une structure, que l'on affecte à une variable du même type."
+        ],
+        "a_retenir": "Structure en paramètre = copie ; pour la changer, la renvoyer ou passer son adresse."
+      }
+    },
+    {
+      "id": "dev-structure-fonctions-trous", "matiere": "dev", "notion": "Structure et fonctions", "format": "trous",
+      "donnees": {
+        "texte": "pirate vaut {\"Sparrow\", \"Jack\", 1, 12.5}. Après affecter_champs(pirate, 2, 11.4), qui modifie e.num_groupe et e.moyenne, printf(\"%d %.2lf\") affiche ___.",
+        "reponse": "1 12.50",
+        "choix": [
+          "1 12.50",
+          "2 11.40",
+          "2 12.50",
+          "1 11.40"
+        ],
+        "explication": "pirate est passé par valeur : la fonction modifie une copie, pirate garde ses valeurs."
+      }
+    },
+    {
+      "id": "dev-exercices-structures-erreur", "matiere": "dev", "notion": "Exercices sur les structures", "format": "erreur",
+      "donnees": {
+        "consigne": "distance doit renvoyer la distance entre deux points (math.h inclus). Quelle ligne est fausse ?",
+        "lignes": [
+          "double distance(Point a,",
+          "                Point b) {",
+          "  double dx = b.x - a.x;",
+          "  double dy = b.y - a.y;",
+          "  return sqrt(dx*dx - dy*dy);",
+          "}"
+        ],
+        "ligne_fausse": 4,
+        "correction": "  return sqrt(dx*dx + dy*dy);",
+        "explication": "La distance vaut la racine de dx² + dy², pas dx² − dy². Avec D(-1 ; -2) et E(3 ; 1), on trouve bien 5."
+      }
+    },
+    {
+      "id": "dev-exercices-structures-trous", "matiere": "dev", "notion": "Exercices sur les structures", "format": "trous",
+      "donnees": {
+        "texte": "Le milieu du segment [BC], avec B(2 ; 2) et C(6 ; 5), a pour coordonnées ___.",
+        "reponse": "(4 ; 3.5)",
+        "choix": [
+          "(4 ; 3.5)",
+          "(4 ; 3)",
+          "(8 ; 7)",
+          "(2 ; 1.5)"
+        ],
+        "explication": "Chaque coordonnée du milieu est la moyenne des deux : (2+6)/2 = 4 et (2+5)/2 = 3.5."
+      }
+    },
+    {
+      "id": "dev-exercices-structures-trous-2", "matiere": "dev", "notion": "Exercices sur les structures", "format": "trous",
+      "donnees": {
+        "texte": "Pour afficher le jour 1 sous la forme 01 (date JJ/MM/AA), on utilise le format ___ dans printf.",
+        "reponse": "%02d",
+        "choix": [
+          "%02d",
+          "%2d",
+          "%d",
+          "%-2d"
+        ],
+        "explication": "%02d affiche l'entier sur 2 chiffres en complétant par des zéros. %2d compléterait par une espace."
+      }
+    },
+    {
+      "id": "dev-fichiers-texte-fiche", "matiere": "dev", "notion": "Fichiers texte", "format": "fiche",
+      "donnees": {
+        "titre": "Fichiers et mémoire tampon",
+        "paragraphes": [
+          "En C, un fichier est un flot : une suite d'octets. Des données brutes forment un fichier binaire ; des octets qui codent des caractères (ASCII, UTF-8…) forment un fichier texte.",
+          "Les lectures et écritures passent par une mémoire tampon, pour limiter les accès au disque, plus lents que la RAM.",
+          "Un fichier est manipulé par un pointeur de type FILE*, défini dans stdio.h."
+        ],
+        "a_retenir": "Fichier texte = octets qui représentent des caractères ; on le manipule avec un FILE*."
+      }
+    },
+    {
+      "id": "dev-fichiers-texte-vf", "matiere": "dev", "notion": "Fichiers texte", "format": "vrai_faux",
+      "donnees": {
+        "affirmation": "La mémoire tampon sert à limiter les accès au disque, plus coûteux que les accès à la RAM.",
+        "reponse": true,
+        "explication": "Le tampon charge une partie du fichier en lecture et accumule les données à écrire avant de les stocker."
+      }
+    },
+    {
+      "id": "dev-ouvrir-fermer-fichier-fiche", "matiere": "dev", "notion": "Ouvrir et fermer un fichier", "format": "fiche",
+      "donnees": {
+        "titre": "fopen, fclose, perror, exit",
+        "paragraphes": [
+          "fopen(chemin, mode) ouvre un fichier et renvoie un FILE*, ou NULL en cas d'échec.",
+          "En cas d'échec, perror affiche la description de l'erreur et exit(EXIT_FAILURE), de stdlib.h, arrête le programme.",
+          "fclose vide le tampon d'écriture dans le fichier, libère la mémoire et ferme le fichier."
+        ],
+        "a_retenir": "Toujours tester fic == NULL après fopen, et fermer avec fclose."
+      }
+    },
+    {
+      "id": "dev-ouvrir-fermer-fichier-associer", "matiere": "dev", "notion": "Ouvrir et fermer un fichier", "format": "associer",
+      "donnees": {
+        "consigne": "Associe chaque mode d'ouverture de fopen à son effet.",
+        "paires": [
+          [
+            "\"r\"",
+            "lecture, le fichier doit exister"
+          ],
+          [
+            "\"w\"",
+            "écriture, le contenu existant est effacé"
+          ],
+          [
+            "\"a\"",
+            "ajout, le curseur est placé à la fin"
+          ]
+        ],
+        "explication": "\"w\" et \"a\" créent le fichier s'il n'existe pas ; seul \"r\" exige qu'il existe."
+      }
+    },
+    {
+      "id": "dev-ouvrir-fermer-fichier-trous", "matiere": "dev", "notion": "Ouvrir et fermer un fichier", "format": "trous",
+      "donnees": {
+        "texte": "Quand fopen n'arrive pas à ouvrir le fichier, elle renvoie ___.",
+        "reponse": "NULL",
+        "choix": [
+          "NULL",
+          "EOF",
+          "-1",
+          "EXIT_FAILURE"
+        ],
+        "explication": "fopen renvoie l'adresse d'une structure FILE en cas de succès, NULL en cas d'échec."
+      }
+    },
+    {
+      "id": "dev-ouvrir-fermer-fichier-vf", "matiere": "dev", "notion": "Ouvrir et fermer un fichier", "format": "vrai_faux",
+      "donnees": {
+        "affirmation": "Ouvrir avec le mode \"w\" un fichier qui existe déjà ajoute les nouvelles données à la fin.",
+        "reponse": false,
+        "explication": "\"w\" efface le contenu existant. Pour écrire à la suite, il faut le mode \"a\"."
+      }
+    },
+    {
+      "id": "dev-ouvrir-fermer-fichier-vf-2", "matiere": "dev", "notion": "Ouvrir et fermer un fichier", "format": "vrai_faux",
+      "donnees": {
+        "affirmation": "Sans fclose, les dernières données du tampon d'écriture risquent de ne pas arriver dans le fichier.",
+        "reponse": true,
+        "explication": "fclose vide le tampon : les données encore en attente sont alors écrites dans le fichier."
+      }
+    },
+    {
+      "id": "dev-lire-fichier-fiche", "matiere": "dev", "notion": "Lire un fichier", "format": "fiche",
+      "donnees": {
+        "titre": "Lire caractère par caractère ou ligne par ligne",
+        "paragraphes": [
+          "fgetc(fic) renvoie le caractère suivant, ou EOF en cas d'erreur ou de fin de fichier.",
+          "fgets(s, n, fic) lit au plus n-1 caractères ou jusqu'au '\\n' (copié), puis ajoute '\\0'. Elle renvoie NULL en fin de fichier.",
+          "feof(fic) devient vrai seulement après une lecture qui a échoué faute de données."
+        ],
+        "a_retenir": "Lire une première fois, puis : tant que !feof, traiter et lire la suite."
+      }
+    },
+    {
+      "id": "dev-lire-fichier-trous", "matiere": "dev", "notion": "Lire un fichier", "format": "trous",
+      "donnees": {
+        "texte": "En fin de fichier, fgetc(fic) renvoie la valeur ___.",
+        "reponse": "EOF",
+        "choix": [
+          "EOF",
+          "NULL",
+          "'\\0'",
+          "'\\n'"
+        ],
+        "explication": "fgetc renvoie un int : le code du caractère lu, ou EOF en cas d'erreur ou de fin de fichier."
+      }
+    },
+    {
+      "id": "dev-lire-fichier-trous-2", "matiere": "dev", "notion": "Lire un fichier", "format": "trous",
+      "donnees": {
+        "texte": "fgets(ligne, n, fic) lit au plus ___ caractères.",
+        "reponse": "n-1",
+        "choix": [
+          "n-1",
+          "n",
+          "n+1",
+          "2n"
+        ],
+        "explication": "fgets garde une place pour le caractère '\\0' qu'elle ajoute à la fin du tableau."
+      }
+    },
+    {
+      "id": "dev-lire-fichier-vf", "matiere": "dev", "notion": "Lire un fichier", "format": "vrai_faux",
+      "donnees": {
+        "affirmation": "feof(fic) devient vrai dès que le dernier caractère du fichier a été lu, avant toute lecture ratée.",
+        "reponse": false,
+        "explication": "feof ne devient vrai qu'après une tentative de lecture au-delà de la fin du fichier."
+      }
+    },
+    {
+      "id": "dev-lire-fichier-ordre", "matiere": "dev", "notion": "Lire un fichier", "format": "ordre",
+      "donnees": {
+        "consigne": "Remets dans l'ordre le schéma de lecture séquentielle d'un fichier.",
+        "etapes": [
+          "Ouvrir le fichier avec fopen",
+          "Vérifier que l'ouverture a réussi",
+          "Lire une première donnée",
+          "Tant que !feof(fic), traiter la donnée lue",
+          "Puis, dans la boucle, lire la donnée suivante",
+          "Fermer le fichier avec fclose"
+        ],
+        "explication": "On lit avant la boucle, car feof ne devient vrai qu'après une lecture ratée."
+      }
+    },
+    {
+      "id": "dev-lire-fichier-trous-3", "matiere": "dev", "notion": "Lire un fichier", "format": "trous",
+      "donnees": {
+        "texte": "La chaîne age contient \"23\". Pour la convertir en entier, on écrit int a = ___(age);",
+        "reponse": "atoi",
+        "choix": [
+          "atoi",
+          "atof",
+          "itoa",
+          "sizeof"
+        ],
+        "explication": "atoi, de stdlib.h, convertit une chaîne en entier ; atof la convertit en flottant."
+      }
+    },
+    {
+      "id": "dev-ecrire-fichier-erreur", "matiere": "dev", "notion": "Écrire dans un fichier", "format": "erreur",
+      "donnees": {
+        "consigne": "Ce code doit écrire une ligne dans le fichier a.csv. Quelle ligne est fausse ?",
+        "lignes": [
+          "FILE* f = fopen(\"a.csv\", \"w\");",
+          "if (f == NULL) {",
+          "  perror(\"fopen\");",
+          "  exit(EXIT_FAILURE);",
+          "}",
+          "printf(f, \"%d;%d\\n\", m, t);",
+          "fclose(f);"
+        ],
+        "ligne_fausse": 5,
+        "correction": "fprintf(f, \"%d;%d\\n\", m, t);",
+        "explication": "printf écrit à l'écran. Pour écrire dans un fichier, on utilise fprintf avec le FILE* en premier paramètre."
+      }
+    },
+    {
+      "id": "dev-ecrire-fichier-vf", "matiere": "dev", "notion": "Écrire dans un fichier", "format": "vrai_faux",
+      "donnees": {
+        "affirmation": "fprintf renvoie une valeur négative quand l'écriture échoue.",
+        "reponse": true,
+        "explication": "Sinon, elle renvoie le nombre de caractères écrits : on peut donc tester if (fprintf(...) < 0)."
+      }
+    },
+    {
+      "id": "dev-ecrire-fichier-associer", "matiere": "dev", "notion": "Écrire dans un fichier", "format": "associer",
+      "donnees": {
+        "consigne": "Associe chaque fonction à son rôle.",
+        "paires": [
+          [
+            "fgetc",
+            "lire un caractère"
+          ],
+          [
+            "fgets",
+            "lire une ligne"
+          ],
+          [
+            "fprintf",
+            "écrire du texte formaté"
+          ],
+          [
+            "fclose",
+            "fermer le fichier"
+          ],
+          [
+            "atof",
+            "convertir une chaîne en flottant"
+          ]
+        ],
+        "explication": "Elles viennent de stdio.h, sauf atof qui est dans stdlib.h."
+      }
     }
   ]
 }
