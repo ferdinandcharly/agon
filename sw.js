@@ -2,9 +2,9 @@
 // Coquille (HTML/CSS/JS/police) : cache d'abord. Données (data/*.json) : réseau d'abord avec un délai
 // maximal, cache en secours, sinon les nouvelles cartes n'apparaîtraient jamais. Seules les réponses OK
 // sont mises en cache. Changer VERSION à chaque livraison de la coquille pour invalider l'ancien cache.
-const VERSION = "facettes-v32";
+const VERSION = "facettes-v33";
 const COQUILLE = [".", "index.html", "theme.css", "fil.css", "validation.js", "app.js", "compte.js", "donnees.js", "classement.js", "discotheque.js", "livret.js", "vendor/supabase-2.119.2.js", "manifest.webmanifest",
-  "favicon.svg", "icone-180.png", "icone-192.png", "icone-512.png", "icone-maskable-192.png", "icone-maskable-512.png", "installer.js", "nav.js", "amis.js", "polices/bricolage-grotesque.woff2", "data/contenus.json"];
+  "favicon.svg", "icone-180.png", "icone-192.png", "icone-512.png", "icone-maskable-192.png", "icone-maskable-512.png", "installer.js", "nav.js", "amis.js", "portail.js", "polices/bricolage-grotesque.woff2", "data/contenus.json"];
 const DELAI_RESEAU = 4000;   // ms : au-delà, on sert les cartes en cache
 
 // cache: "reload" contourne le cache HTTP du navigateur, sinon une ancienne version d'app.js

@@ -670,7 +670,8 @@ h1, h2, h3 { font-family: var(--police); }
   box-shadow: 3px 3px 0 #7B4DFF; font-size: 17px;
 }
 .f-classement-rang { font-weight: 800; font-size: 20px; font-stretch: 80%; }
-.f-classement-pseudo { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.f-classement-pseudo { display: flex; align-items: center; gap: 10px; min-width: 0; font-weight: 600; }
+.f-classement-nom { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .f-classement-pseudo small { font-weight: 500; color: var(--gris); }
 .f-classement-score { font-weight: 800; font-size: 20px; }
 .f-classement-ligne.or { background: #FFC21A; }
@@ -899,6 +900,7 @@ body.portail-ouvert .f-accueil:not(#portail), body.portail-ouvert .f-maj { displ
   padding: 8px 12px; border: 2px solid #3A3260; border-radius: 12px;
 }
 .f-amis-ligne b { font-size: 17px; overflow-wrap: anywhere; }
+.f-amis-qui { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .f-amis-boutons { display: flex; gap: 8px; }
 .f-amis-action { padding: 6px 12px; font-size: 15px; font-weight: 700; }
 .f-amis-action.confirmer { background: var(--rate); }

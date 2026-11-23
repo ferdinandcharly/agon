@@ -48,7 +48,8 @@ const Classement = (() => {
       const podium = ["or", "rose", "bleu"][l.rang - 1];
       liste.append(el("li", { class: ["f-classement-ligne", podium, l.moi ? "moi" : ""].filter(Boolean).join(" ") },
         el("span", { class: "f-classement-rang" }, String(l.rang)),
-        el("span", { class: "f-classement-pseudo" }, l.pseudo, l.moi ? el("small", {}, " (toi)") : null),
+        el("span", { class: "f-classement-pseudo" }, Portail.avatar(l.avatar, 30),
+          el("span", { class: "f-classement-nom" }, l.pseudo, l.moi ? el("small", {}, " (toi)") : null)),
         el("span", { class: "f-classement-score" }, String(l.score))));
     }
     morceaux.push(liste);
