@@ -105,6 +105,13 @@ try {
   assert.match(r6b.texte, /Hors ligne/, "scénario 6 : pas de mention hors ligne");
   console.log("6 : rendu de l'écran Amis");
 
+  // Portail : avatars dans le classement des amis et la liste des amis
+  const av = await a.evaluer(`(() => { const n = Amis.rendre({ amis: [{ pseudo: "Lucas", avatar: "vert-coeur", relation: "ami", notions: 2, record: 1, record_le: null }],
+    classement: [{ rang: 1, pseudo: "Lucas", avatar: "vert-coeur", score: 1, moi: false, notions: 2 }], periode: "record", monRecord: 0, vuLe: null });
+    return [...n.querySelectorAll(".f-avatar")].map((x) => x.dataset.avatar); })()`);
+  assert.deepEqual(av, ["vert-coeur", "vert-coeur"], "avatars de l'écran Amis");
+  console.log("avatars de l'écran Amis");
+
   // 7 : sans compte, publierNotions ne contacte pas la base
   const avant7 = a.requetes.length;
   await a.evaluer("Compte.publierNotions(5)");

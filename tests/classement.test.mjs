@@ -112,6 +112,12 @@ try {
   assert.equal(await a.evaluer(`Classement.estErreurReseau({ message: "permission denied", code: "42501" })`), false, "scénario 10 : erreur serveur prise pour réseau");
   console.log("6 à 10 : corrections de la relecture");
 
+  // Portail : l'avatar devant le pseudo (défaut si absent)
+  const avatars = await a.evaluer(`[...Classement.rendre([{ rang: 1, pseudo: "Lucas", avatar: "rose-etoile", score: 9, moi: false },
+    { rang: 2, pseudo: "Zoe", score: 5, moi: false }]).querySelectorAll(".f-avatar")].map((x) => x.dataset.avatar)`);
+  assert.deepEqual(avatars, ["rose-etoile", "violet-facette"], "avatars du classement");
+  console.log("avatars dans le classement");
+
   assert.deepEqual(a.violationsCsp, [], "violations CSP");
   assert.deepEqual(a.erreurs, [], "erreurs");
   console.log("OK — classement (appli)");

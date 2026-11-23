@@ -28,6 +28,9 @@ try {
     assert.ok(texte.includes(attendu), `le dialogue ne mentionne pas « ${attendu} »`);
   assert.match(texte, /2\s?ans/, "durée de conservation absente");
   assert.match(texte, /amis/, "les amis ne sont pas mentionnés");
+  assert.match(texte, /prénom/, "le prénom n'est pas mentionné");
+  assert.match(texte, /établissement/, "l'établissement n'est pas mentionné");
+  assert.match(texte, /avatar/, "l'avatar n'est pas mentionné");
   assert.match(texte, /notions allumées/, "le nombre de notions publié n'est pas mentionné");
   assert.match(texte, /15\s?ans/, "mention des moins de 15 ans absente");
   console.log("1 : dialogue complet");

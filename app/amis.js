@@ -88,6 +88,9 @@ const Amis = (() => {
     if (p) p.textContent = message;
   }
 
+  // Avatar + pseudo d'une relation
+  const qui = (a) => el("span", { class: "f-amis-qui" }, Portail.avatar(a.avatar, 30), el("b", {}, a.pseudo));
+
   // --- Rendu pur (testable) : etat = { amis, classement, periode, monRecord, vuLe }
   function rendre(etat, { horsLigne = false, date = null } = {}) {
     const amis = etat.amis || [];
@@ -111,8 +114,9 @@ const Amis = (() => {
       : !lignes.length ? vide(etat.periode === "semaine" ? "Personne n'a encore joué cette semaine." : "Pas encore de record.")
       : el("ol", { class: "f-classement-liste" }, ...lignes.map((l) => el("li", { class: "f-classement-ligne" + (l.moi ? " moi" : "") },
           el("span", { class: "f-classement-rang" }, String(l.rang)),
-          el("span", { class: "f-classement-pseudo" }, l.pseudo, l.moi ? el("small", {}, " (toi)") : null,
-            el("small", { class: "f-amis-notions" }, `${l.notions ?? 0} notion${(l.notions ?? 0) > 1 ? "s" : ""}`)),
+          el("span", { class: "f-classement-pseudo" }, Portail.avatar(l.avatar, 30),
+            el("span", { class: "f-classement-nom" }, l.pseudo, l.moi ? el("small", {}, " (toi)") : null,
+              el("small", { class: "f-amis-notions" }, `${l.notions ?? 0} notion${(l.notions ?? 0) > 1 ? "s" : ""}`))),
           el("span", { class: "f-classement-score" }, String(l.score)))));
     parties.push(el("section", { class: "f-amis-bloc" }, el("h2", { class: "f-amis-titre" }, "Classement des amis"), onglets, contenu));
 
@@ -124,7 +128,7 @@ const Amis = (() => {
         const non = el("button", { class: "f-option f-amis-action", type: "button" }, "Refuser");
         oui.addEventListener("click", () => action(oui, "repondre_ami", { p_pseudo: a.pseudo, p_accepter: true }));
         non.addEventListener("click", () => action(non, "repondre_ami", { p_pseudo: a.pseudo, p_accepter: false }));
-        return el("div", { class: "f-amis-ligne" }, el("b", {}, a.pseudo), el("span", { class: "f-amis-boutons" }, oui, non));
+        return el("div", { class: "f-amis-ligne" }, qui(a), el("span", { class: "f-amis-boutons" }, oui, non));
       })));
 
     // Ajouter un ami
@@ -137,7 +141,7 @@ const Amis = (() => {
       el("p", { class: "f-amis-message", "aria-live": "polite" }, message)));
 
     // Tes amis, puis demandes envoyées
-    const ligne = (a, libelle) => el("div", { class: "f-amis-ligne" }, el("b", {}, a.pseudo),
+    const ligne = (a, libelle) => el("div", { class: "f-amis-ligne" }, qui(a),
       boutonConfirme(libelle, "retirer_ami", { p_pseudo: a.pseudo }));
     const mesAmis = amis.filter((a) => a.relation === "ami");
     const envoyees = amis.filter((a) => a.relation === "envoyee");
