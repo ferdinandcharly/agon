@@ -56,6 +56,52 @@ try {
   assert.equal(await b.evaluer(visible("#nav")), true, "scénario 4 : barre cachée");
   console.log("4 : session gardée, pas de portail");
 
+  // 5 : vérification locale des infos (mêmes formats qu'en base)
+  assert.deepEqual(Object.keys(await b.evaluer(`Portail.verifierInfos({ pseudo: "a b", prenom: "Zo3", etablissement: "<b>" })`)).sort(),
+    ["etablissement", "prenom", "pseudo"], "scénario 5 : erreurs attendues sur les trois champs");
+  assert.deepEqual(await b.evaluer(`Portail.verifierInfos({ pseudo: "Ferdi", prenom: "Zoé N'Golo", etablissement: "" })`), {}, "scénario 5 : prénom accentué refusé");
+  assert.deepEqual(await b.evaluer(`Portail.verifierInfos({ pseudo: "Ferdi", prenom: "", etablissement: "IUT de Lannion" })`), {}, "scénario 5 : établissement refusé");
+  assert.ok((await b.evaluer(`Portail.verifierInfos({ pseudo: "Ferdi", prenom: "", etablissement: "a" })`)).etablissement, "scénario 5 : établissement d'un caractère accepté");
+  console.log("5 : vérification des infos");
+
+  // 6 : composant avatar
+  const couleur = (code) => b.evaluer(`(() => { const a = Portail.avatar(${JSON.stringify(code)}); document.body.append(a);
+    const r = [a.classList.contains("f-avatar"), getComputedStyle(a).getPropertyValue("--avatar").trim(), !!a.querySelector("svg")]; a.remove(); return r; })()`);
+  assert.deepEqual(await couleur("rose-etoile"), [true, "#FF5FA2", true], "scénario 6 : avatar rose-etoile");
+  assert.deepEqual(await couleur("nimporte"), [true, "#7B4DFF", true], "scénario 6 : avatar par défaut");
+  console.log("6 : avatar");
+
+  // 7 : étape 3 (compte simulé) — champs, choix d'avatar, refus local sans requête
+  await b.evaluer("Portail.ouvrir(3)");
+  await attendre(300);
+  const r7 = await b.evaluer(`(() => { const p = document.getElementById("portail");
+    return { pseudo: !!p.querySelector("#portail-pseudo"), prenom: !!p.querySelector("#portail-prenom"), etab: !!p.querySelector("#portail-etablissement"),
+             couleurs: p.querySelectorAll(".f-portail-couleur").length, symboles: p.querySelectorAll(".f-portail-symbole").length, texte: p.innerText }; })()`);
+  assert.deepEqual([r7.pseudo, r7.prenom, r7.etab, r7.couleurs, r7.symboles], [true, true, true, 7, 6], "scénario 7 : champs de l'étape 3");
+  assert.match(r7.texte, /Privé/, "scénario 7 : mention « Privé » absente");
+  await b.cliquer('#portail .f-portail-couleur[data-couleur="vert"]');
+  await b.cliquer('#portail .f-portail-symbole[data-symbole="coeur"]');
+  assert.equal(await b.evaluer(`document.querySelector("#portail .f-portail-apercu .f-avatar").dataset.avatar`), "vert-coeur", "scénario 7 : aperçu de l'avatar");
+  const avant7 = b.requetes.length;
+  await b.evaluer(`(() => { document.getElementById("portail-pseudo").value = "a b"; document.querySelector("#portail .f-portail-valider").click(); })()`);
+  await attendre(300);
+  assert.match(await b.evaluer(`document.getElementById("portail").innerText`), /3 à 20 caractères/, "scénario 7 : message du pseudo absent");
+  assert.equal(b.requetes.slice(avant7).filter((q) => q.url.includes("/rest/v1/profils")).length, 0, "scénario 7 : profil envoyé malgré l'erreur");
+  console.log("7 : étape « Présente-toi »");
+
+  // 8 : profil inconnu (hors ligne) → pas d'étape 3 ; déconnexion → portail, étape 1
+  await b.evaluer("Portail.fermer()");
+  await attendre(300);
+  assert.equal(await b.evaluer(visible("#accueil")), true, "scénario 8 : accueil non rétabli");
+  await b.evaluer(`dispatchEvent(new Event("facettes:synchro"))`);
+  await attendre(200);
+  assert.equal(await b.evaluer(visible("#portail")), false, "scénario 8 : étape 3 ouverte sans savoir s'il y a un profil");
+  await b.evaluer(`dispatchEvent(new Event("facettes:deconnexion"))`);
+  await attendre(200);
+  assert.equal(await b.evaluer("document.querySelector('#portail [data-etape]')?.dataset.etape"), "1", "scénario 8 : la déconnexion ne ramène pas au portail");
+  assert.equal(await b.evaluer(visible("#accueil")), false, "scénario 8 : accueil atteignable après la déconnexion");
+  console.log("8 : profil inconnu et déconnexion");
+
   for (const x of [a, b]) {
     assert.deepEqual(x.violationsCsp, [], "violations CSP");
     assert.deepEqual(x.erreurs, [], "erreurs");

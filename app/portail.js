@@ -13,6 +13,39 @@ const Portail = (() => {
   ];
   let etape = null;
 
+  // --- Avatar : une couleur Facettes et un symbole blanc (public, comme le pseudo)
+  const COULEURS = { orange: "#FF6B3D", jaune: "#FFC21A", vert: "#00C08B", bleu: "#3D5AFE", violet: "#7B4DFF", rose: "#FF5FA2", cyan: "#2FD3E0" };
+  const SYMBOLES = {
+    facette: '<rect x="7" y="7" width="10" height="10" rx="2.2" transform="rotate(15 12 12)"/>',
+    etoile: '<polygon points="12,3 14.6,9 21,9.3 16,13.4 17.8,20 12,16.3 6.2,20 8,13.4 3,9.3 9.4,9"/>',
+    note: '<circle cx="8.5" cy="17" r="3"/><rect x="10" y="4" width="2.2" height="13"/><path d="M12.2 4l6.8 2.2v3.2l-6.8-2.2z"/>',
+    eclair: '<polygon points="13.5,2 5,13.5 11,13.5 10,22 19,10 13,10"/>',
+    coeur: '<path d="M12 20.5s-7.5-4.6-7.5-10.3A4.2 4.2 0 0 1 12 7.6a4.2 4.2 0 0 1 7.5 2.6c0 5.7-7.5 10.3-7.5 10.3z"/>',
+    vinyle: '<circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="2.6"/><circle cx="12" cy="12" r="2.6"/>',
+  };
+  const FORMAT_AVATAR = /^(orange|jaune|vert|bleu|violet|rose|cyan)-(facette|etoile|note|eclair|coeur|vinyle)$/;
+  function avatar(code, taille = 40) {
+    if (!FORMAT_AVATAR.test(code || "")) code = "violet-facette";
+    const [couleur, symbole] = code.split("-");
+    const a = el("span", { class: "f-avatar", "data-avatar": code, "aria-hidden": "true" });
+    a.style.setProperty("--avatar", COULEURS[couleur]);
+    a.style.setProperty("--taille-avatar", `${taille}px`);
+    a.innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor">${SYMBOLES[symbole]}</svg>`;
+    return a;
+  }
+
+  // --- Vérification locale des infos (mêmes formats qu'en base) ; {} = tout est bon
+  const FORMAT_PRENOM = /^\p{L}[\p{L} '-]{0,29}$/u;
+  function verifierInfos({ pseudo = "", prenom = "", etablissement = "" }) {
+    const erreurs = {};
+    const p = typeof Compte !== "undefined" ? Compte.messagePseudo(pseudo.trim()) : null;
+    if (p) erreurs.pseudo = p;
+    if (prenom.trim() && !FORMAT_PRENOM.test(prenom.trim())) erreurs.prenom = "Lettres, espaces, ' et - : 30 caractères au plus.";
+    const e = etablissement.trim();
+    if (e && (e.length < 2 || e.length > 60 || /[\u0000-\u001f\u007f<>]/.test(e))) erreurs.etablissement = "2 à 60 caractères, sans < ni >.";
+    return erreurs;
+  }
+
   const sessionGardee = () => { try { return !!localStorage.getItem("agon.session"); } catch { return false; } };
   const estOuvert = () => !ecran.classList.contains("cache");
 
@@ -62,9 +95,63 @@ const Portail = (() => {
     return contenu;
   }
 
-  // Remplie par la tâche « Présente-toi »
   function etapeInfos() {
-    return cadre(3, "Présente-toi", el("p", { class: "f-arbre-intro" }, "Chargement…"));
+    const hasard = (liste) => liste[Math.floor(Math.random() * liste.length)];
+    let couleur = hasard(Object.keys(COULEURS));
+    let symbole = hasard(Object.keys(SYMBOLES));
+    const apercu = el("div", { class: "f-portail-apercu" });
+    const majApercu = () => {
+      apercu.replaceChildren(avatar(`${couleur}-${symbole}`, 64));
+      couleurs.forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.couleur === couleur)));
+      symboles.forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.symbole === symbole)));
+    };
+    const couleurs = Object.entries(COULEURS).map(([id]) => {
+      const b = el("button", { class: "f-portail-couleur", type: "button", "data-couleur": id, "aria-label": `Couleur ${id}` });
+      b.style.setProperty("--avatar", COULEURS[id]);
+      b.addEventListener("click", () => { couleur = id; majApercu(); });
+      return b;
+    });
+    const symboles = Object.keys(SYMBOLES).map((id) => {
+      const b = el("button", { class: "f-portail-symbole", type: "button", "data-symbole": id, "aria-label": `Symbole ${id}` });
+      b.innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">${SYMBOLES[id]}</svg>`;
+      b.addEventListener("click", () => { symbole = id; majApercu(); });
+      return b;
+    });
+    const champ = (id, libelle, attrs = {}) => el("label", { class: "f-portail-champ", for: id }, el("span", {}, libelle),
+      el("input", { id, type: "text", autocomplete: "off", spellcheck: "false", ...attrs }),
+      el("small", { class: "f-portail-erreur", "data-champ": id.replace("portail-", "") }));
+    const message = el("p", { class: "f-portail-message", "aria-live": "polite" });
+    const valider = el("button", { class: "f-lancer-session f-portail-valider", type: "button" },
+      el("span", { class: "f-lancer-texte" }, el("b", {}, "C'est parti")));
+    const contenu = cadre(3, "Présente-toi",
+      champ("portail-pseudo", "Pseudo (visible des autres joueurs)", { maxlength: "20", autocapitalize: "off" }),
+      el("div", { class: "f-portail-avatar" }, apercu,
+        el("div", { class: "f-portail-choix" }, el("div", { class: "f-portail-couleurs" }, ...couleurs), el("div", { class: "f-portail-symboles" }, ...symboles))),
+      champ("portail-prenom", "Prénom (facultatif)", { maxlength: "30", autocomplete: "given-name" }),
+      champ("portail-etablissement", "Établissement ou ville (facultatif)", { maxlength: "60" }),
+      el("p", { class: "f-discret f-portail-prive" }, "Privé : prénom et établissement ne sont jamais montrés aux autres."),
+      valider, message);
+    majApercu();
+    valider.addEventListener("click", async () => {
+      const val = (id) => contenu.querySelector(`#${id}`).value.trim();
+      const infos = { pseudo: val("portail-pseudo"), prenom: val("portail-prenom"), etablissement: val("portail-etablissement") };
+      const erreurs = verifierInfos(infos);
+      contenu.querySelectorAll(".f-portail-erreur").forEach((s) => { s.textContent = erreurs[s.dataset.champ] || ""; });
+      message.textContent = "";
+      if (Object.keys(erreurs).length) return;
+      valider.disabled = true;
+      try {
+        let parcours = "but-info-1";
+        try { parcours = localStorage.getItem(CLE_PARCOURS) || parcours; } catch { /* défaut */ }
+        await Compte.enregistrerProfil({ ...infos, avatar: `${couleur}-${symbole}`, parcours });
+        fermer();
+      } catch (err) {
+        if (err?.messageAffiche && /pseudo|Déjà pris|caractères/i.test(err.messageAffiche)) contenu.querySelector('[data-champ="pseudo"]').textContent = err.messageAffiche;
+        else message.textContent = navigator.onLine === false || /fetch|network|load failed/i.test(err?.message || "")
+          ? "Pas de connexion, réessaie." : (err?.messageAffiche || `Ça n'a pas marché (${err?.message || "erreur inconnue"}).`);
+      } finally { valider.disabled = false; }
+    });
+    return contenu;
   }
 
   function ouvrir(n) {
@@ -106,5 +193,5 @@ const Portail = (() => {
   // Déconnexion ou suppression du compte : retour au début
   addEventListener("facettes:deconnexion", () => ouvrir(1));
 
-  return { decider, ouvrir, fermer, estOuvert };
+  return { decider, ouvrir, fermer, estOuvert, avatar, verifierInfos };
 })();

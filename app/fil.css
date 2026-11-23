@@ -858,6 +858,32 @@ body.portail-ouvert .f-accueil:not(#portail), body.portail-ouvert .f-maj { displ
 .f-portail-retour { justify-self: start; padding: 6px 0; border: 0; background: none; color: #CFC9E8; font: 700 15px var(--police); cursor: pointer; }
 .f-portail-compte { padding: 16px; border-radius: 18px; background: var(--papier); color: var(--encre); }
 .f-portail-horsligne { color: #FFC21A; }
+.f-avatar {
+  flex: none; display: inline-grid; place-items: center; width: var(--taille-avatar, 40px); height: var(--taille-avatar, 40px);
+  border: 2px solid var(--encre); border-radius: 50%; background: var(--avatar, #7B4DFF); color: #FFFFFF;
+}
+.f-avatar svg { width: 62%; height: 62%; }
+.f-portail-champ { display: grid; gap: 6px; font-weight: 700; }
+.f-portail-champ input {
+  padding: 11px 12px; border: var(--trait); border-radius: 12px; background: var(--papier); color: var(--encre); font: 600 16px var(--police);
+}
+.f-portail-erreur { min-height: 1em; color: #FF8FA8; font-weight: 600; }
+.f-portail-avatar { display: flex; gap: 14px; align-items: center; }
+.f-portail-avatar > .f-portail-apercu .f-avatar { box-shadow: 3px 3px 0 #FFFFFF; }
+.f-portail-choix { display: grid; gap: 8px; min-width: 0; }
+.f-portail-couleurs, .f-portail-symboles { display: flex; flex-wrap: wrap; gap: 6px; }
+.f-portail-couleur {
+  width: 30px; height: 30px; padding: 0; border: 2px solid var(--encre); border-radius: 50%; background: var(--avatar); cursor: pointer;
+}
+.f-portail-symbole {
+  display: grid; place-items: center; width: 34px; height: 34px; padding: 0; border: 2px solid #3A3260; border-radius: 10px;
+  background: none; color: #FFFFFF; cursor: pointer;
+}
+.f-portail-symbole svg { width: 20px; height: 20px; }
+.f-portail-couleur[aria-pressed="true"] { outline: 3px solid #FFFFFF; outline-offset: 2px; }
+.f-portail-symbole[aria-pressed="true"] { border-color: #FFFFFF; background: #2A2347; }
+.f-portail-prive { color: #CFC9E8; font-size: 14px; }
+.f-portail-message { min-height: 1.2em; color: #FFC21A; font-weight: 600; }
 
 /* ---------- Écran Amis ---------- */
 .f-amis-zone, .f-amis-rendu { display: grid; gap: 18px; }
