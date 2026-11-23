@@ -1120,7 +1120,7 @@ function remplirAccueil() {
   accueil.replaceChildren(el("div", { class: "f-accueil-col f-accueil-boule" },
     el("p", { class: "f-accueil-date" }, jour),
     el("h1", { class: "f-accueil-titre" }, titreAccueil(notions)),
-    el("div", { class: "f-scene" }, boule, bulle),
+    el("div", { class: "f-scene-zone" }, el("div", { class: "f-scene" }, boule, bulle)),
     el("p", { class: "f-boule-legende" },
       el("b", {}, `${allumees} notion${allumees > 1 ? "s" : ""} allumée${allumees > 1 ? "s" : ""} sur ${notions.length}`),
       " Touche la boule pour ouvrir ta discothèque."),
