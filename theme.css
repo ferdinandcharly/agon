@@ -45,6 +45,7 @@ html {
   -webkit-tap-highlight-color: transparent;   /* pas de flash gris au toucher */
 }
 button { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+*, *::before, *::after { touch-action: manipulation; }   /* iOS : pas de zoom au double tap, nulle part */
 body {
   background: var(--fond);
   color: var(--encre);

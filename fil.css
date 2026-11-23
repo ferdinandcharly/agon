@@ -268,7 +268,9 @@ h1, h2, h3 { font-family: var(--police); }
 
 /* ---------- Réglages ---------- */
 .f-reglages {
-  width: min(100% - 24px, 520px); max-height: min(100% - 32px, 760px); margin: auto;
+  /* Entre le flou d'iOS en haut et la barre d'accueil en bas */
+  inset: calc(var(--haut) + 8px) 0 max(16px, env(safe-area-inset-bottom)) 0;
+  width: min(100% - 24px, 520px); max-height: min(100% - var(--haut) - 8px - max(16px, env(safe-area-inset-bottom)), 760px); margin: auto;
   padding: 0; border: var(--trait); border-radius: 22px; box-shadow: var(--ombre);
   background: var(--papier); color: var(--encre); overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none;
 }
@@ -284,6 +286,9 @@ h1, h2, h3 { font-family: var(--police); }
 .f-reglages h3 { font-size: 20px; font-weight: 800; letter-spacing: -0.01em; }
 .f-reglages .f-discret { font-size: 15px; margin-top: 2px; }
 .f-fermer { padding: 8px 14px; font-weight: 700; }
+.f-reglages-bas { display: flex; justify-content: center; }
+.f-zero { padding: 6px 10px; border: 0; background: none; color: var(--gris); font: 700 14px var(--police); text-decoration: underline; cursor: pointer; }
+.f-zero.confirmer { color: #D23B53; }
 
 .f-pastilles { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
 .f-pastille {
@@ -298,12 +303,6 @@ h1, h2, h3 { font-family: var(--police); }
 .f-pastille:active { transform: translate(2px, 2px); }
 .f-pastille.secoue { animation: f-secoue .3s; }
 
-.f-progression { display: grid; gap: 12px; margin-top: 12px; }
-.f-prog-texte { display: flex; justify-content: space-between; gap: 10px; font-size: 15px; }
-.f-prog-texte span { color: var(--gris); text-align: right; }
-.f-prog-barre { height: 12px; margin-top: 4px; border: 2px solid var(--encre); border-radius: 999px; overflow: hidden; background: var(--papier); }
-.f-prog-barre i { display: block; height: 100%; background: var(--c); border-right: 2px solid var(--encre); }
-.f-prog-barre i[style="width: 0%;"] { border-right: 0; }
 
 .f-danger { text-align: center; font-weight: 700; margin-top: 12px; width: 100%; }
 
@@ -553,7 +552,6 @@ h1, h2, h3 { font-family: var(--police); }
   background: linear-gradient(135deg, #FFE27A, #FFC21A 45%, #E0A100); color: var(--encre); font-weight: 800;
 }
 .f-disque-or.arrive { animation: f-tampon .5s cubic-bezier(.3, 1.6, .5, 1) .5s both; }
-.f-reglages .f-vitrine { margin-top: 12px; }
 /* Sur la piste de nuit, l'ombre d'encre ne se verrait pas : ombre rose disco à la place */
 .f-ecran[data-matiere="tube"] .f-carte { box-shadow: 6px 6px 0 #FF5FA2; }
 
