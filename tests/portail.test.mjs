@@ -102,7 +102,42 @@ try {
   assert.equal(await b.evaluer(visible("#accueil")), false, "scénario 8 : accueil atteignable après la déconnexion");
   console.log("8 : profil inconnu et déconnexion");
 
-  for (const x of [a, b]) {
+  // 9 (relecture) : session refusée au démarrage (jeton invalide supprimé par supabase-js avant toute connexion)
+  // → l'événement de déconnexion part quand même et le portail s'ouvre
+  const c = await edge.nouvelAppareil({ connecte: false });
+  await c.avantPage(`window.__deconnexions = 0; addEventListener("facettes:deconnexion", () => window.__deconnexions++);
+    if (!sessionStorage.getItem("posee")) { sessionStorage.setItem("posee", "1"); localStorage.setItem("agon.session", JSON.stringify({ access_token: "invalide" })); }`);
+  await c.aller(serveur.url);
+  await c.attendreQue("!document.getElementById('lancement') && typeof donnees !== 'undefined' && !!donnees", 8000);
+  await attendre(800);
+  assert.ok(await c.evaluer("window.__deconnexions") >= 1, "scénario 9 : pas d'événement de déconnexion pour une session refusée");
+  assert.equal(await c.evaluer(visible("#portail")), true, "scénario 9 : pas de portail après une session refusée");
+  console.log("9 : session refusée au démarrage");
+
+  // 10 (relecture) : on peut taper une espace dans les champs de l'étape 3
+  await b.evaluer("Portail.ouvrir(3)");
+  await attendre(200);
+  assert.equal(await b.evaluer(`(() => { const e = new KeyboardEvent("keydown", { key: " ", bubbles: true, cancelable: true });
+    document.getElementById("portail-prenom").dispatchEvent(e); return e.defaultPrevented; })()`), false, "scénario 10 : espace bloquée dans un champ");
+  // 11 (relecture) : un nouvel appel à decider() ne referme pas l'étape 3
+  await b.evaluer("Portail.decider()");
+  await attendre(200);
+  assert.equal(await b.evaluer("document.querySelector('#portail [data-etape]')?.dataset.etape"), "3", "scénario 11 : l'étape 3 a été refermée");
+  // 12 (relecture) : apostrophe typographique d'iPhone et accent décomposé acceptés
+  assert.deepEqual(await b.evaluer(`Portail.verifierInfos({ pseudo: "Ferdi", prenom: "N’Golo", etablissement: "" })`), {}, "scénario 12 : apostrophe ’ refusée");
+  assert.deepEqual(await b.evaluer(`Portail.verifierInfos({ pseudo: "Ferdi", prenom: "Zoé", etablissement: "" })`), {}, "scénario 12 : accent décomposé refusé");
+  console.log("10-12 : espace, decider, apostrophe");
+
+  // 13 (relecture) : après la connexion, une attente qui ne finit pas propose de réessayer
+  await a.evaluer("Portail.ouvrir(2)");
+  await a.evaluer(`dispatchEvent(new Event("facettes:connexion"))`);
+  await attendre(300);
+  assert.match(await a.evaluer("document.getElementById('portail').innerText"), /Connexion réussie/, "scénario 13 : pas de message d'attente");
+  await attendre(8500);
+  assert.equal(await a.evaluer(visible("#portail .f-portail-relancer")), true, "scénario 13 : pas de bouton pour réessayer");
+  console.log("13 : attente après connexion");
+
+  for (const x of [a, b, c]) {
     assert.deepEqual(x.violationsCsp, [], "violations CSP");
     assert.deepEqual(x.erreurs, [], "erreurs");
   }

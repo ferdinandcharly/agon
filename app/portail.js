@@ -36,8 +36,11 @@ const Portail = (() => {
 
   // --- Vérification locale des infos (mêmes formats qu'en base) ; {} = tout est bon
   const FORMAT_PRENOM = /^\p{L}[\p{L} '-]{0,29}$/u;
+  // iOS remplace ' par ’ et peut décomposer les accents : on ramène tout à la forme attendue par la base
+  const normaliser = (s) => String(s || "").normalize("NFC").replace(/[\u2018\u2019\u02bc]/g, "'").trim();
   function verifierInfos({ pseudo = "", prenom = "", etablissement = "" }) {
     const erreurs = {};
+    pseudo = normaliser(pseudo); prenom = normaliser(prenom); etablissement = normaliser(etablissement);
     const p = typeof Compte !== "undefined" ? Compte.messagePseudo(pseudo.trim()) : null;
     if (p) erreurs.pseudo = p;
     if (prenom.trim() && !FORMAT_PRENOM.test(prenom.trim())) erreurs.prenom = "Lettres, espaces, ' et - : 30 caractères au plus.";
@@ -133,7 +136,7 @@ const Portail = (() => {
       valider, message);
     majApercu();
     valider.addEventListener("click", async () => {
-      const val = (id) => contenu.querySelector(`#${id}`).value.trim();
+      const val = (id) => normaliser(contenu.querySelector(`#${id}`).value);
       const infos = { pseudo: val("portail-pseudo"), prenom: val("portail-prenom"), etablissement: val("portail-etablissement") };
       const erreurs = verifierInfos(infos);
       contenu.querySelectorAll(".f-portail-erreur").forEach((s) => { s.textContent = erreurs[s.dataset.champ] || ""; });
@@ -173,23 +176,40 @@ const Portail = (() => {
 
   // Au démarrage (et sur « Réessayer ») : session gardée → l'appli ; sinon le portail
   function decider() {
-    if (sessionGardee()) { if (estOuvert()) fermer(); else afficherAccueil(); return; }
+    if (sessionGardee()) {
+      if (etape === 3) return;   // compte sans profil : on reste sur « Présente-toi »
+      if (estOuvert()) fermer(); else afficherAccueil();
+      return;
+    }
     if (navigator.onLine === false) { horsLigne(); return; }
     ouvrir(1);
   }
 
   // Connexion réussie à l'étape 2 : on attend la lecture du profil (première synchro)
+  // Profil connu après la synchro : étape 3 s'il n'existe pas, sinon l'appli ; inconnu : rien (on réessaiera)
+  function suiteSelonProfil() {
+    if (typeof Compte === "undefined" || !Compte.utilisateur()) return false;
+    if (Compte.profil() === null) { if (etape !== 3) ouvrir(3); return true; }
+    if (Compte.profil() && estOuvert() && etape !== 3) { fermer(); return true; }
+    return false;
+  }
   addEventListener("facettes:connexion", () => {
     if (!estOuvert() || etape !== 2) return;
-    const zone = ecran.querySelector(".f-portail-compte");
-    zone?.replaceChildren(el("p", { class: "f-arbre-intro" }, "Connexion réussie, un instant…"));
+    if (typeof Compte !== "undefined") Compte.afficherDans(null);   // le panneau du compte ne s'affiche pas ici
+    const message = el("p", { class: "f-arbre-intro" }, "Connexion réussie, un instant…");
+    const relancer = el("button", { class: "f-option f-portail-relancer cache", type: "button" }, "Réessayer");
+    relancer.addEventListener("click", async () => {
+      relancer.disabled = true;
+      message.textContent = "Un instant…";
+      await Compte.synchroniser();
+      relancer.disabled = false;
+      if (!suiteSelonProfil()) message.textContent = "Le serveur ne répond pas. Vérifie ta connexion puis réessaie.";
+    });
+    ecran.querySelector(".f-portail-compte")?.replaceChildren(message, relancer);
     ecran.querySelector(".f-portail-retour")?.remove();
+    setTimeout(() => { if (estOuvert() && etape === 2) relancer.classList.remove("cache"); }, 8000);
   });
-  addEventListener("facettes:synchro", () => {
-    if (typeof Compte === "undefined" || !Compte.utilisateur()) return;
-    if (Compte.profil() === null) { if (etape !== 3) ouvrir(3); }
-    else if (Compte.profil() && estOuvert() && etape !== 3) fermer();
-  });
+  addEventListener("facettes:synchro", suiteSelonProfil);
   // Déconnexion ou suppression du compte : retour au début
   addEventListener("facettes:deconnexion", () => ouvrir(1));
 

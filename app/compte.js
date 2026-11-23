@@ -227,7 +227,8 @@ const Compte = (() => {
       profil = undefined;
       oublierCachesDuCompte();
       changerEtat("deconnecte");
-      if (avant) dispatchEvent(new Event("facettes:deconnexion"));   // portail.js : retour au début
+      // portail.js : retour au début (aussi pour une session gardée mais refusée au démarrage)
+      dispatchEvent(new Event("facettes:deconnexion"));
       return;
     }
     if (utilisateur.id !== avant) {
@@ -510,7 +511,7 @@ const Compte = (() => {
   return {
     programmer,
     synchroniser,
-    afficherDans(element) { conteneur = element; dessiner(); },
+    afficherDans(element) { conteneur = element; if (element) dessiner(); },   // null : ne plus rien dessiner
     publierPartie,
     publierNotions,
     enregistrerProfil,

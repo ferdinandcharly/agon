@@ -1354,6 +1354,8 @@ fil.addEventListener("wheel", (e) => {
 // Clavier sur ordinateur : flèches, Page suivante/précédente et espace
 document.addEventListener("keydown", (e) => {
   if (e.ctrlKey || e.altKey || e.metaKey || dialogue.open || fil.classList.contains("verrouille")) return;
+  if (e.target.closest("input, textarea, select, [contenteditable]")) return;   // on tape du texte
+  if (typeof Portail !== "undefined" && Portail.estOuvert()) return;
   if (e.target.closest("button") && e.key === " ") return;
   let sens = { ArrowDown: 1, PageDown: 1, " ": 1, ArrowUp: -1, PageUp: -1 }[e.key];
   if (!sens) return;
