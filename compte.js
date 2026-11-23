@@ -54,6 +54,7 @@ const Compte = (() => {
   function oublierCachesDuCompte() {
     for (const cle of [CLE_CLASSEMENT, "agon.amis", "agon.amis.vu", CLE_NOTIONS])
       try { localStorage.removeItem(cle); } catch { /* tant pis */ }
+    if (typeof Amis !== "undefined") Amis.oublier();   // pastille de l'onglet Amis
   }
 
   // ---------- File des parties de Survie (agon.parties) ----------

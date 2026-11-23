@@ -13,6 +13,7 @@ const Amis = (() => {
   const PERIODES = { semaine: "Cette semaine", record: "Record" };
   let periode = "semaine";
   let vuOuverture = null;      // date de la visite précédente : l'activité affichée pendant cette visite
+  let visiteEnregistree = false;   // la visite ne compte qu'une fois des données fraîches affichées
   let message = "";            // résultat du dernier « Ajouter un ami »
   let derniereRequetePastille = 0;
 
@@ -183,6 +184,14 @@ const Amis = (() => {
         el("button", { class: "f-option", type: "button", onclick: charger }, "Réessayer")));
       return;
     }
+    // Données fraîches affichées : la visite compte (l'activité vue disparaîtra à la suivante). Première visite
+    // (nouvel appareil, reconnexion) : rien n'est « battu », on part de maintenant.
+    if (!visiteEnregistree) {
+      const maintenant = new Date().toISOString();
+      if (vuOuverture === null) vuOuverture = maintenant;
+      ecrire(CLE_VU, maintenant);
+      visiteEnregistree = true;
+    }
     const c = lireCache();
     ecrire(CLE, { amis: rel.data, classement: { ...(c.classement || {}), [demande]: cl.data }, date: new Date().toISOString() });
     zone().replaceChildren(rendre({ amis: rel.data, classement: cl.data, periode: demande, monRecord: monRecord(), vuLe: vuOuverture }));
@@ -195,7 +204,7 @@ const Amis = (() => {
     accueil.classList.add("cache");
     message = "";
     vuOuverture = lireVu();
-    ecrire(CLE_VU, new Date().toISOString());   // l'activité de cette visite disparaîtra à la suivante
+    visiteEnregistree = false;
     ecran.replaceChildren(el("div", { class: "f-accueil-col" },
       el("h1", { class: "f-accueil-titre" }, "Amis"),
       el("div", { class: "f-amis-zone", "aria-live": "polite" })));
@@ -222,5 +231,11 @@ const Amis = (() => {
   // Après chaque synchro réussie (ouverture de l'appli, retour au premier plan, retour du réseau)
   addEventListener("facettes:synchro", () => rafraichirPastille());
 
-  return { ouvrir, recharger, rendre, recordsBattus, compterPastille, rafraichirPastille };
+  // Déconnexion ou changement de compte : rien de l'ancien compte ne reste affiché
+  function oublier() {
+    Nav.pastille(0);
+    derniereRequetePastille = 0;
+  }
+
+  return { ouvrir, recharger, rendre, recordsBattus, compterPastille, rafraichirPastille, oublier };
 })();

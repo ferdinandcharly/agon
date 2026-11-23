@@ -821,6 +821,8 @@ h1, h2, h3 { font-family: var(--police); }
   position: absolute; top: 2px; left: calc(50% + 6px); min-width: 18px; height: 18px; padding: 0 5px;
   border-radius: 999px; background: #FF5FA2; color: #16112B; font: 800 11px/18px var(--police); text-align: center;
 }
+/* « Nouvelle version » se pose au-dessus de la barre */
+body.avec-nav .f-maj { bottom: calc(var(--hauteur-nav) + max(6px, env(safe-area-inset-bottom)) + 12px); }
 /* Les écrans qui ont la barre lui réservent leur bas */
 body.avec-nav #accueil, body.avec-nav .f-accueil {
   padding-bottom: calc(var(--hauteur-nav) + max(6px, env(safe-area-inset-bottom)) + 10px);
