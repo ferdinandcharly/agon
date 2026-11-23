@@ -35,6 +35,11 @@ const Compte = (() => {
   let recordAMoi = true;     // le record de cet appareil appartient-il au compte connecté (pas à un compte précédent) ?
   const CLE_COMPTE = "agon.compte";        // dernier compte connecté sur cet appareil
   const CLE_CLASSEMENT = "agon.classement"; // cache du classement (pseudos des autres) : propre à un compte
+  // Caches propres à un compte (pseudos des autres, amis, dernière visite, notions publiées)
+  function oublierCachesDuCompte() {
+    for (const cle of [CLE_CLASSEMENT, "agon.amis", "agon.amis.vu", "agon.notions.publiees"])
+      try { localStorage.removeItem(cle); } catch { /* tant pis */ }
+  }
 
   // ---------- File des parties de Survie (agon.parties) ----------
   // Chaque partie a un id créé ici : renvoyée deux fois, elle n'est comptée qu'une fois.
@@ -169,6 +174,7 @@ const Compte = (() => {
         await envoyerParties();
         derniereSynchro = new Date();
         changerEtat("ok");
+        dispatchEvent(new Event("facettes:synchro"));   // amis.js : pastille ; app.js : notions publiées
         if (change) window.apresSynchro?.();
       } catch (err) {
         console.warn("[Facettes] synchro :", err);
@@ -203,7 +209,7 @@ const Compte = (() => {
     utilisateur = session?.user ?? null;
     if (!utilisateur) {
       profil = undefined;
-      try { localStorage.removeItem(CLE_CLASSEMENT); } catch { /* tant pis */ }
+      oublierCachesDuCompte();
       changerEtat("deconnecte");
       return;
     }
@@ -215,7 +221,7 @@ const Compte = (() => {
       recordAMoi = !precedent || precedent === utilisateur.id;
       if (!recordAMoi) {
         ecrireFile(fileDe(lireFile(), utilisateur.id));
-        try { localStorage.removeItem(CLE_CLASSEMENT); } catch { /* tant pis */ }
+        oublierCachesDuCompte();
       }
       try { localStorage.setItem(CLE_COMPTE, utilisateur.id); } catch { /* tant pis */ }
       setTimeout(synchroniser, 0);
@@ -309,7 +315,8 @@ const Compte = (() => {
     const { error } = await sb.rpc("supprimer_mon_compte");
     if (error) throw error;
     ecrireFile(lireFile().filter((p) => p.user_id !== utilisateur?.id));   // les parties du compte supprimé
-    try { localStorage.removeItem(CLE_CLASSEMENT); localStorage.removeItem(CLE_COMPTE); } catch { /* tant pis */ }
+    oublierCachesDuCompte();
+    try { localStorage.removeItem(CLE_COMPTE); } catch { /* tant pis */ }
     profil = undefined;
     await sb.auth.signOut({ scope: "local" }).catch(() => {});
   }

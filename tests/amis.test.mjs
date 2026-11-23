@@ -61,6 +61,54 @@ try {
   }
   console.log("3 : accueil et barre sur un écran");
 
+  // 4 : écran Amis sans compte = invitation à se connecter
+  await a.cliquer('#nav [data-onglet="amis"]');
+  await attendre(400);
+  assert.equal(await a.evaluer("!document.getElementById('amis').classList.contains('cache')"), true, "scénario 4 : écran Amis fermé");
+  assert.equal((await etatNav()).actif, "amis", "scénario 4 : onglet Amis non actif");
+  assert.match(await a.evaluer("document.getElementById('amis').innerText"), /Connecte-toi pour ajouter des amis/, "scénario 4 : invitation absente");
+  await a.cliquer("#amis .f-classement-connexion");
+  await attendre(400);
+  assert.equal(await a.evaluer("document.getElementById('reglages').open"), true, "scénario 4 : le bouton n'ouvre pas le compte");
+  await a.evaluer("document.getElementById('reglages').close()");
+  console.log("4 : Amis sans compte");
+
+  // 5 : records battus et pastille (fonctions pures)
+  const amisExemple = [
+    { pseudo: "Lucas", relation: "ami", notions: 26, record: 42, record_le: "2026-11-23T10:00:00Z" },
+    { pseudo: "Zoé", relation: "ami", notions: 3, record: 38, record_le: "2026-11-23T10:00:00Z" },
+    { pseudo: "Max", relation: "recue", notions: null, record: null, record_le: null },
+    { pseudo: "Léa", relation: "envoyee", notions: null, record: null, record_le: null },
+  ];
+  const A = JSON.stringify(amisExemple);
+  assert.deepEqual(await a.evaluer(`Amis.recordsBattus(${A}, 38, "2026-11-22T00:00:00Z")`), [{ pseudo: "Lucas", record: 42, moi: 38 }], "scénario 5 : records battus");
+  assert.deepEqual(await a.evaluer(`Amis.recordsBattus(${A}, 38, "2026-11-24T00:00:00Z")`), [], "scénario 5 : record déjà vu");
+  assert.deepEqual(await a.evaluer(`Amis.recordsBattus(${A}, null, null).map((r) => r.pseudo)`), ["Lucas", "Zoé"], "scénario 5 : sans record à moi");
+  assert.equal(await a.evaluer(`Amis.compterPastille(${A}, 38, "2026-11-22T00:00:00Z")`), 2, "scénario 5 : pastille");
+  console.log("5 : records battus et pastille");
+
+  // 6 : rendu sur données simulées, en ligne puis hors ligne ; pseudo invalide refusé sans appel
+  const etat = `{ amis: ${A}, classement: [{ rang: 1, pseudo: "Lucas", score: 42, moi: false, notions: 26 }, { rang: 2, pseudo: "Ferdi", score: 38, moi: true, notions: 30 }],
+    periode: "record", monRecord: 38, vuLe: "2026-11-22T00:00:00Z" }`;
+  const r6 = await a.evaluer(`(() => { const n = Amis.rendre(${etat}); document.getElementById("amis").replaceChildren(n);
+    return { texte: n.innerText, accepter: !!n.querySelector(".f-amis-accepter"), champ: !!n.querySelector("input.f-amis-pseudo") }; })()`);
+  assert.match(r6.texte, /Lucas a battu ton record : 42 \(toi : 38\)/, "scénario 6 : carte record battu");
+  assert.match(r6.texte, /26 notions/, "scénario 6 : notions des amis");
+  assert.equal(r6.accepter, true, "scénario 6 : pas de bouton Accepter");
+  assert.equal(r6.champ, true, "scénario 6 : pas de champ pour ajouter");
+  const avant = a.requetes.length;
+  await a.evaluer(`(() => { const z = document.getElementById("amis"); z.querySelector("input.f-amis-pseudo").value = "a b";
+    z.querySelector(".f-amis-envoyer").click(); })()`);
+  await attendre(300);
+  assert.match(await a.evaluer("document.querySelector('#amis .f-amis-message').innerText"), /3 à 20 caractères/, "scénario 6 : format du pseudo non vérifié");
+  assert.equal(a.requetes.slice(avant).filter((q) => q.url.includes("demander_ami")).length, 0, "scénario 6 : appel avec un pseudo invalide");
+  const r6b = await a.evaluer(`(() => { const n = Amis.rendre(${etat}, { horsLigne: true, date: "2026-11-23T09:00:00Z" });
+    const actions = [...n.querySelectorAll("button.f-amis-action, input.f-amis-pseudo, .f-amis-envoyer")];
+    return { n: actions.length, toutes: actions.every((x) => x.disabled), texte: n.innerText }; })()`);
+  assert.ok(r6b.n >= 4 && r6b.toutes, `scénario 6 : actions possibles hors ligne (${r6b.n})`);
+  assert.match(r6b.texte, /Hors ligne/, "scénario 6 : pas de mention hors ligne");
+  console.log("6 : rendu de l'écran Amis");
+
   assert.deepEqual(a.violationsCsp, [], "violations CSP");
   assert.deepEqual(a.erreurs, [], "erreurs");
   console.log("OK — amis");
