@@ -1036,18 +1036,6 @@ function notionsParEtat() {
   return notions;
 }
 
-function titreAccueil(notions) {
-  const aRevoir = notions.filter((n) => n.etat === "a_revoir");
-  if (aRevoir.length) {
-    const parMatiere = {};
-    for (const n of aRevoir) parMatiere[n.matiere.nom] = (parMatiere[n.matiere.nom] || 0) + 1;
-    const pire = Object.entries(parMatiere).sort((a, b) => b[1] - a[1])[0][0];
-    return aRevoir.length === 1 ? `1 notion à revoir, en ${pire}.` : `${aRevoir.length} notions à revoir, surtout en ${pire}.`;
-  }
-  if (notions.every((n) => n.etat === "pas_vue")) return "Ta boule est encore éteinte.";
-  const restantes = notions.filter((n) => n.etat === "pas_vue").length;
-  return restantes ? `Rien à revoir. ${restantes} notions à découvrir.` : "Tout est allumé. Bravo.";
-}
 
 // Cases d'une grille carrée dont le centre tombe dans le cercle, rangées par angle :
 // chaque matière occupe ainsi un quartier de la boule, comme les reflets d'une vraie boule à facettes.
@@ -1119,7 +1107,6 @@ function remplirAccueil() {
 
   accueil.replaceChildren(el("div", { class: "f-accueil-col f-accueil-boule" },
     el("p", { class: "f-accueil-date" }, jour),
-    el("h1", { class: "f-accueil-titre" }, titreAccueil(notions)),
     el("div", { class: "f-scene-zone" }, el("div", { class: "f-scene" }, boule, bulle)),
     el("p", { class: "f-boule-legende" },
       el("b", {}, `${allumees} notion${allumees > 1 ? "s" : ""} allumée${allumees > 1 ? "s" : ""} sur ${notions.length}`),
@@ -1186,7 +1173,6 @@ function pastille(texte, active, couleur, basculer) {
     reglages.maj = new Date().toISOString();
     ecrireReglages(reglages);
     reglagesModifies = true;
-    remplirProgression();
   });
   return b;
 }
@@ -1197,23 +1183,6 @@ function basculerDans(liste, valeur, actif) {
   if (!actif && i < 0) liste.push(valeur);
 }
 
-function remplirProgression() {
-  const resultats = lireResultats();
-  const lignes = donnees.matieres.map((m) => {
-    // On compte les jeux (pas les fiches) : réussis au dernier essai, ratés à revoir, jamais joués
-    const jeux = donnees.contenus.filter((c) => c.matiere === m.id && c.format !== "fiche" && contenuValide(c));
-    const reussis = jeux.filter((c) => resultats[c.id]?.derniereOk === true).length;
-    const aRevoir = jeux.filter((c) => resultats[c.id]?.derniereOk === false).length;
-    const part = jeux.length ? reussis / jeux.length : 0;
-    const detail = `${reussis} réussi${reussis > 1 ? "s" : ""} sur ${jeux.length}` + (aRevoir ? `, ${aRevoir} à revoir` : "");
-    const ligne = el("div", { class: "f-prog-ligne", "data-matiere": m.id },
-      el("div", { class: "f-prog-texte" }, el("b", {}, m.nom), el("span", {}, detail)),
-      el("div", { class: "f-prog-barre", role: "img", "aria-label": `${Math.round(part * 100)} % réussi` }, el("i")));
-    ligne.querySelector("i").style.width = `${part * 100}%`;
-    return ligne;
-  });
-  document.getElementById("progression").replaceChildren(...lignes);
-}
 
 function remplirReglages() {
   const couleurDe = (id) => {
@@ -1229,8 +1198,6 @@ function remplirReglages() {
   document.getElementById("choix-formats").replaceChildren(...Object.entries(NOMS_FORMATS).map(([id, nom]) =>
     pastille(nom, !reglages.formatsExclus.includes(id), null,
       (actif) => basculerDans(reglages.formatsExclus, id, actif))));
-  remplirProgression();
-  document.getElementById("collection").replaceChildren(vitrine(lireCollection()));
   if (typeof Compte !== "undefined") Compte.afficherDans(document.getElementById("compte"));
 }
 
@@ -1285,7 +1252,6 @@ btnZero.addEventListener("click", () => {
   afficherScore();
   btnZero.classList.remove("confirmer");
   btnZero.textContent = "Progression effacée";
-  remplirProgression();
 });
 
 // ---------- Navigation : une carte à la fois ----------

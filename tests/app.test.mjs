@@ -110,6 +110,27 @@ try {
   }
   console.log("6 : accueil sur un seul écran");
 
+  // 7 : épuration — pas de phrase perso sur l'accueil, réglages réduits, panneaux sous le flou, pas de zoom au double tap
+  const e = await edge.nouvelAppareil({ largeur: 390, hauteur: 844 });
+  await e.encoche(47, 34);
+  await e.avantPage("Object.defineProperty(Navigator.prototype, 'standalone', { get: () => true })");
+  await e.aller(serveur.url);
+  await e.attendreQue("!document.getElementById('lancement')", 8000);
+  assert.equal(await e.evaluer("!!document.querySelector('#accueil .f-accueil-titre')"), false, "scénario 7 : phrase perso sur l'accueil");
+  assert.match(await e.evaluer("document.querySelector('meta[name=viewport]').content"), /maximum-scale=1/, "scénario 7 : zoom encore permis");
+  const toucher = await e.evaluer(`[".f-lancer-session", ".f-bouton-survie", ".f-menu", ".f-accueil-date"].map((s) => getComputedStyle(document.querySelector(s)).touchAction)`);
+  assert.ok(toucher.every((v) => v === "manipulation"), `scénario 7 : double tap encore actif (${toucher})`);
+  await e.cliquer("#btn-reglages");
+  await attendre(500);
+  const r7 = await e.evaluer(`(() => { const d = document.getElementById("reglages");
+    return { haut: Math.round(d.getBoundingClientRect().top), titres: [...d.querySelectorAll("h3")].map((h) => h.textContent) }; })()`);
+  assert.ok(r7.haut >= 89, `scénario 7 : réglages dans le flou (${r7.haut} px)`);
+  assert.deepEqual(r7.titres, ["Matières", "Jeux", "Compte"], "scénario 7 : sections des réglages");
+  assert.equal(await e.evaluer("!!document.getElementById('btn-zero')"), true, "scénario 7 : plus de bouton pour effacer");
+  await e.cliquer("#btn-fermer-reglages");
+  assert.deepEqual(e.erreurs, [], "scénario 7 : erreurs");
+  console.log("7 : accueil et réglages épurés, sous le flou, sans zoom");
+
   for (const x of [a, i, j]) {
     assert.deepEqual(x.violationsCsp, [], "violations CSP");
     assert.deepEqual(x.erreurs, [], "erreurs");

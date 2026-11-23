@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
   <!-- CSP (GitHub Pages n'envoie pas d'en-têtes) : seuls nos fichiers, Supabase et Turnstile sont autorisés.
        Elle protège la session (dans localStorage) même si une faille XSS apparaissait un jour. -->
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://challenges.cloudflare.com; connect-src 'self' https://hiqymrmygjisqqypbfxp.supabase.co; frame-src https://challenges.cloudflare.com; img-src 'self' data:; style-src 'self'; font-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
@@ -51,31 +51,18 @@
   </div>
   <section>
     <h3>Matières</h3>
-    <p class="f-discret">Celles qui apparaissent dans le fil.</p>
     <div class="f-pastilles" id="choix-matieres"></div>
   </section>
   <section>
     <h3>Jeux</h3>
-    <p class="f-discret">Les formats de cartes à mélanger.</p>
     <div class="f-pastilles" id="choix-formats"></div>
-  </section>
-  <section>
-    <h3>Progression</h3>
-    <div class="f-progression" id="progression"></div>
-  </section>
-  <section>
-    <h3>Ta collection</h3>
-    <p class="f-discret">Chaque jour, le Tube du jour ouvre le fil. Réussis-le pour gagner un vinyle : 7 vinyles font un disque d'or.</p>
-    <div id="collection"></div>
   </section>
   <section>
     <h3>Compte</h3>
     <div class="f-compte" id="compte"></div>
   </section>
-  <section>
-    <h3>Remettre à zéro</h3>
-    <p class="f-discret">Efface tes résultats (sur tous tes appareils si tu es connecté). Les réglages et ta collection de vinyles sont gardés.</p>
-    <button class="f-option f-danger" id="btn-zero" type="button">Effacer ma progression</button>
+  <section class="f-reglages-bas">
+    <button class="f-zero" id="btn-zero" type="button">Effacer ma progression</button>
   </section>
   <p class="f-version" id="version">Version inconnue (hors ligne ou premier lancement)</p>
 </dialog>
