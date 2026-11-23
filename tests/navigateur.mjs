@@ -59,7 +59,7 @@ export async function lancerEdge() {
     ws.send(JSON.stringify({ id, method, params, sessionId }));
   });
 
-  async function nouvelAppareil({ largeur = 390, hauteur = 844, mobile = true } = {}) {
+  async function nouvelAppareil({ largeur = 390, hauteur = 844, mobile = true, ua = null } = {}) {
     const { browserContextId } = await cdp("Target.createBrowserContext");
     const { targetId } = await cdp("Target.createTarget", { url: "about:blank", browserContextId });
     const { sessionId } = await cdp("Target.attachToTarget", { targetId, flatten: true });
@@ -80,6 +80,7 @@ export async function lancerEdge() {
     for (const domaine of ["Runtime", "Log", "Network", "Page"]) await cdp(`${domaine}.enable`, {}, sessionId);
     await cdp("Emulation.setDeviceMetricsOverride", { width: largeur, height: hauteur, deviceScaleFactor: mobile ? 3 : 1, mobile }, sessionId);
     if (mobile) await cdp("Emulation.setTouchEmulationEnabled", { enabled: true, maxTouchPoints: 5 }, sessionId);
+    if (ua) await cdp("Emulation.setUserAgentOverride", { userAgent: ua }, sessionId);   // se faire passer pour un iPhone
 
     async function evaluer(expression) {
       const r = await cdp("Runtime.evaluate", { expression, awaitPromise: true, returnByValue: true, userGesture: true }, sessionId);
@@ -102,6 +103,7 @@ export async function lancerEdge() {
       async couperReseau(coupe) {
         await cdp("Network.emulateNetworkConditions", { offline: coupe, latency: 0, downloadThroughput: -1, uploadThroughput: -1 }, sessionId);
       },
+      async avantPage(source) { await cdp("Page.addScriptToEvaluateOnNewDocument", { source }, sessionId); },   // avant les scripts de la page
       async bloquerUrls(motifs) { await cdp("Network.setBlockedURLs", { urls: motifs }, sessionId); },
       async capture(chemin) {
         const { data } = await cdp("Page.captureScreenshot", { format: "png" }, sessionId);

@@ -1137,6 +1137,7 @@ function remplirAccueil() {
         el("span", {}, lireRecordSurvie() ? `Record : ${lireRecordSurvie()}` : "Pas encore joué")),
       el("button", { class: "f-bouton-survie f-bouton-classement", type: "button", onclick: () => Classement.ouvrir() },
         el("b", {}, "Classement"), el("span", {}, "Cette semaine et record")),
+      Installer.carte(),
       el("p", { class: "f-ligne-info discret" }, "Bientôt : amis, arène"))));
 }
 

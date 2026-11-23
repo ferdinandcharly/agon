@@ -38,7 +38,13 @@ h1, h2, h3, h4, .logo { font-family: var(--police-titre); font-stretch: var(--et
 /* ---------- Base ---------- */
 *, *::before, *::after { box-sizing: border-box; }
 * { margin: 0; padding: 0; }
-html { -webkit-text-size-adjust: 100%; }
+html {
+  -webkit-text-size-adjust: 100%;
+  touch-action: manipulation;   /* app, pas site : pas de zoom au double tap (le pincement reste possible) */
+  overscroll-behavior: none;    /* ni rebond ni « tirer pour recharger » */
+  -webkit-tap-highlight-color: transparent;   /* pas de flash gris au toucher */
+}
+button { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
 body {
   background: var(--fond);
   color: var(--encre);
