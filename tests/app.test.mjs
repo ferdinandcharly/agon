@@ -94,9 +94,10 @@ try {
     await k.attendreQue("!document.getElementById('lancement')", 8000);
     const d = await k.evaluer(`(() => { const acc = document.getElementById("accueil"); return [acc.scrollHeight, acc.clientHeight]; })()`);
     assert.ok(d[0] <= d[1], `scénario 6 : l'accueil défile en ${largeur}×${hauteur} (${d[0]} > ${d[1]})`);
-    // Pas de place perdue en bas : le dernier élément arrive à moins de 40 px du bas (marge comprise)
+    // Pas de place perdue en bas : le dernier élément arrive à moins de 40 px de la barre d'onglets
     const vide = await k.evaluer(`(() => { const acc = document.getElementById("accueil");
-      const fin = acc.querySelector(".f-accueil-bas").getBoundingClientRect().bottom; return Math.round(acc.clientHeight - fin); })()`);
+      const fin = acc.querySelector(".f-accueil-bas").getBoundingClientRect().bottom;
+      return Math.round(document.getElementById("nav").getBoundingClientRect().top - fin); })()`);
     assert.ok(vide <= 40, `scénario 6 : ${vide} px vides en bas en ${largeur}×${hauteur}`);
     // La boule reste ronde (carrée)
     const b = await k.evaluer(`(() => { const r = document.querySelector("#accueil .f-scene").getBoundingClientRect(); return [Math.round(r.width), Math.round(r.height)]; })()`);

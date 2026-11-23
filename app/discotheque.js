@@ -184,7 +184,6 @@ const Discotheque = (() => {
     }, { passive: true });
     leBac.addEventListener("scrollend", fin);
     ecran.replaceChildren(el("div", { class: "f-accueil-col" },
-      el("button", { class: "f-retour-menu", type: "button", onclick: afficherAccueil }, "← Retour au menu"),
       el("h1", { class: "f-accueil-titre" }, "Ta discothèque"),
       el("p", { class: "f-arbre-intro" }, `${albums.length} albums · ${maitrisees} pistes maîtrisées sur ${total}`),
       el("div", { class: "f-bac-cadre" },
@@ -226,6 +225,7 @@ const Discotheque = (() => {
     afficherAccueil();
     accueil.classList.add("cache");
     ecran.classList.remove("cache");
+    Nav.afficher("disco");
     ecran.scrollTo({ top: 0 });
     dessiner(matiere);
   }

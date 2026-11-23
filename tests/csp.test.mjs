@@ -19,7 +19,7 @@ try {
 
     // Arbre puis retour
     await a.cliquer(".f-boule");
-    await a.cliquer(".f-retour-menu");
+    await a.cliquer('#nav [data-onglet="accueil"]');
     // Session : on fait défiler une douzaine de cartes (une Prise d'otage peut verrouiller : sans gravité)
     await a.cliquer(".f-lancer-session");
     for (let i = 0; i < 12; i++) {
