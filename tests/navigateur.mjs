@@ -103,6 +103,7 @@ export async function lancerEdge() {
       async couperReseau(coupe) {
         await cdp("Network.emulateNetworkConditions", { offline: coupe, latency: 0, downloadThroughput: -1, uploadThroughput: -1 }, sessionId);
       },
+      async encoche(haut, bas) { await cdp("Emulation.setSafeAreaInsetsOverride", { insets: { top: haut, bottom: bas, left: 0, right: 0 } }, sessionId); },   // marges d'un vrai iPhone
       async avantPage(source) { await cdp("Page.addScriptToEvaluateOnNewDocument", { source }, sessionId); },   // avant les scripts de la page
       async bloquerUrls(motifs) { await cdp("Network.setBlockedURLs", { urls: motifs }, sessionId); },
       async capture(chemin) {

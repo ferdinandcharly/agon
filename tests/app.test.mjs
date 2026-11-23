@@ -85,8 +85,10 @@ try {
   console.log("5 : réglages tactiles");
 
   // 6 : l'accueil tient sur un écran, sans défiler (app installée : iPhone SE, standard, Pro Max)
-  for (const [largeur, hauteur] of [[375, 667], [390, 844], [430, 932]]) {
+  // (marges réelles : encoche en haut, barre d'accueil en bas ; l'iPhone SE n'en a qu'en haut)
+  for (const [largeur, hauteur, haut, bas] of [[375, 667, 20, 0], [390, 844, 47, 34], [393, 852, 59, 34], [430, 932, 59, 34]]) {
     const k = await edge.nouvelAppareil({ largeur, hauteur });
+    await k.encoche(haut, bas);
     await k.avantPage("Object.defineProperty(Navigator.prototype, 'standalone', { get: () => true })");
     await k.aller(serveur.url);
     await k.attendreQue("!document.getElementById('lancement')", 8000);
