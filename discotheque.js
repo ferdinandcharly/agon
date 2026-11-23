@@ -115,12 +115,17 @@ const Discotheque = (() => {
     // Livret de cours (compte admin seulement)
     if (typeof Livret !== "undefined")
       Livret.dessiner(zone.querySelector(".f-livret-zone"), album.id, zone.querySelector(".f-livret-bouton-zone"));
-    ecran.querySelectorAll(".f-pochette").forEach((p) => {
-      p.classList.toggle("courante", p.dataset.matiere === courant);
-      if (p.dataset.matiere === courant) p.setAttribute("aria-current", "true"); else p.removeAttribute("aria-current");
-    });
+    marquer(courant);
     const ordre = [...ecran.querySelectorAll(".f-pochette")].map((p) => p.dataset.matiere);
     ecran.querySelectorAll(".f-bac-points i").forEach((p, i) => p.classList.toggle("actif", ordre[i] === courant));
+  }
+
+  // Pochette mise en avant (vinyle sorti). Pendant un glissement, elle suit le doigt ; les pistes attendent la fin.
+  function marquer(id) {
+    ecran.querySelectorAll(".f-pochette").forEach((p) => {
+      p.classList.toggle("courante", p.dataset.matiere === id);
+      if (p.dataset.matiere === id) p.setAttribute("aria-current", "true"); else p.removeAttribute("aria-current");
+    });
   }
 
   // Album le plus proche du centre du bac (après un glissement)
@@ -170,7 +175,13 @@ const Discotheque = (() => {
       choisir(albumAuCentre());
       if (rafraichirApres) { rafraichirApres = false; rafraichir(); }
     };
-    leBac.addEventListener("scroll", () => { clearTimeout(attenteFin); attenteFin = setTimeout(fin, 120); }, { passive: true });
+    let image = 0;
+    leBac.addEventListener("scroll", () => {
+      clearTimeout(attenteFin);
+      attenteFin = setTimeout(fin, 120);
+      cancelAnimationFrame(image);
+      image = requestAnimationFrame(() => marquer(albumAuCentre()));
+    }, { passive: true });
     leBac.addEventListener("scrollend", fin);
     ecran.replaceChildren(el("div", { class: "f-accueil-col" },
       el("button", { class: "f-retour-menu", type: "button", onclick: afficherAccueil }, "← Retour au menu"),

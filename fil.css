@@ -695,6 +695,7 @@ h1, h2, h3 { font-family: var(--police); }
   position: relative; z-index: 1; display: flex; flex-direction: column; justify-content: space-between; align-items: flex-start;
   width: 100%; height: 100%; padding: 10px; border: var(--trait); border-radius: 12px; background: var(--c);
   color: var(--encre); box-shadow: 4px 4px 0 #FFFFFF; text-align: left; overflow: hidden;
+  transform: translateZ(0);   /* calque à part : Safari dessine sinon le vinyle animé par-dessus la face */
 }
 .f-pochette-face::after {   /* cercles décoratifs de pochette */
   content: ""; position: absolute; right: -30px; bottom: -30px; width: 110px; height: 110px; border-radius: 50%;
@@ -711,7 +712,7 @@ h1, h2, h3 { font-family: var(--police); }
   position: absolute; z-index: 0; top: 5%; left: 5%; width: 90%; aspect-ratio: 1; border-radius: 50%;
   border: 2px solid #000000;
   background: radial-gradient(circle, #FF5FA2 0 13%, var(--encre) 14% 16%, #2B2450 17% 60%, #241D42 61% 63%, #2B2450 64% 100%);
-  transition: transform .45s var(--ressort);
+  transition: transform .45s var(--ressort); will-change: transform;
 }
 /* Le vinyle sort d'un tiers au minimum, des deux tiers quand l'album est maîtrisé */
 .f-pochette.courante .f-vinyle-sort { transform: translateX(calc((.3 + var(--sortie, .15) * .38) * 100%)) rotate(calc(var(--sortie, .15) * 200deg)); }
