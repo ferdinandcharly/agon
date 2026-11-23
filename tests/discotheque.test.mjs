@@ -260,6 +260,23 @@ try {
   assert.equal(await v({ name: "IMG_1.HEIC", type: "", size: 2000 }), null, "scénario 15 : photo iPhone (type vide) refusée");
   console.log("15 : livret absent sans compte, contrôle des fichiers");
 
+  // 16 (iPhone) : pendant le glissement, la pochette centrée s'anime tout de suite (pas d'attente de la fin),
+  // et la face de la pochette a son propre calque (Safari dessine sinon le vinyle animé par-dessus)
+  await a.evaluer("Discotheque.ouvrir('reseau')");
+  await attendre(500);
+  const r16 = await a.evaluer(`(async () => { const bac = document.querySelector("#discotheque .f-bac");
+    bac.addEventListener("scrollend", (e) => e.stopImmediatePropagation(), { capture: true, once: true });
+    const cible = [...bac.querySelectorAll(".f-pochette")].at(-1);
+    bac.scrollTo({ left: cible.offsetLeft - (bac.clientWidth - cible.offsetWidth) / 2, behavior: "instant" });
+    await new Promise((r) => setTimeout(r, 60));   // le doigt n'est pas encore levé (< 120 ms)
+    return { anime: cible.classList.contains("courante"), seules: bac.querySelectorAll(".f-pochette.courante").length,
+             calque: getComputedStyle(cible.querySelector(".f-pochette-face")).transform }; })()`);
+  assert.equal(r16.anime, true, "scénario 16 : la pochette centrée attend la fin du glissement");
+  assert.equal(r16.seules, 1, "scénario 16 : plusieurs pochettes courantes");
+  assert.notEqual(r16.calque, "none", "scénario 16 : la face de pochette n'a pas son propre calque");
+  await attendre(400);
+  console.log("16 : pochette animée pendant le glissement, face sur son calque");
+
   assert.deepEqual(a.violationsCsp, [], "violations CSP");
   assert.deepEqual(a.erreurs, [], "erreurs");
   console.log("OK — discothèque");
