@@ -26,7 +26,8 @@ compte ; les potes qui jouaient sans compte gardent leur progression.
 ### Hors périmètre
 
 Import de ses propres cours par les utilisateurs (projet à part, demande une génération automatique), autres
-parcours que `but-info-1`, classements par établissement, photo de profil, refonte de l'accueil.
+parcours que `but-info-1`, classements par établissement, photo de profil, refonte de l'accueil,
+**page Réglages** (avatar dans Compte, « Modifier mon profil ») : refaite juste après, dans un projet à part.
 
 ## 1. Base de données (Supabase, projet `facettes`)
 
@@ -97,8 +98,6 @@ Un indicateur « 1 · 2 · 3 » en haut, un bouton « Retour » (sauf à l'étap
 
 ### Après le portail
 
-- Réglages → Compte : avatar + pseudo (+ prénom s'il existe) et « Modifier mon profil », qui rouvre l'étape 3
-  pré-remplie (bouton « Annuler » qui revient aux réglages).
 - L'avatar s'affiche devant le pseudo dans le classement général, le classement des amis et la liste des amis.
 - La carte « Installe Facettes » reste sur l'accueil.
 
@@ -127,5 +126,4 @@ Rond de la couleur, symbole blanc au centre, contour `var(--encre)`. Code invali
   simulée** (session factice déposée dans le stockage avant le chargement + domaine Supabase bloqué, ce qui
   revient à un compte connecté hors ligne) ; les scénarios « sans compte » des écrans (classement, amis, livret)
   deviennent des scénarios du portail.
-- **À la main (Ferdinand)** : création d'un compte neuf de bout en bout sur iPhone, puis « Modifier mon profil »,
-  déconnexion → portail.
+- **À la main (Ferdinand)** : création d'un compte neuf de bout en bout sur iPhone, puis déconnexion → portail.
