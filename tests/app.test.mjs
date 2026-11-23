@@ -94,6 +94,18 @@ try {
     await k.attendreQue("!document.getElementById('lancement')", 8000);
     const d = await k.evaluer(`(() => { const acc = document.getElementById("accueil"); return [acc.scrollHeight, acc.clientHeight]; })()`);
     assert.ok(d[0] <= d[1], `scénario 6 : l'accueil défile en ${largeur}×${hauteur} (${d[0]} > ${d[1]})`);
+    // Pas de place perdue en bas : le dernier élément arrive à moins de 40 px du bas (marge comprise)
+    const vide = await k.evaluer(`(() => { const acc = document.getElementById("accueil");
+      const fin = acc.querySelector(".f-accueil-bas").getBoundingClientRect().bottom; return Math.round(acc.clientHeight - fin); })()`);
+    assert.ok(vide <= 40, `scénario 6 : ${vide} px vides en bas en ${largeur}×${hauteur}`);
+    // La boule reste ronde (carrée)
+    const b = await k.evaluer(`(() => { const r = document.querySelector("#accueil .f-scene").getBoundingClientRect(); return [Math.round(r.width), Math.round(r.height)]; })()`);
+    assert.ok(Math.abs(b[0] - b[1]) <= 1 && b[0] >= 150, `scénario 6 : boule ${b[0]}×${b[1]} en ${largeur}×${hauteur}`);
+    // L'en-tête descend sous le flou d'iOS (environ l'encoche en plus sous la barre d'état)
+    if (haut >= 40) {
+      const marque = await k.evaluer(`Math.round(document.querySelector(".f-marque").getBoundingClientRect().top)`);
+      assert.ok(marque >= haut * 1.85, `scénario 6 : en-tête dans le flou (${marque} px pour une encoche de ${haut})`);
+    }
     assert.deepEqual(k.erreurs, [], "scénario 6 : erreurs");
   }
   console.log("6 : accueil sur un seul écran");
