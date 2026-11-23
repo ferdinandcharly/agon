@@ -35,9 +35,24 @@ const Compte = (() => {
   let recordAMoi = true;     // le record de cet appareil appartient-il au compte connecté (pas à un compte précédent) ?
   const CLE_COMPTE = "agon.compte";        // dernier compte connecté sur cet appareil
   const CLE_CLASSEMENT = "agon.classement"; // cache du classement (pseudos des autres) : propre à un compte
+  const CLE_NOTIONS = "agon.notions.publiees";   // dernier nombre de notions allumées envoyé au profil
+
+  // Publie le nombre de notions allumées (vu par les amis) s'il a changé ; silencieux en cas d'échec
+  async function publierNotions(n) {
+    if (!sb || !utilisateur || !profil || navigator.onLine === false) return;
+    n = Math.max(0, Math.min(2000, Math.round(Number(n) || 0)));
+    let deja = null;
+    try { deja = JSON.parse(localStorage.getItem(CLE_NOTIONS)); } catch { /* tant pis */ }
+    if (deja === n) return;
+    try {
+      const { error } = await sb.from("profils").update({ notions_allumees: n }).eq("user_id", utilisateur.id);
+      if (!error) localStorage.setItem(CLE_NOTIONS, JSON.stringify(n));
+    } catch { /* réessayé à la prochaine synchro */ }
+  }
+
   // Caches propres à un compte (pseudos des autres, amis, dernière visite, notions publiées)
   function oublierCachesDuCompte() {
-    for (const cle of [CLE_CLASSEMENT, "agon.amis", "agon.amis.vu", "agon.notions.publiees"])
+    for (const cle of [CLE_CLASSEMENT, "agon.amis", "agon.amis.vu", CLE_NOTIONS])
       try { localStorage.removeItem(cle); } catch { /* tant pis */ }
   }
 
@@ -476,6 +491,7 @@ const Compte = (() => {
     synchroniser,
     afficherDans(element) { conteneur = element; dessiner(); },
     publierPartie,
+    publierNotions,
     profil: () => profil,
     // Admin = posé en base dans app_metadata (que l'utilisateur ne peut pas modifier) ; à jour avec le jeton
     estAdmin: () => utilisateur?.app_metadata?.admin === true,

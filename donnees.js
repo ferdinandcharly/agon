@@ -23,6 +23,7 @@ const Donnees = (() => {
     let enLigne = null;
     let profil = null;
     let parties = null;
+    let amis = null;
     // L'utilisateur vient de la mémoire ou de la session gardée sur l'appareil : jamais d'appel réseau ici
     // (getSession essaierait de rafraîchir un jeton expiré et bloquerait jusqu'à 30 s hors ligne)
     const utilisateur = typeof Compte !== "undefined" ? Compte.utilisateur() || sessionGardee()?.user : null;
@@ -32,10 +33,11 @@ const Donnees = (() => {
         const { data: ligne, error } = await sb.from("progression")
           .select("resultats, reglages, collection, survie, maj").maybeSingle();
         if (!error) enLigne = ligne;
-        const p = await sb.from("profils").select("pseudo, cree_le").maybeSingle();
+        const p = await sb.from("profils").select("pseudo, notions_allumees, cree_le").maybeSingle();
         if (!p.error) profil = p.data;
         const q = await sb.from("parties_survie").select("score, parcours, joue_le").order("joue_le");
         if (!q.error) parties = q.data;
+        if (profil) { const r = await sb.rpc("mes_amis"); if (!r.error) amis = r.data; }
       } catch { /* réseau perdu en route : on exporte ce qu'il y a sur l'appareil */ }
     }
     const contenu = {
@@ -44,6 +46,7 @@ const Donnees = (() => {
       progression_en_ligne: enLigne,
       profil,
       parties,
+      amis,
       appareil: { resultats: lireResultats(), reglages: lireReglages(), collection: lireCollection(),
                   survie: { record: lireRecordSurvie() }, parties_en_attente: partiesEnAttente() },
     };
@@ -88,7 +91,7 @@ const Donnees = (() => {
     dialogue.replaceChildren(
       el("div", { class: "f-reglages-haut" }, el("h2", { id: "titre-donnees", tabindex: "-1" }, "Tes données"), fermer),
       el("section", { class: "f-donnees" },
-        point("Ce qu'on garde", "ton adresse e-mail, ta progression (réponses, réglages), ta collection de vinyles, ton record, ton pseudo et tes parties de Survie (score et date). Ton pseudo et ton meilleur score sont visibles des autres joueurs connectés, rien d'autre. Sans compte, rien ne quitte ton appareil."),
+        point("Ce qu'on garde", "ton adresse e-mail, ta progression (réponses, réglages), ta collection de vinyles, ton record, ton pseudo, tes parties de Survie (score et date), tes amis et tes demandes d'amis, et ton nombre de notions allumées. Ton pseudo et ton meilleur score sont visibles des autres joueurs connectés ; tes amis voient en plus ton record et ton nombre de notions allumées, rien d'autre. Sans compte, rien ne quitte ton appareil."),
         point("Pourquoi", "retrouver ta progression sur tous tes appareils et te classer en mode Survie. Pas de publicité, pas de mesure d'audience, pas de revente."),
         point("Où", "chez Supabase, sur des serveurs à Paris. Les codes de connexion sont envoyés par e-mail ; une vérification anti-robot de Cloudflare protège leur envoi."),
         point("Combien de temps", `tant que ton compte existe. Un compte inutilisé pendant 2${NB}ans est supprimé automatiquement.`),
