@@ -280,6 +280,24 @@ const Compte = (() => {
     await synchroniser();
   }
 
+  // Profil complet du portail : pseudo et avatar (publics), prénom et établissement (privés), parcours
+  async function enregistrerProfil({ pseudo, avatar, prenom, etablissement, parcours }) {
+    const invalide = messagePseudo(pseudo);
+    if (invalide) throw Object.assign(new Error(invalide), { messageAffiche: invalide });
+    const ligne = { pseudo, avatar, prenom: prenom || null, etablissement: etablissement || null, parcours: parcours || "but-info-1" };
+    const mettreAJour = () => sb.from("profils").update(ligne).eq("user_id", utilisateur.id);
+    let { error } = await (profil ? mettreAJour() : sb.from("profils").insert(ligne));
+    if (error?.code === "23505" && /profils_pkey/.test(`${error.message} ${error.details || ""}`)) {
+      await lireProfil();   // le profil existait déjà (lu trop tôt) : on le met à jour
+      ({ error } = await mettreAJour());
+    }
+    if (error) throw Object.assign(error, { messageAffiche: messagePseudo(pseudo, error) });
+    const premier = !profil;
+    profil = { pseudo };
+    if (premier && recordAMoi && lireRecordSurvie() > 0) publierPartie(lireRecordSurvie());
+    await synchroniser();
+  }
+
   function messageErreur(err) {
     const code = err?.code || "";
     if (navigator.onLine === false || err?.name === "AuthRetryableFetchError") return "Pas de connexion. Réessaie quand tu as du réseau.";
@@ -495,6 +513,7 @@ const Compte = (() => {
     afficherDans(element) { conteneur = element; dessiner(); },
     publierPartie,
     publierNotions,
+    enregistrerProfil,
     profil: () => profil,
     // Admin = posé en base dans app_metadata (que l'utilisateur ne peut pas modifier) ; à jour avec le jeton
     estAdmin: () => utilisateur?.app_metadata?.admin === true,
