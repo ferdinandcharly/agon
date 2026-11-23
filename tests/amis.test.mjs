@@ -129,20 +129,24 @@ try {
   assert.ok(maj[0] <= maj[1], `scénario 8 : « Nouvelle version » sur la barre (${maj[0]} > ${maj[1]})`);
   console.log("8 : relecture (visite, pastille, nouvelle version)");
 
-  // 9 : iOS installé qui raccourcit la zone d'affichage de la barre d'état (797 px sur un écran de 844) :
-  // la barre d'onglets et les écrans vont quand même jusqu'en bas de l'écran
+  // 9 : iOS installé qui raccourcit la zone d'affichage de la barre d'état (797 px sur un écran de 844) et ne
+  // dessine rien en dessous : la barre reste dans la zone visible et ne réserve plus la barre d'accueil de l'iPhone
+  // (qui tombe dans la bande non dessinée) ; sans ce défaut, elle la réserve toujours.
   const ios = await edge.nouvelAppareil({ largeur: 390, hauteur: 797, ecran: 844 });
   await ios.encoche(47, 34);
   await ios.avantPage("Object.defineProperty(Navigator.prototype, 'standalone', { get: () => true })");
   await ios.aller(serveur.url);
   await ios.attendreQue("!document.getElementById('lancement')", 8000);
-  const r9 = await ios.evaluer(`[document.getElementById("nav"), document.getElementById("accueil")].map((e) => Math.round(e.getBoundingClientRect().bottom))`);
-  assert.deepEqual(r9, [844, 844], `scénario 9 : bas de la barre et de l'accueil (${r9})`);
+  const barreIos = `(() => { const n = document.getElementById("nav"); return [Math.round(n.getBoundingClientRect().bottom), getComputedStyle(n).paddingBottom]; })()`;
+  assert.deepEqual(await ios.evaluer(barreIos), [797, "6px"], "scénario 9 : barre hors de la zone visible ou trop haute");
+  const r9 = await ios.evaluer(`(() => { const acc = document.getElementById("accueil"); return [acc.scrollHeight, acc.clientHeight]; })()`);
+  assert.ok(r9[0] <= r9[1], `scénario 9 : l'accueil défile (${r9})`);
   const sansDefaut = await edge.nouvelAppareil({ largeur: 390, hauteur: 844, ecran: 844 });
+  await sansDefaut.encoche(47, 34);
   await sansDefaut.avantPage("Object.defineProperty(Navigator.prototype, 'standalone', { get: () => true })");
   await sansDefaut.aller(serveur.url);
   await sansDefaut.attendreQue("!document.getElementById('lancement')", 8000);
-  assert.equal(await sansDefaut.evaluer(`Math.round(document.getElementById("nav").getBoundingClientRect().bottom)`), 844, "scénario 9 : barre déplacée sans défaut");
+  assert.deepEqual(await sansDefaut.evaluer(barreIos), [844, "34px"], "scénario 9 : barre d'accueil de l'iPhone non réservée sans le défaut");
   assert.deepEqual([...ios.erreurs, ...sansDefaut.erreurs], [], "scénario 9 : erreurs");
   console.log("9 : bas de l'écran iOS (app installée)");
 
