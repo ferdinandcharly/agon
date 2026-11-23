@@ -801,12 +801,15 @@ h1, h2, h3 { font-family: var(--police); }
 .f-bouton-survie b { font-size: 20px; font-weight: 800; font-stretch: 80%; }
 .f-bouton-survie span { font-size: 14px; color: #CFC9E8; }
 /* ---------- Barre d'onglets du bas ---------- */
-:root { --hauteur-nav: 62px; }
+/* Marge sous les icônes : la barre d'accueil de l'iPhone. Défaut d'iOS (app installée) : la zone d'affichage
+   s'arrête avant le bas de l'écran (--manque-bas, mesuré par app.js) et rien n'est dessiné en dessous ; la barre
+   d'accueil tombe alors dans cette bande, il n'y a plus à la réserver. */
+:root { --hauteur-nav: 62px; --bas-nav: max(6px, calc(env(safe-area-inset-bottom) - var(--manque-bas, 0px))); }
 .f-nav {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 9;
   display: grid; grid-template-columns: repeat(3, 1fr);
-  height: calc(var(--hauteur-nav) + max(6px, env(safe-area-inset-bottom)));
-  padding: 6px max(12px, env(safe-area-inset-right)) max(6px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+  height: calc(var(--hauteur-nav) + var(--bas-nav));
+  padding: 6px max(12px, env(safe-area-inset-right)) var(--bas-nav) max(12px, env(safe-area-inset-left));
   background: var(--encre); border-top: 2px solid #3A3260;
 }
 .f-nav button {
@@ -822,10 +825,10 @@ h1, h2, h3 { font-family: var(--police); }
   border-radius: 999px; background: #FF5FA2; color: #16112B; font: 800 11px/18px var(--police); text-align: center;
 }
 /* « Nouvelle version » se pose au-dessus de la barre */
-body.avec-nav .f-maj { bottom: calc(var(--hauteur-nav) + max(6px, env(safe-area-inset-bottom)) + 12px); }
+body.avec-nav .f-maj { bottom: calc(var(--hauteur-nav) + var(--bas-nav) + 12px); }
 /* Les écrans qui ont la barre lui réservent leur bas */
 body.avec-nav #accueil, body.avec-nav .f-accueil {
-  padding-bottom: calc(var(--hauteur-nav) + max(6px, env(safe-area-inset-bottom)) + 10px);
+  padding-bottom: calc(var(--hauteur-nav) + var(--bas-nav) + 10px);
 }
 
 /* ---------- Écran Amis ---------- */
@@ -881,6 +884,3 @@ body.avec-nav #accueil, body.avec-nav .f-accueil {
 }
 .f-bouton-survie:active { transform: translate(2px, 2px); }
 
-/* Défaut d'iOS (app installée) : zone d'affichage plus courte que l'écran ; --manque-bas mesuré par app.js.
-   Les écrans plein cadre et la barre d'onglets descendent jusqu'au vrai bas de l'écran. */
-.f-accueil, .f-fil, .f-lancement, .f-nav { bottom: calc(-1 * var(--manque-bas, 0px)); }
