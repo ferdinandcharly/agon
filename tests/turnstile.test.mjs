@@ -14,17 +14,17 @@ const jeton = (r) => JSON.parse(r.corps || "{}").gotrue_meta_security?.captcha_t
 async function ouvrirCompte(a) {
   await a.aller(`${serveur.url}?turnstile=ok`);
   await a.attendreQue("!document.getElementById('lancement')", 6000);
-  await a.cliquer("#btn-reglages");
-  await a.attendreQue("!!document.querySelector('#compte input[type=email]')");
-  await a.evaluer(`(() => { const c = document.querySelector('#compte input[type=email]');
+  await a.cliquer("#portail .f-portail-continuer");
+  await a.attendreQue("!!document.querySelector('#portail input[type=email]')");
+  await a.evaluer(`(() => { const c = document.querySelector('#portail input[type=email]');
     c.value = 'test@facettes.test'; c.dispatchEvent(new Event('input', { bubbles: true })); })()`);
 }
-const bouton = "document.querySelector('#compte .f-compte-valider')";
+const bouton = "document.querySelector('#portail .f-compte-valider')";
 
 let echec = null;
 try {
   // 1 et 2 : jeton transmis, puis un nouveau jeton pour la demande suivante
-  const a = await edge.nouvelAppareil();
+  const a = await edge.nouvelAppareil({ connecte: false });
   await a.bloquerUrls(["*/auth/v1/otp*"]);
   await ouvrirCompte(a);
   await a.attendreQue(`!${bouton}.disabled`, 15000);
@@ -47,14 +47,14 @@ try {
   console.log("1, 2 : jeton transmis puis renouvelé");
 
   // 3 : Turnstile injoignable
-  const b = await edge.nouvelAppareil();
+  const b = await edge.nouvelAppareil({ connecte: false });
   await b.bloquerUrls(["*challenges.cloudflare.com*", "*/auth/v1/otp*"]);
   await ouvrirCompte(b);
   await attendre(9000);
-  const texte = await b.evaluer("document.getElementById('compte').innerText");
+  const texte = await b.evaluer("document.querySelector('#portail .f-portail-compte').innerText");
   assert.match(texte, /Vérification anti-robot indisponible/, "scénario 3 : message absent");
   assert.equal(await b.evaluer(`${bouton}.disabled`), true, "scénario 3 : le bouton devrait être désactivé");
-  await b.evaluer(`document.querySelector('#compte form').requestSubmit()`);
+  await b.evaluer(`document.querySelector('#portail form').requestSubmit()`);
   await attendre(800);
   assert.equal(demandes(b).length, 0, "scénario 3 : une demande est partie sans jeton");
   console.log("3 : Turnstile indisponible → message, bouton désactivé, rien d'envoyé");

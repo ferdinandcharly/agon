@@ -1010,6 +1010,7 @@ const ecranAmis = document.getElementById("amis");
 
 function afficherAccueil() {
   if (fil.classList.contains("verrouille")) return;   // pas de fuite pendant une Prise d'otage
+  if (typeof Portail !== "undefined" && Portail.estOuvert()) return;   // compte obligatoire : rien derrière le portail
   observateurEcrans.disconnect();
   fil.classList.add("cache");
   ecranDiscotheque.classList.add("cache");
@@ -1025,6 +1026,7 @@ function afficherAccueil() {
 }
 
 function montrerFil(mode, cible = null) {
+  if (typeof Portail !== "undefined" && Portail.estOuvert()) return;
   modeFil = mode;
   cibleFil = cible;
   accueil.classList.add("cache");
@@ -1370,7 +1372,9 @@ async function demarrer() {
     const reponse = await fetch("data/contenus.json");
     if (!reponse.ok) throw new Error(`HTTP ${reponse.status}`);
     donnees = await reponse.json();
-    afficherAccueil();
+    // portail.js est chargé après app.js : on attend la fin du chargement de la page
+    if (document.readyState === "loading") await new Promise((ok) => addEventListener("DOMContentLoaded", ok, { once: true }));
+    Portail.decider();   // sans session gardée : le portail ; sinon l'accueil
   } catch (err) {
     accueil.classList.add("cache");
     fil.classList.remove("cache");

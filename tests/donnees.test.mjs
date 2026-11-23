@@ -11,15 +11,15 @@ const RESULTATS = { "bd-cle-primaire-vf": { vu: 1, ok: 1, ko: 0, derniereOk: tru
 
 let echec = null;
 try {
-  const a = await edge.nouvelAppareil();
+  const a = await edge.nouvelAppareil({ connecte: false });
   await a.aller(serveur.url);
   await a.evaluer(`localStorage.setItem("agon.resultats", ${JSON.stringify(JSON.stringify(RESULTATS))})`);
   await a.aller(serveur.url);
   await a.attendreQue("!document.getElementById('lancement')", 6000);
 
   // 1 : le dialogue, ouvert depuis le lien sous le formulaire de connexion
-  await a.cliquer("#btn-reglages");
-  await a.cliquer("#compte .f-lien");
+  await a.cliquer("#portail .f-portail-continuer");
+  await a.cliquer("#portail .f-lien");
   assert.equal(await a.evaluer("document.getElementById('donnees').open"), true, "le dialogue « Tes données » ne s'ouvre pas");
   await attendre(400);
   await a.capture("tests/captures/donnees-iPhone.png");

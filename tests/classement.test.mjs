@@ -33,8 +33,11 @@ try {
     await attendre(400);
   }
   assert.equal(await a.evaluer("!!document.querySelector('.f-survie-fin')"), true, "scénario 1 : la partie ne s'est pas terminée");
-  assert.equal(await a.evaluer(`localStorage.getItem("agon.parties")`), null, "scénario 1 : sans compte, aucune partie en file");
-  console.log(`1 : Survie sur toutes les matières (${rapides.length} questions), rien en file sans compte`);
+  // Compte simulé, Supabase injoignable : la partie attend dans la file, rattachée au compte
+  const enFile = await a.evaluer(`JSON.parse(localStorage.getItem("agon.parties") || "[]")`);
+  assert.equal(enFile.length, 1, "scénario 1 : la partie n'est pas en file");
+  assert.equal(enFile[0].user_id, "00000000-0000-4000-8000-000000000001", "scénario 1 : partie non rattachée au compte");
+  console.log(`1 : Survie sur toutes les matières (${rapides.length} questions), partie en file pour le compte`);
 
   // Scénario 2 : messages du pseudo (règles identiques à celles de la base)
   const FORMAT = "3 à 20 caractères : lettres, chiffres, _ et -.";
@@ -45,15 +48,12 @@ try {
   assert.equal(await a.evaluer(`Compte.messagePseudo("Ferdi", { code: "23505" })`), "Déjà pris : essaie un autre pseudo.", "pseudo pris");
   console.log("2 : messages du pseudo");
 
-  // Scénario 3 : sans compte, l'écran invite à se connecter et ouvre les réglages
+  // Scénario 3 : compte connecté sans réseau vers Supabase, sans classement en mémoire → message hors ligne
   await a.cliquer("#btn-accueil");
   await a.cliquer(".f-bouton-classement");
   assert.equal(await a.evaluer("document.getElementById('classement').classList.contains('cache')"), false, "scénario 3 : écran caché");
-  assert.match(await a.evaluer("document.getElementById('classement').innerText"), /Connecte-toi pour apparaître/, "scénario 3 : invitation absente");
-  await a.cliquer("#classement .f-classement-connexion");
-  assert.equal(await a.evaluer("document.getElementById('reglages').open"), true, "scénario 3 : les réglages ne s'ouvrent pas");
-  await a.cliquer("#btn-fermer-reglages");
-  console.log("3 : sans compte → invitation et réglages");
+  await a.attendreQue("/indisponible hors ligne/.test(document.getElementById('classement').innerText)", 30000);
+  console.log("3 : compte sans réseau → classement indisponible hors ligne");
 
   // Scénario 4 : rendu hors ligne (podium, ta place hors du top 50, bandeau)
   const lignes = [
@@ -90,13 +90,16 @@ try {
   // Scénario 7 : profil déjà existant (clé primaire) ≠ pseudo pris
   const dejaProfil = await a.evaluer(`Compte.messagePseudo("Ferdi", { code: "23505", message: 'duplicate key value violates unique constraint "profils_pkey"' })`);
   assert.ok(!/Déjà pris/.test(dejaProfil), "scénario 7 : « Déjà pris » pour un profil déjà existant");
-  // Scénario 8 : un redessin de la section Compte garde la saisie en cours
-  await a.cliquer("#btn-reglages");
-  await a.evaluer(`(() => { const c = document.querySelector("#compte input[type=email]"); c.focus(); c.value = "en-cours@ex.fr"; })()`);
-  await a.evaluer(`Compte.afficherDans(document.getElementById("compte"))`);
-  assert.equal(await a.evaluer(`document.querySelector("#compte input[type=email]").value`), "en-cours@ex.fr", "scénario 8 : saisie perdue au redessin");
-  assert.equal(await a.evaluer(`document.activeElement === document.querySelector("#compte input[type=email]")`), true, "scénario 8 : focus perdu");
-  await a.cliquer("#btn-fermer-reglages");
+  // Scénario 8 : un redessin du formulaire de connexion (portail, sans session) garde la saisie en cours
+  const c8 = await edge.nouvelAppareil({ connecte: false });
+  await c8.aller(serveur.url);
+  await c8.attendreQue("!document.getElementById('lancement') && !!document.querySelector('#portail .f-portail-continuer')", 8000);
+  await c8.cliquer("#portail .f-portail-continuer");
+  await c8.attendreQue("!!document.querySelector('#portail input[type=email]')");
+  await c8.evaluer(`(() => { const c = document.querySelector("#portail input[type=email]"); c.focus(); c.value = "en-cours@ex.fr"; })()`);
+  await c8.evaluer(`Compte.afficherDans(document.querySelector("#portail .f-portail-compte"))`);
+  assert.equal(await c8.evaluer(`document.querySelector("#portail input[type=email]").value`), "en-cours@ex.fr", "scénario 8 : saisie perdue au redessin");
+  assert.equal(await c8.evaluer(`document.activeElement === document.querySelector("#portail input[type=email]")`), true, "scénario 8 : focus perdu");
   // Scénario 9 : fermer les réglages recharge l'écran Classement s'il est affiché
   await a.evaluer(`Classement.ouvrir()`);
   await a.evaluer(`document.querySelector("#classement .f-classement-zone").append(Object.assign(document.createElement("i"), { className: "temoin" }))`);

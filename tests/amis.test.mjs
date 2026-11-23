@@ -66,12 +66,8 @@ try {
   await attendre(400);
   assert.equal(await a.evaluer("!document.getElementById('amis').classList.contains('cache')"), true, "scénario 4 : écran Amis fermé");
   assert.equal((await etatNav()).actif, "amis", "scénario 4 : onglet Amis non actif");
-  assert.match(await a.evaluer("document.getElementById('amis').innerText"), /Connecte-toi pour ajouter des amis/, "scénario 4 : invitation absente");
-  await a.cliquer("#amis .f-classement-connexion");
-  await attendre(400);
-  assert.equal(await a.evaluer("document.getElementById('reglages').open"), true, "scénario 4 : le bouton n'ouvre pas le compte");
-  await a.evaluer("document.getElementById('reglages').close()");
-  console.log("4 : Amis sans compte");
+  await a.attendreQue("/Hors ligne/.test(document.getElementById('amis').innerText)", 8000);
+  console.log("4 : Amis, compte sans réseau → hors ligne");
 
   // 5 : records battus et pastille (fonctions pures)
   const amisExemple = [

@@ -59,7 +59,18 @@ export async function lancerEdge() {
     ws.send(JSON.stringify({ id, method, params, sessionId }));
   });
 
-  async function nouvelAppareil({ largeur = 390, hauteur = 844, mobile = true, ua = null, ecran = null } = {}) {
+  // Session factice déposée avant les scripts de la page (jeton au format JWT, valable une heure)
+  const SESSION_SIMULEE = `(() => {
+    const b64 = (o) => btoa(JSON.stringify(o)).split("=").join("").split("+").join("-").split("/").join("_");
+    const exp = Math.floor(Date.now() / 1000) + 3600;
+    const user = { id: "00000000-0000-4000-8000-000000000001", aud: "authenticated", role: "authenticated",
+      email: "test@facettes.test", app_metadata: {}, user_metadata: {}, created_at: "2026-11-01T00:00:00Z" };
+    const jeton = b64({ alg: "HS256", typ: "JWT" }) + "." + b64({ sub: user.id, aud: "authenticated", role: "authenticated", exp, email: user.email }) + ".simule";
+    localStorage.setItem("agon.session", JSON.stringify({ access_token: jeton, token_type: "bearer", expires_in: 3600,
+      expires_at: exp, refresh_token: "simule", user }));
+  })()`;
+
+  async function nouvelAppareil({ largeur = 390, hauteur = 844, mobile = true, ua = null, ecran = null, connecte = true } = {}) {
     const { browserContextId } = await cdp("Target.createBrowserContext");
     const { targetId } = await cdp("Target.createTarget", { url: "about:blank", browserContextId });
     const { sessionId } = await cdp("Target.attachToTarget", { targetId, flatten: true });
@@ -114,6 +125,12 @@ export async function lancerEdge() {
         writeFileSync(chemin, Buffer.from(data, "base64"));
       },
     });
+    // Session simulée : un compte « connecté » sans réseau vers Supabase (le CAPTCHA interdit une vraie connexion
+    // en test). L'appli passe le portail obligatoire et fonctionne comme un compte connecté hors ligne.
+    if (connecte) {
+      await appareil.avantPage(SESSION_SIMULEE);
+      await appareil.bloquerUrls(["*hiqymrmygjisqqypbfxp.supabase.co*"]);
+    }
     return appareil;
   }
 

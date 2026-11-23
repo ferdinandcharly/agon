@@ -831,6 +831,34 @@ body.avec-nav #accueil, body.avec-nav .f-accueil {
   padding-bottom: calc(var(--hauteur-nav) + var(--bas-nav) + 10px);
 }
 
+/* ---------- Portail d'accueil ---------- */
+/* Tant qu'il est ouvert, rien d'autre ne s'affiche (compte obligatoire) */
+body.portail-ouvert .f-entete, body.portail-ouvert .f-nav, body.portail-ouvert .f-fil,
+body.portail-ouvert .f-accueil:not(#portail), body.portail-ouvert .f-maj { display: none !important; }
+#portail { padding-top: calc(var(--haut) + 18px); }
+.f-portail-col { gap: 18px; }
+.f-portail-etapes { display: flex; gap: 8px; padding: 0; margin: 0; list-style: none; }
+.f-portail-etapes li {
+  display: grid; place-items: center; width: 30px; height: 30px; border: 2px solid #3A3260; border-radius: 50%;
+  color: #8A84A6; font-weight: 800; font-size: 14px;
+}
+.f-portail-etapes li.faite { border-color: #00C08B; color: #00C08B; }
+.f-portail-etapes li.actuelle { border-color: #FFFFFF; background: #FFFFFF; color: var(--encre); }
+.f-portail-cartes { display: grid; gap: 10px; }
+.f-portail-parcours {
+  display: grid; gap: 2px; padding: 14px 16px; border: 2.5px solid #FFFFFF; border-radius: 16px; background: none;
+  color: #FFFFFF; font-family: var(--police); text-align: left; cursor: pointer;
+}
+.f-portail-parcours b { font-size: 20px; font-weight: 800; font-stretch: 85%; }
+.f-portail-parcours span { font-size: 14px; color: #CFC9E8; }
+.f-portail-parcours[aria-pressed="true"] { background: #FFFFFF; color: var(--encre); box-shadow: 4px 4px 0 #FF5FA2; }
+.f-portail-parcours[aria-pressed="true"] span { color: var(--gris); }
+.f-portail-parcours[aria-disabled="true"] { border-style: dashed; border-color: #3A3260; color: #8A84A6; cursor: default; }
+.f-portail-parcours[aria-disabled="true"] span { color: #6F6896; }
+.f-portail-retour { justify-self: start; padding: 6px 0; border: 0; background: none; color: #CFC9E8; font: 700 15px var(--police); cursor: pointer; }
+.f-portail-compte { padding: 16px; border-radius: 18px; background: var(--papier); color: var(--encre); }
+.f-portail-horsligne { color: #FFC21A; }
+
 /* ---------- Écran Amis ---------- */
 .f-amis-zone, .f-amis-rendu { display: grid; gap: 18px; }
 .f-amis-bloc { display: grid; gap: 10px; }

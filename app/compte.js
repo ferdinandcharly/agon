@@ -227,10 +227,12 @@ const Compte = (() => {
       profil = undefined;
       oublierCachesDuCompte();
       changerEtat("deconnecte");
+      if (avant) dispatchEvent(new Event("facettes:deconnexion"));   // portail.js : retour au début
       return;
     }
     if (utilisateur.id !== avant) {
       profil = undefined;
+      dispatchEvent(new Event("facettes:connexion"));   // portail.js : étape suivante
       // Un autre compte que le précédent sur cet appareil : ni ses parties ni son record ne passent à celui-ci
       let precedent = null;
       try { precedent = localStorage.getItem(CLE_COMPTE); } catch { /* tant pis */ }
