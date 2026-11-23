@@ -1212,6 +1212,7 @@ window.apresSynchro = () => {
   if (dialogue.open) remplirReglages();
   else if (!accueil.classList.contains("cache")) remplirAccueil();
   else if (!ecranDiscotheque.classList.contains("cache")) Discotheque.rafraichir();
+  else if (!ecranAmis.classList.contains("cache")) Amis.recharger();
 };
 
 function ouvrirReglages() {
@@ -1227,6 +1228,7 @@ dialogue.addEventListener("close", () => {
   if (!accueil.classList.contains("cache")) remplirAccueil();   // stats et compte de cartes à jour
   else if (!ecranDiscotheque.classList.contains("cache")) Discotheque.rafraichir();
   else if (!ecranClassement.classList.contains("cache")) Classement.recharger();
+  else if (!ecranAmis.classList.contains("cache")) Amis.recharger();
   else if (reglagesModifies) construireFil();
 });
 document.getElementById("btn-reglages").addEventListener("click", ouvrirReglages);

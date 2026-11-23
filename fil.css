@@ -826,6 +826,32 @@ body.avec-nav #accueil, body.avec-nav .f-accueil {
   padding-bottom: calc(var(--hauteur-nav) + max(6px, env(safe-area-inset-bottom)) + 10px);
 }
 
+/* ---------- Écran Amis ---------- */
+.f-amis-zone, .f-amis-rendu { display: grid; gap: 18px; }
+.f-amis-bloc { display: grid; gap: 10px; }
+.f-amis-titre { font-size: 22px; font-weight: 800; font-stretch: 85%; letter-spacing: -0.01em; }
+.f-amis-activite {
+  padding: 12px 14px; border: 2.5px solid #FFFFFF; border-radius: 14px; background: #FF5FA2; color: var(--encre);
+  font-weight: 700; box-shadow: 3px 3px 0 #FFFFFF;
+}
+.f-amis-notions { display: block; font-weight: 500; color: var(--gris); }
+.f-amis-ligne {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;
+  padding: 8px 12px; border: 2px solid #3A3260; border-radius: 12px;
+}
+.f-amis-ligne b { font-size: 17px; overflow-wrap: anywhere; }
+.f-amis-boutons { display: flex; gap: 8px; }
+.f-amis-action { padding: 6px 12px; font-size: 15px; font-weight: 700; }
+.f-amis-action.confirmer { background: var(--rate); }
+.f-amis-ajout { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }
+.f-amis-pseudo {
+  min-width: 0; padding: 10px 12px; border: var(--trait); border-radius: 12px; background: var(--papier); color: var(--encre);
+  font: 600 16px var(--police);
+}
+.f-amis-envoyer { font-weight: 800; }
+.f-amis-message { min-height: 1.4em; color: #CFC9E8; font-size: 15px; }
+.f-amis-pseudo:disabled, .f-amis-envoyer:disabled, .f-amis-action:disabled { opacity: .5; }
+
 /* Survie et Classement côte à côte sous « Lancer la session » */
 .f-accueil-duo { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .f-accueil-duo .f-bouton-survie { flex-direction: column; align-items: flex-start; gap: 0; padding: 10px 14px; text-align: left; }
