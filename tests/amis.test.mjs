@@ -109,6 +109,13 @@ try {
   assert.match(r6b.texte, /Hors ligne/, "scénario 6 : pas de mention hors ligne");
   console.log("6 : rendu de l'écran Amis");
 
+  // 7 : sans compte, publierNotions ne contacte pas la base
+  const avant7 = a.requetes.length;
+  await a.evaluer("Compte.publierNotions(5)");
+  await attendre(300);
+  assert.equal(a.requetes.slice(avant7).filter((q) => q.url.includes("/rest/v1/profils")).length, 0, "scénario 7 : profil modifié sans compte");
+  console.log("7 : notions non publiées sans compte");
+
   assert.deepEqual(a.violationsCsp, [], "violations CSP");
   assert.deepEqual(a.erreurs, [], "erreurs");
   console.log("OK — amis");

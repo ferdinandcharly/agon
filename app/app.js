@@ -1091,6 +1091,7 @@ function remplirAccueil() {
   const tube = tubeDuJour();
   const notions = notionsParEtat();
   const allumees = notions.filter((n) => n.etat === "maitrisee").length;
+  if (typeof Compte !== "undefined") Compte.publierNotions(allumees);   // vu par les amis
   const collection = lireCollection();
   const pluriel = (n, mot) => `${n} ${mot}${n > 1 ? "s" : ""}`;
   const jour = new Date().toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" });
@@ -1204,6 +1205,11 @@ function remplirReglages() {
       (actif) => basculerDans(reglages.formatsExclus, id, actif))));
   if (typeof Compte !== "undefined") Compte.afficherDans(document.getElementById("compte"));
 }
+
+// Après chaque synchro réussie : le nombre de notions allumées vu par les amis
+addEventListener("facettes:synchro", () => {
+  if (donnees) Compte.publierNotions(notionsParEtat().filter((n) => n.etat === "maitrisee").length);
+});
 
 // Une synchro a rapporté du nouveau (autre appareil) : on redessine ce qui est à l'écran.
 // Le fil en cours n'est pas reconstruit, pour ne pas couper une partie.

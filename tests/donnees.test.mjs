@@ -27,6 +27,8 @@ try {
   for (const attendu of ["facettes.app@gmail.com", "Paris", "Ferdinand Charly", "pseudo", "parties de Survie", "visible", "Exporter mes données"])
     assert.ok(texte.includes(attendu), `le dialogue ne mentionne pas « ${attendu} »`);
   assert.match(texte, /2\s?ans/, "durée de conservation absente");
+  assert.match(texte, /amis/, "les amis ne sont pas mentionnés");
+  assert.match(texte, /notions allumées/, "le nombre de notions publié n'est pas mentionné");
   assert.match(texte, /15\s?ans/, "mention des moins de 15 ans absente");
   console.log("1 : dialogue complet");
 
@@ -36,6 +38,7 @@ try {
   assert.equal(sansCompte.progression_en_ligne, null, "sans compte : rien en ligne");
   assert.equal(sansCompte.profil, null, "sans compte : profil devrait être null");
   assert.equal(sansCompte.parties, null, "sans compte : parties devrait être null");
+  assert.equal(sansCompte.amis, null, "sans compte : amis devrait être null");
   assert.deepEqual(sansCompte.appareil.resultats, RESULTATS, "données de l'appareil");
   assert.deepEqual(sansCompte.appareil.parties_en_attente, [], "parties en attente");
   console.log("2 : export sans compte");
