@@ -2296,6 +2296,285 @@
         ],
         "explication": "D'abord l'ouverture aux IDE et les transferts de technologie, puis la montée en gamme jusqu'au leadership sur les batteries."
       }
+    },
+    {
+      "id": "dev-adresse-memoire-fiche", "matiere": "dev", "notion": "Adresse mémoire", "format": "fiche",
+      "donnees": {
+        "titre": "L'adresse mémoire",
+        "paragraphes": [
+          "Une adresse est un entier positif qui indique la position d'un octet dans la mémoire centrale (souvent la RAM).",
+          "Elle est codée sur 4 octets sur un système 32 bits, sur 8 octets avec un processeur 64 bits.",
+          "Avec printf, le format %p affiche une adresse en hexadécimal."
+        ],
+        "a_retenir": "Adresse = numéro d'un octet en mémoire ; on l'affiche avec %p."
+      }
+    },
+    {
+      "id": "dev-adresse-memoire-trous", "matiere": "dev", "notion": "Adresse mémoire", "format": "trous",
+      "donnees": {
+        "texte": "Avec un processeur 64 bits, une adresse mémoire est codée sur ___ octets.",
+        "reponse": "8",
+        "choix": [
+          "2",
+          "4",
+          "8",
+          "16"
+        ],
+        "explication": "64 bits = 8 octets. Sur un système 32 bits, l'adresse tient sur 4 octets."
+      }
+    },
+    {
+      "id": "dev-adresse-memoire-vf", "matiere": "dev", "notion": "Adresse mémoire", "format": "vrai_faux",
+      "donnees": {
+        "affirmation": "Le format %p de printf affiche une adresse en hexadécimal.",
+        "reponse": true,
+        "explication": "%p est le format prévu pour les adresses : il les affiche comme un nombre hexadécimal."
+      }
+    },
+    {
+      "id": "dev-arithmetique-pointeurs-fiche", "matiere": "dev", "notion": "Arithmétique des pointeurs", "format": "fiche",
+      "donnees": {
+        "titre": "Ajouter un entier à un pointeur",
+        "paragraphes": [
+          "Une adresse est un entier : on peut lui ajouter un entier k.",
+          "Si ad est l'adresse d'un objet de type type, ad+k désigne l'adresse ad + k*sizeof(type), celle d'un objet du même type.",
+          "Le contenu à cette adresse s'écrit *(ad+k) ou ad[k]."
+        ],
+        "a_retenir": "ad+k avance de k objets, pas de k octets."
+      }
+    },
+    {
+      "id": "dev-arithmetique-pointeurs-vf", "matiere": "dev", "notion": "Arithmétique des pointeurs", "format": "vrai_faux",
+      "donnees": {
+        "affirmation": "Si ptx est un pointeur sur double, ptx + 1 est l'adresse située 1 octet après ptx.",
+        "reponse": false,
+        "explication": "ptx + 1 avance d'un double entier : l'adresse augmente de sizeof(double) octets, pas de 1."
+      }
+    },
+    {
+      "id": "dev-arithmetique-pointeurs-trous", "matiere": "dev", "notion": "Arithmétique des pointeurs", "format": "trous",
+      "donnees": {
+        "texte": "Pour lire le contenu pointé par ad+k, on peut écrire *(ad+k) ou ___.",
+        "reponse": "ad[k]",
+        "choix": [
+          "ad[k]",
+          "&ad[k]",
+          "*ad+k",
+          "ad+k"
+        ],
+        "explication": "ad[k] est une autre écriture de *(ad+k). &ad[k] et ad+k sont des adresses, et *ad+k ajoute k à la valeur pointée."
+      }
+    },
+    {
+      "id": "dev-passage-adresse-fiche", "matiere": "dev", "notion": "Passage par adresse", "format": "fiche",
+      "donnees": {
+        "titre": "Passer un paramètre par adresse",
+        "paragraphes": [
+          "On transmet à la fonction l'adresse d'une variable : le paramètre est déclaré type* nom_var et l'appel se fait avec &variable.",
+          "Dans la fonction, *nom_var modifie directement la variable d'origine : on parle de modification par effet de bord.",
+          "Pour interdire cette modification, on déclare le paramètre const type* nom_var."
+        ],
+        "a_retenir": "Paramètre type* + appel avec & = la fonction peut modifier la variable."
+      }
+    },
+    {
+      "id": "dev-passage-adresse-vf", "matiere": "dev", "notion": "Passage par adresse", "format": "vrai_faux",
+      "donnees": {
+        "affirmation": "Avec void myst(int* ptr, int y), l'appel myst(&a, b) peut modifier a mais pas b.",
+        "reponse": true,
+        "explication": "a est passé par adresse : *ptr la modifie. b est passé par valeur : y n'est qu'une copie."
+      }
+    },
+    {
+      "id": "dev-passage-adresse-trous", "matiere": "dev", "notion": "Passage par adresse", "format": "trous",
+      "donnees": {
+        "texte": "On a void g(int* x) { *x = 2 * *x; }. Si y vaut 15, après g(&y), y vaut ___.",
+        "reponse": "30",
+        "choix": [
+          "15",
+          "17",
+          "30",
+          "225"
+        ],
+        "explication": "g reçoit l'adresse de y et double la valeur pointée : y passe de 15 à 30."
+      }
+    },
+    {
+      "id": "dev-passage-adresse-trous-2", "matiere": "dev", "notion": "Passage par adresse", "format": "trous",
+      "donnees": {
+        "texte": "Pour qu'une fonction reçoive une adresse sans pouvoir modifier l'objet pointé, on déclare le paramètre ___ int* p.",
+        "reponse": "const",
+        "choix": [
+          "const",
+          "static",
+          "void",
+          "define"
+        ],
+        "explication": "Le qualificatif const interdit de modifier l'objet pointé dans le corps de la fonction."
+      }
+    },
+    {
+      "id": "dev-passage-adresse-erreur", "matiere": "dev", "notion": "Passage par adresse", "format": "erreur",
+      "donnees": {
+        "consigne": "Cette fonction doit échanger les valeurs de deux entiers. Quelle ligne est fausse ?",
+        "lignes": [
+          "void echange(int* a, int* b) {",
+          "  int tmp = *a;",
+          "  *a = *b;",
+          "  b = tmp;",
+          "}"
+        ],
+        "ligne_fausse": 3,
+        "correction": "  *b = tmp;",
+        "explication": "b = tmp change le pointeur lui-même. Il faut écrire dans l'entier pointé : *b = tmp."
+      }
+    },
+    {
+      "id": "dev-pointeurs-tableaux-fiche", "matiere": "dev", "notion": "Pointeurs et tableaux", "format": "fiche",
+      "donnees": {
+        "titre": "Un tableau, c'est une adresse",
+        "paragraphes": [
+          "Le nom d'un tableau est un pointeur constant vers son premier élément : tab vaut &tab[0].",
+          "tab+k est l'adresse &tab[k] et *(tab+k) est le contenu tab[k].",
+          "Il faut rester dans la zone allouée, sinon le système peut arrêter le programme (erreur de segmentation)."
+        ],
+        "a_retenir": "tab = &tab[0] et *(tab+k) = tab[k]."
+      }
+    },
+    {
+      "id": "dev-pointeurs-tableaux-associer", "matiere": "dev", "notion": "Pointeurs et tableaux", "format": "associer",
+      "donnees": {
+        "consigne": "Avec int tab[10], associe chaque écriture à son équivalent.",
+        "paires": [
+          [
+            "tab",
+            "&tab[0]"
+          ],
+          [
+            "*tab",
+            "tab[0]"
+          ],
+          [
+            "tab+k",
+            "&tab[k]"
+          ],
+          [
+            "*(tab+k)",
+            "tab[k]"
+          ]
+        ],
+        "explication": "Le nom du tableau est l'adresse de sa première case ; ajouter k avance de k cases."
+      }
+    },
+    {
+      "id": "dev-pointeurs-tableaux-vf", "matiere": "dev", "notion": "Pointeurs et tableaux", "format": "vrai_faux",
+      "donnees": {
+        "affirmation": "Dans scanf(\"%d\", t+i), t+i désigne la même adresse que &t[i].",
+        "reponse": true,
+        "explication": "t+i est l'adresse de la case d'indice i, exactement comme &t[i]."
+      }
+    },
+    {
+      "id": "dev-pointeurs-tableaux-vf-2", "matiere": "dev", "notion": "Pointeurs et tableaux", "format": "vrai_faux",
+      "donnees": {
+        "affirmation": "Lire une case en dehors de la zone allouée au tableau est sans risque en C.",
+        "reponse": false,
+        "explication": "Le programme peut accéder à une zone non autorisée : le système l'arrête (erreur de segmentation)."
+      }
+    },
+    {
+      "id": "dev-pointeurs-chaines-trous", "matiere": "dev", "notion": "Pointeurs et chaînes", "format": "trous",
+      "donnees": {
+        "texte": "Avec char chaine[] = \"Coucou le monde\"; et char* ptr = chaine + 7;, printf(\"%s\", ptr) affiche ___.",
+        "reponse": "le monde",
+        "choix": [
+          "le monde",
+          "Coucou le monde",
+          "Coucou",
+          "e monde"
+        ],
+        "explication": "ptr pointe sur le caractère d'indice 7, le « l » : l'affichage part de là jusqu'à la fin de la chaîne."
+      }
+    },
+    {
+      "id": "dev-pointeurs-structures-trous", "matiere": "dev", "notion": "Pointeurs et structures", "format": "trous",
+      "donnees": {
+        "texte": "Si ptr pointe sur une structure, ptr->x est une autre écriture de ___.",
+        "reponse": "(*ptr).x",
+        "choix": [
+          "(*ptr).x",
+          "*ptr.x",
+          "ptr.x",
+          "&ptr.x"
+        ],
+        "explication": "-> combine l'accès au contenu pointé et l'accès au champ. Les parenthèses sont nécessaires dans (*ptr).x."
+      }
+    },
+    {
+      "id": "dev-pointeurs-structures-erreur", "matiere": "dev", "notion": "Pointeurs et structures", "format": "erreur",
+      "donnees": {
+        "consigne": "p pointe sur la structure pirate. Quelle ligne est fausse ?",
+        "lignes": [
+          "Etudiant* p = &pirate;",
+          "p->groupe = 2;",
+          "p.moyenne = 15.5;"
+        ],
+        "ligne_fausse": 2,
+        "correction": "p->moyenne = 15.5;",
+        "explication": "p est un pointeur : on accède au champ avec p->moyenne ou (*p).moyenne, pas avec un point."
+      }
+    },
+    {
+      "id": "dev-pointeurs-structures-vf", "matiere": "dev", "notion": "Pointeurs et structures", "format": "vrai_faux",
+      "donnees": {
+        "affirmation": "Passer une structure par adresse à une fonction évite de recopier tous ses champs.",
+        "reponse": true,
+        "explication": "Seule l'adresse est transmise : on gagne en efficacité, et la fonction peut modifier les champs."
+      }
+    },
+    {
+      "id": "dev-bon-usage-pointeurs-trous", "matiere": "dev", "notion": "Bon usage des pointeurs", "format": "trous",
+      "donnees": {
+        "texte": "Un pointeur qui ne pointe encore sur rien s'initialise avec la valeur ___.",
+        "reponse": "NULL",
+        "choix": [
+          "NULL",
+          "0.0",
+          "void",
+          "EOF"
+        ],
+        "explication": "On initialise un pointeur dès sa création : avec l'adresse d'un objet, ou avec NULL, défini dans stdio.h."
+      }
+    },
+    {
+      "id": "dev-bon-usage-pointeurs-vf", "matiere": "dev", "notion": "Bon usage des pointeurs", "format": "vrai_faux",
+      "donnees": {
+        "affirmation": "On peut accéder à *p quand p vaut NULL.",
+        "reponse": false,
+        "explication": "NULL ne désigne aucun objet en mémoire : il ne faut jamais accéder au contenu d'un tel pointeur."
+      }
+    },
+    {
+      "id": "dev-dereferencement-trous", "matiere": "dev", "notion": "Déréférencement", "format": "trous",
+      "donnees": {
+        "texte": "int i = 35, j; int* p = &i; j = *p; *p = 10; j = 20; (*p)++; À la fin, i vaut ___.",
+        "reponse": "11",
+        "choix": [
+          "10",
+          "11",
+          "35",
+          "36"
+        ],
+        "explication": "*p = 10 met i à 10, puis (*p)++ l'augmente de 1 : i vaut 11. Les affectations de j ne touchent pas i."
+      }
+    },
+    {
+      "id": "dev-dereferencement-vf-3", "matiere": "dev", "notion": "Déréférencement", "format": "vrai_faux",
+      "donnees": {
+        "affirmation": "Avec ptra = &temp1 et ptrb = &temp2, les lignes ptrc = ptra; ptra = ptrb; ptrb = ptrc; échangent les valeurs de temp1 et temp2.",
+        "reponse": false,
+        "explication": "Ces lignes échangent seulement les pointeurs. Pour échanger les valeurs, il faut passer par *ptrc = *ptra, etc."
+      }
     }
   ]
 }
