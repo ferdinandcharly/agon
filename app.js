@@ -1132,11 +1132,12 @@ function remplirAccueil() {
           el("span", {}, `${pluriel(retenus.length, "carte")}, ${pluriel(nbMatieres, "matière")}`))),
       el("p", { class: "f-ligne-info" }, vinyles,
         `${collection.vinyles}/${VINYLES_PAR_DISQUE} vinyles` + (collection.disquesOr ? `, ${pluriel(collection.disquesOr, "disque")} d'or` : "")),
-      el("button", { class: "f-bouton-survie", type: "button", onclick: () => montrerFil("survie") },
-        el("b", {}, "Mode survie"),
-        el("span", {}, lireRecordSurvie() ? `Record : ${lireRecordSurvie()}` : "Pas encore joué")),
-      el("button", { class: "f-bouton-survie f-bouton-classement", type: "button", onclick: () => Classement.ouvrir() },
-        el("b", {}, "Classement"), el("span", {}, "Cette semaine et record")),
+      el("div", { class: "f-accueil-duo" },
+        el("button", { class: "f-bouton-survie", type: "button", onclick: () => montrerFil("survie") },
+          el("b", {}, "Mode survie"),
+          el("span", {}, lireRecordSurvie() ? `Record : ${lireRecordSurvie()}` : "Pas encore joué")),
+        el("button", { class: "f-bouton-survie f-bouton-classement", type: "button", onclick: () => Classement.ouvrir() },
+          el("b", {}, "Classement"), el("span", {}, "Semaine et record"))),
       Installer.carte(),
       el("p", { class: "f-ligne-info discret" }, "Bientôt : amis, arène"))));
 }
