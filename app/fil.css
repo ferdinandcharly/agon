@@ -880,3 +880,7 @@ body.avec-nav #accueil, body.avec-nav .f-accueil {
   cursor: pointer; text-decoration: underline;
 }
 .f-bouton-survie:active { transform: translate(2px, 2px); }
+
+/* Défaut d'iOS (app installée) : zone d'affichage plus courte que l'écran ; --manque-bas mesuré par app.js.
+   Les écrans plein cadre et la barre d'onglets descendent jusqu'au vrai bas de l'écran. */
+.f-accueil, .f-fil, .f-lancement, .f-nav { bottom: calc(-1 * var(--manque-bas, 0px)); }

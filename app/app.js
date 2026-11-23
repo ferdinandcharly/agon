@@ -853,6 +853,17 @@ let ecranActif = null;
 let indiceGlisseMontre = false;
 const metaTheme = document.querySelector('meta[name="theme-color"]');
 
+// iOS, app installée : la zone d'affichage peut s'arrêter avant le bas de l'écran (la hauteur de la barre d'état
+// en moins) alors que la page commence tout en haut. On mesure ce qui manque pour étendre les écrans et la barre
+// d'onglets jusqu'en bas. Au-delà de 80 px, ce n'est pas ce défaut (paysage, clavier ouvert) : on ne touche à rien.
+function mesurerBasManquant() {
+  const installee = matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+  const manque = installee ? Math.round(screen.height - document.documentElement.clientHeight) : 0;
+  document.documentElement.style.setProperty("--manque-bas", `${manque > 0 && manque <= 80 ? manque : 0}px`);
+}
+mesurerBasManquant();
+addEventListener("resize", mesurerBasManquant);
+
 const observateurEcrans = new IntersectionObserver((entrees) => {
   for (const e of entrees) {
     if (!e.isIntersecting) continue;

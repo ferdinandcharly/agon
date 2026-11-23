@@ -59,7 +59,7 @@ export async function lancerEdge() {
     ws.send(JSON.stringify({ id, method, params, sessionId }));
   });
 
-  async function nouvelAppareil({ largeur = 390, hauteur = 844, mobile = true, ua = null } = {}) {
+  async function nouvelAppareil({ largeur = 390, hauteur = 844, mobile = true, ua = null, ecran = null } = {}) {
     const { browserContextId } = await cdp("Target.createBrowserContext");
     const { targetId } = await cdp("Target.createTarget", { url: "about:blank", browserContextId });
     const { sessionId } = await cdp("Target.attachToTarget", { targetId, flatten: true });
@@ -78,7 +78,9 @@ export async function lancerEdge() {
         appareil.requetes.push({ url: p.request.url, methode: p.request.method, corps: p.request.postData ?? null });
     });
     for (const domaine of ["Runtime", "Log", "Network", "Page"]) await cdp(`${domaine}.enable`, {}, sessionId);
-    await cdp("Emulation.setDeviceMetricsOverride", { width: largeur, height: hauteur, deviceScaleFactor: mobile ? 3 : 1, mobile }, sessionId);
+    // ecran : hauteur de l'écran physique, plus grande que la zone d'affichage (défaut d'iOS dans l'app installée)
+    await cdp("Emulation.setDeviceMetricsOverride", { width: largeur, height: hauteur, deviceScaleFactor: mobile ? 3 : 1, mobile,
+      ...(ecran ? { screenWidth: largeur, screenHeight: ecran } : {}) }, sessionId);
     if (mobile) await cdp("Emulation.setTouchEmulationEnabled", { enabled: true, maxTouchPoints: 5 }, sessionId);
     if (ua) await cdp("Emulation.setUserAgentOverride", { userAgent: ua }, sessionId);   // se faire passer pour un iPhone
 
