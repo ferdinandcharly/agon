@@ -116,6 +116,19 @@ try {
   assert.equal(a.requetes.slice(avant7).filter((q) => q.url.includes("/rest/v1/profils")).length, 0, "scénario 7 : profil modifié sans compte");
   console.log("7 : notions non publiées sans compte");
 
+  // 8 (relecture) : ouvrir Amis sans données fraîches n'enregistre pas de visite ; la pastille s'oublie avec le compte
+  await a.evaluer("localStorage.removeItem('agon.amis.vu'); Amis.ouvrir()");
+  await attendre(300);
+  assert.equal(await a.evaluer("localStorage.getItem('agon.amis.vu')"), null, "scénario 8 : visite enregistrée sans données fraîches");
+  await a.evaluer("Nav.pastille(3); Amis.oublier()");
+  assert.equal(await a.evaluer("document.querySelector('#nav .f-nav-pastille').classList.contains('cache')"), true, "scénario 8 : pastille gardée après l'oubli du compte");
+  // Le bouton « Nouvelle version » ne recouvre pas la barre d'onglets
+  await a.evaluer("afficherAccueil()");
+  const maj = await a.evaluer(`(() => { const b = el("button", { class: "f-maj", type: "button" }, "Nouvelle version"); document.body.append(b);
+    const r = [Math.round(b.getBoundingClientRect().bottom), Math.round(document.getElementById("nav").getBoundingClientRect().top)]; b.remove(); return r; })()`);
+  assert.ok(maj[0] <= maj[1], `scénario 8 : « Nouvelle version » sur la barre (${maj[0]} > ${maj[1]})`);
+  console.log("8 : relecture (visite, pastille, nouvelle version)");
+
   assert.deepEqual(a.violationsCsp, [], "violations CSP");
   assert.deepEqual(a.erreurs, [], "erreurs");
   console.log("OK — amis");
