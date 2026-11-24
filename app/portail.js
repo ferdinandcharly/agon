@@ -98,10 +98,13 @@ const Portail = (() => {
     return contenu;
   }
 
-  function etapeInfos() {
+  // Formulaire de profil (avatar, pseudo, prénom, établissement) : étape 3 du portail et « Modifier mon profil ».
+  // valeurs : préremplissage (avatar absent ou invalide → couleur et symbole au hasard).
+  // valider() vérifie, affiche les erreurs et appelle surValider(infos) ; le message d'erreur général est à placer.
+  function formulaireProfil({ valeurs = {}, prefixe = "portail", surValider }) {
     const hasard = (liste) => liste[Math.floor(Math.random() * liste.length)];
-    let couleur = hasard(Object.keys(COULEURS));
-    let symbole = hasard(Object.keys(SYMBOLES));
+    let [couleur, symbole] = FORMAT_AVATAR.test(valeurs.avatar || "") ? valeurs.avatar.split("-")
+      : [hasard(Object.keys(COULEURS)), hasard(Object.keys(SYMBOLES))];
     const apercu = el("div", { class: "f-portail-apercu" });
     const majApercu = () => {
       apercu.replaceChildren(avatar(`${couleur}-${symbole}`, 64));
@@ -120,41 +123,54 @@ const Portail = (() => {
       b.addEventListener("click", () => { symbole = id; majApercu(); });
       return b;
     });
-    const champ = (id, libelle, attrs = {}) => el("label", { class: "f-portail-champ", for: id }, el("span", {}, libelle),
-      el("input", { id, type: "text", autocomplete: "off", spellcheck: "false", ...attrs }),
-      el("small", { class: "f-portail-erreur", "data-champ": id.replace("portail-", "") }));
+    const champ = (nom, libelle, attrs = {}) => {
+      const entree = el("input", { id: `${prefixe}-${nom}`, type: "text", autocomplete: "off", spellcheck: "false", ...attrs });
+      entree.value = valeurs[nom] || "";
+      return el("label", { class: "f-portail-champ", for: `${prefixe}-${nom}` }, el("span", {}, libelle),
+        entree, el("small", { class: "f-portail-erreur", "data-champ": nom }));
+    };
     const message = el("p", { class: "f-portail-message", "aria-live": "polite" });
-    const valider = el("button", { class: "f-lancer-session f-portail-valider", type: "button" },
-      el("span", { class: "f-lancer-texte" }, el("b", {}, "C'est parti")));
-    const contenu = cadre(3, "Présente-toi",
-      champ("portail-pseudo", "Pseudo (visible des autres joueurs)", { maxlength: "20", autocapitalize: "off" }),
+    const element = el("div", { class: "f-profil-form" },
+      champ("pseudo", "Pseudo (visible des autres joueurs)", { maxlength: "20", autocapitalize: "off" }),
       el("div", { class: "f-portail-avatar" }, apercu,
         el("div", { class: "f-portail-choix" }, el("div", { class: "f-portail-couleurs" }, ...couleurs), el("div", { class: "f-portail-symboles" }, ...symboles))),
-      champ("portail-prenom", "Prénom (facultatif)", { maxlength: "30", autocomplete: "given-name" }),
-      champ("portail-etablissement", "Établissement ou ville (facultatif)", { maxlength: "60" }),
-      el("p", { class: "f-discret f-portail-prive" }, "Privé : prénom et établissement ne sont jamais montrés aux autres."),
-      valider, message);
+      champ("prenom", "Prénom (facultatif)", { maxlength: "30", autocomplete: "given-name" }),
+      champ("etablissement", "Établissement ou ville (facultatif)", { maxlength: "60" }),
+      el("p", { class: "f-discret f-portail-prive" }, "Privé : prénom et établissement ne sont jamais montrés aux autres."));
     majApercu();
-    valider.addEventListener("click", async () => {
-      const val = (id) => normaliser(contenu.querySelector(`#${id}`).value);
-      const infos = { pseudo: val("portail-pseudo"), prenom: val("portail-prenom"), etablissement: val("portail-etablissement") };
+
+    async function valider() {
+      const val = (nom) => normaliser(element.querySelector(`#${prefixe}-${nom}`).value);
+      const infos = { pseudo: val("pseudo"), prenom: val("prenom"), etablissement: val("etablissement") };
       const erreurs = verifierInfos(infos);
-      contenu.querySelectorAll(".f-portail-erreur").forEach((s) => { s.textContent = erreurs[s.dataset.champ] || ""; });
+      element.querySelectorAll(".f-portail-erreur").forEach((s) => { s.textContent = erreurs[s.dataset.champ] || ""; });
       message.textContent = "";
       if (Object.keys(erreurs).length) return;
-      valider.disabled = true;
       try {
-        let parcours = "but-info-1";
-        try { parcours = localStorage.getItem(CLE_PARCOURS) || parcours; } catch { /* défaut */ }
-        await Compte.enregistrerProfil({ ...infos, avatar: `${couleur}-${symbole}`, parcours });
-        fermer();
+        await surValider({ ...infos, avatar: `${couleur}-${symbole}` });
       } catch (err) {
-        if (err?.messageAffiche && /pseudo|Déjà pris|caractères/i.test(err.messageAffiche)) contenu.querySelector('[data-champ="pseudo"]').textContent = err.messageAffiche;
+        if (err?.messageAffiche && /pseudo|Déjà pris|caractères/i.test(err.messageAffiche)) element.querySelector('[data-champ="pseudo"]').textContent = err.messageAffiche;
         else message.textContent = navigator.onLine === false || /fetch|network|load failed/i.test(err?.message || "")
           ? "Pas de connexion, réessaie." : (err?.messageAffiche || `Ça n'a pas marché (${err?.message || "erreur inconnue"}).`);
-      } finally { valider.disabled = false; }
+      }
+    }
+    return { element, message, valider };
+  }
+
+  function etapeInfos() {
+    const formulaire = formulaireProfil({ surValider: async (infos) => {
+      let parcours = "but-info-1";
+      try { parcours = localStorage.getItem(CLE_PARCOURS) || parcours; } catch { /* défaut */ }
+      await Compte.enregistrerProfil({ ...infos, parcours });
+      fermer();
+    } });
+    const valider = el("button", { class: "f-lancer-session f-portail-valider", type: "button" },
+      el("span", { class: "f-lancer-texte" }, el("b", {}, "C'est parti")));
+    valider.addEventListener("click", async () => {
+      valider.disabled = true;
+      try { await formulaire.valider(); } finally { valider.disabled = false; }
     });
-    return contenu;
+    return cadre(3, "Présente-toi", formulaire.element, valider, formulaire.message);
   }
 
   function ouvrir(n) {
@@ -213,5 +229,5 @@ const Portail = (() => {
   // Déconnexion ou suppression du compte : retour au début
   addEventListener("facettes:deconnexion", () => ouvrir(1));
 
-  return { decider, ouvrir, fermer, estOuvert, avatar, verifierInfos };
+  return { decider, ouvrir, fermer, estOuvert, avatar, verifierInfos, formulaireProfil };
 })();

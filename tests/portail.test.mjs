@@ -62,6 +62,17 @@ try {
   assert.deepEqual(await b.evaluer(`Portail.verifierInfos({ pseudo: "Ferdi", prenom: "Zoé N'Golo", etablissement: "" })`), {}, "scénario 5 : prénom accentué refusé");
   assert.deepEqual(await b.evaluer(`Portail.verifierInfos({ pseudo: "Ferdi", prenom: "", etablissement: "IUT de Lannion" })`), {}, "scénario 5 : établissement refusé");
   assert.ok((await b.evaluer(`Portail.verifierInfos({ pseudo: "Ferdi", prenom: "", etablissement: "a" })`)).etablissement, "scénario 5 : établissement d'un caractère accepté");
+  // Le formulaire de profil se construit aussi prérempli (écran « Modifier mon profil »)
+  const r5 = await b.evaluer(`(() => {
+    const f = Portail.formulaireProfil({ valeurs: { pseudo: "Zoe_1", avatar: "rose-coeur", prenom: "Zoé" }, prefixe: "t", surValider: async () => {} });
+    document.body.append(f.element);
+    const r = { pseudo: f.element.querySelector("#t-pseudo").value, prenom: f.element.querySelector("#t-prenom").value,
+      couleur: f.element.querySelector('[data-couleur="rose"]').getAttribute("aria-pressed"),
+      symbole: f.element.querySelector('[data-symbole="coeur"]').getAttribute("aria-pressed"), valider: typeof f.valider };
+    f.element.remove();
+    return r;
+  })()`);
+  assert.deepEqual(r5, { pseudo: "Zoe_1", prenom: "Zoé", couleur: "true", symbole: "true", valider: "function" }, "scénario 5 : formulaire prérempli");
   console.log("5 : vérification des infos");
 
   // 6 : composant avatar
