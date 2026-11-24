@@ -286,6 +286,7 @@ function creerEcranSurvie() {
   let points = 0;
   let dernierInstant = null;
   let fini = false;
+  let enPause = false;   // appli en arrière-plan (appel, notification…) : le temps ne file pas
 
   function afficher() {
     temps.textContent = `${Math.max(0, restant / 1000).toFixed(1).replace(".", ",")} s`;
@@ -294,7 +295,7 @@ function creerEcranSurvie() {
   }
 
   function tic(instant) {
-    if (fini) return;
+    if (fini || enPause) return;
     if (dernierInstant !== null) restant -= instant - dernierInstant;
     dernierInstant = instant;
     afficher();
@@ -311,6 +312,18 @@ function creerEcranSurvie() {
       question);
     afficher();
     suivante();
+    requestAnimationFrame(tic);
+    window.abandonnerSurvie = () => finir(null);   // bouton ✕ de l'en-tête, après confirmation
+    document.addEventListener("visibilitychange", surVisibilite);
+  }
+
+  // Page cachée : on arrête le chrono ; au retour, il repart d'où il était (rien n'est décompté)
+  function surVisibilite() {
+    if (fini) return;
+    if (document.visibilityState === "hidden") { enPause = true; return; }
+    if (!enPause) return;
+    enPause = false;
+    dernierInstant = null;
     requestAnimationFrame(tic);
   }
 
@@ -338,6 +351,8 @@ function creerEcranSurvie() {
 
   function finir(rate) {
     fini = true;
+    window.abandonnerSurvie = null;
+    document.removeEventListener("visibilitychange", surVisibilite);
     restant = Math.max(0, restant);
     afficher();
     const nouveauRecord = points > record;
@@ -1235,6 +1250,33 @@ function effacerProgression() {
   session.joues = session.reussis = 0;
   afficherScore();
 }
+
+// ✕ de l'en-tête pendant le fil : retour à l'accueil. En Survie, un premier appui demande confirmation (4 s) ;
+// pendant une Prise d'otage (quelques secondes), il ne fait rien.
+const btnQuitter = document.getElementById("btn-quitter");
+const ICONE_QUITTER = btnQuitter.innerHTML;
+let minuteurQuitter = null;
+function remettreQuitter() {
+  clearTimeout(minuteurQuitter);
+  btnQuitter.classList.remove("confirmer");
+  btnQuitter.innerHTML = ICONE_QUITTER;
+  btnQuitter.setAttribute("aria-label", "Quitter la session");
+}
+btnQuitter.addEventListener("click", () => {
+  if (fil.classList.contains("verrouille")) {
+    if (!window.abandonnerSurvie) return;
+    if (!btnQuitter.classList.contains("confirmer")) {
+      btnQuitter.classList.add("confirmer");
+      btnQuitter.textContent = "Abandonner ?";
+      btnQuitter.setAttribute("aria-label", "Abandonner la partie");
+      minuteurQuitter = setTimeout(remettreQuitter, 4000);
+      return;
+    }
+    window.abandonnerSurvie();
+  }
+  remettreQuitter();
+  afficherAccueil();
+});
 
 // Version de l'appli (réponse du service worker), affichée en bas des Paramètres
 let versionAppli = null;
