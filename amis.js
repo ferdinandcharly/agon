@@ -156,7 +156,7 @@ const Amis = (() => {
   const zone = () => ecran.querySelector(".f-amis-zone");
   function invitation(texte) {
     return el("div", { class: "f-classement-invitation" }, el("p", {}, texte),
-      el("button", { class: "f-option f-classement-connexion", type: "button", onclick: ouvrirReglages }, "Ouvrir mon compte"));
+      el("button", { class: "f-option f-classement-connexion", type: "button", onclick: () => Profil.ouvrir() }, "Ouvrir mon compte"));
   }
 
   async function charger() {
