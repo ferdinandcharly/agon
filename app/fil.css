@@ -84,6 +84,10 @@ h1, h2, h3 { font-family: var(--police); }
 }
 .f-menu svg { width: 20px; height: 20px; }
 .f-menu:active { transform: translate(3px, 3px); box-shadow: none; }
+/* ✕ : seulement pendant le fil */
+.f-quitter { display: none; width: 44px; height: 44px; }
+body.fil-ouvert .f-quitter { display: grid; }
+.f-quitter.confirmer { width: auto; padding: 0 14px; border-radius: 999px; background: var(--rate); font: 800 15px var(--police); }
 
 /* ---------- Le fil ----------
    Un écran = une carte. scroll-snap-stop: always empêche de sauter plusieurs cartes d'un coup de pouce. */

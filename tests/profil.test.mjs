@@ -6,6 +6,8 @@ import { demarrerServeur, lancerEdge, attendre } from "./navigateur.mjs";
 
 const serveur = await demarrerServeur("app", 8766);
 const edge = await lancerEdge();
+const visibleDans = (sel) => `(() => { const e = document.querySelector(${JSON.stringify(sel)});
+  return !!e && !e.classList.contains("cache") && getComputedStyle(e).display !== "none" && getComputedStyle(e).visibility !== "hidden"; })()`;
 const pret = "!document.getElementById('lancement') && typeof donnees !== 'undefined' && !!donnees";
 let echec = null;
 try {
@@ -284,6 +286,42 @@ try {
   })()`);
   assert.deepEqual(r14, [true, "3"], "scénario 14 : « Présente-toi » non ouvert");
   console.log("12-14 : synchro et suppression, entrées invalides, étape 3");
+
+  // 15 (bilan) : bouton ✕ pendant une session, abandon de Survie, pause en arrière-plan
+  const q = await edge.nouvelAppareil();
+  await q.aller(serveur.url);
+  await q.attendreQue(pret, 8000);
+  await attendre(500);
+  const taille = (sel) => q.evaluer(`(() => { const r = document.querySelector(${JSON.stringify(sel)}).getBoundingClientRect(); return Math.min(r.width, r.height); })()`);
+  assert.equal(await q.evaluer(visibleDans("#btn-quitter")), false, "scénario 15 : ✕ visible sur l'accueil");
+  await q.evaluer("montrerFil('session')");
+  await attendre(300);
+  assert.equal(await q.evaluer(visibleDans("#btn-quitter")), true, "scénario 15 : ✕ absent dans le fil");
+  assert.ok(await taille("#btn-quitter") >= 44, "scénario 15 : ✕ trop petit");
+  await q.cliquer("#btn-quitter");
+  assert.equal(await q.evaluer(visibleDans("#accueil")), true, "scénario 15 : ✕ ne ramène pas à l'accueil");
+  // Survie : pause quand la page est cachée
+  await q.cliquer(".f-bouton-survie");
+  await q.cliquer(".f-ecran[data-matiere='survie'] .f-lancer");
+  await attendre(300);
+  const chrono = () => q.evaluer(`parseFloat(document.querySelector(".f-chrono-temps").textContent.replace(",", "."))`);
+  await q.evaluer(`Object.defineProperty(document, "visibilityState", { configurable: true, get: () => "hidden" }); document.dispatchEvent(new Event("visibilitychange"))`);
+  const avantPause = await chrono();
+  await attendre(1500);
+  assert.equal(await chrono(), avantPause, "scénario 15 : le chrono tourne pendant que l'appli est cachée");
+  await q.evaluer(`Object.defineProperty(document, "visibilityState", { configurable: true, get: () => "visible" }); document.dispatchEvent(new Event("visibilitychange"))`);
+  await attendre(600);
+  const apresPause = await chrono();
+  assert.ok(apresPause < avantPause && apresPause > avantPause - 1.2, `scénario 15 : reprise anormale (${avantPause} → ${apresPause})`);
+  // Abandon en deux appuis
+  await q.cliquer("#btn-quitter");
+  assert.match(await q.evaluer("document.getElementById('btn-quitter').textContent"), /Abandonner/, "scénario 15 : pas de confirmation d'abandon");
+  assert.equal(await q.evaluer(visibleDans("#fil")), true, "scénario 15 : partie quittée dès le premier appui");
+  await q.cliquer("#btn-quitter");
+  await attendre(300);
+  assert.deepEqual(await q.evaluer(`[${visibleDans("#accueil")}, fil.classList.contains("verrouille"), lireRecordSurvie()]`), [true, false, 0], "scénario 15 : abandon de Survie");
+  assert.deepEqual(q.erreurs, [], "scénario 15 : erreurs");
+  console.log("15 : bouton ✕, abandon et pause de la Survie");
 
   // 7 : captures iPhone (Profil, Paramètres) et PC (Profil)
   await p.evaluer("Profil.ouvrir()");
