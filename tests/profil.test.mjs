@@ -234,6 +234,57 @@ try {
   assert.equal(await defaut.d.evaluer("document.querySelector('#profil .f-param-titre')?.textContent"), "Modifier mon profil", "scénario 11 : l'invitation n'ouvre pas Modifier");
   console.log("11 : profil gardé sur l'appareil");
 
+  // 12 (bilan) : une synchro en vol pendant la suppression du compte ne remet pas la progression sur l'appareil
+  const s12 = await edge.nouvelAppareil();
+  await s12.aller(serveur.url);
+  await s12.attendreQue(pret, 8000);
+  await attendre(500);
+  const r12 = await s12.evaluer(`(async () => {
+    localStorage.setItem("agon.survie", JSON.stringify({ record: 42 }));
+    let liberer;
+    const lente = new Promise((ok) => { liberer = ok; });
+    const sb = Compte.client();
+    sb.from = (table) => ({
+      select: () => ({ maybeSingle: () => table === "profils" ? Promise.resolve({ data: ${JSON.stringify(ZOE)}, error: null })
+        : lente.then(() => ({ data: { resultats: { "bd-cle-primaire-vf": { vu: 1, ok: 1, ko: 0, derniereOk: true, dernier: "2026-11-20T08:00:00Z" } },
+            reglages: {}, collection: {}, survie: { record: 42 } }, error: null })) }),
+      upsert: async () => ({ error: null }), insert: async () => ({ error: null }), update: () => ({ eq: async () => ({ error: null }) }),
+    });
+    sb.rpc = async () => ({ error: null });
+    const synchro = Compte.synchroniser();
+    await new Promise((ok) => setTimeout(ok, 50));
+    const suppression = Compte.supprimer();
+    await new Promise((ok) => setTimeout(ok, 50));
+    liberer();
+    await synchro; await suppression;
+    await new Promise((ok) => setTimeout(ok, 200));
+    return { survie: localStorage.getItem("agon.survie"), resultats: Object.keys(lireResultats()).length };
+  })()`);
+  assert.deepEqual(r12, { survie: null, resultats: 0 }, `scénario 12 : progression revenue après suppression (${JSON.stringify(r12)})`);
+  // 13 (bilan) : une entrée non-objet dans les résultats est ignorée et ne bloque pas la fusion
+  const r13 = await s12.evaluer(`(() => {
+    localStorage.setItem("agon.resultats", JSON.stringify({ x: null, y: 3, "bd-cle-primaire-vf": { vu: 1, ok: 1, ko: 0, dernier: "2026-11-20T08:00:00Z" } }));
+    const cles = Object.keys(lireResultats());
+    let erreur = null;
+    try { Compte.fusionner({ resultats: { z: null, ...lireResultats() }, reglages: { ...lireReglages(), remise: "2026-11-21T00:00:00Z" }, collection: lireCollection(), survie: { record: 0 } },
+      { resultats: { w: null }, reglages: { remise: "2026-11-21T00:00:00Z", maj: "2026-11-21T00:00:00Z" } }); } catch (e) { erreur = e.message; }
+    return { cles, erreur };
+  })()`);
+  assert.deepEqual(r13, { cles: ["bd-cle-primaire-vf"], erreur: null }, `scénario 13 : entrée invalide (${JSON.stringify(r13)})`);
+  // 14 (bilan) : profil lu vide → « Présente-toi » s'ouvre sans attendre la fin de la synchro
+  const s14 = await edge.nouvelAppareil();
+  await s14.aller(serveur.url);
+  await s14.attendreQue(pret, 8000);
+  await attendre(500);
+  const r14 = await s14.evaluer(`(async () => {
+    Compte.client().from = () => ({ select: () => ({ maybeSingle: async () => ({ data: null, error: null }) }) });
+    await Compte.lireProfil();
+    await new Promise((ok) => setTimeout(ok, 100));
+    return [Portail.estOuvert(), document.querySelector("#portail [data-etape]")?.dataset.etape];
+  })()`);
+  assert.deepEqual(r14, [true, "3"], "scénario 14 : « Présente-toi » non ouvert");
+  console.log("12-14 : synchro et suppression, entrées invalides, étape 3");
+
   // 7 : captures iPhone (Profil, Paramètres) et PC (Profil)
   await p.evaluer("Profil.ouvrir()");
   await attendre(400);
