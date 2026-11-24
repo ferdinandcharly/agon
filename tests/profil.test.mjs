@@ -100,6 +100,42 @@ try {
   assert.deepEqual(r3.m.map((x) => [x.id, x.faites, x.total]), [["bd", 1, 1], ["sys", 2, 3]], "scénario 3 : matières triées");
   console.log("1a et 3 : écran Profil");
 
+  // 1b : Profil → Paramètres → Matières → retour → retour
+  const titre = () => p.evaluer("document.querySelector('#profil .f-param-titre')?.textContent || ''");
+  await p.cliquer("#profil .f-profil-roue");
+  assert.equal(await titre(), "Paramètres", "scénario 1b : Paramètres non ouverts");
+  assert.equal(await p.evaluer(visible("#nav")), false, "scénario 1b : barre du bas sur les Paramètres");
+  assert.match(await p.evaluer("document.querySelector('#profil [data-ligne=sync]').textContent"), /À jour|Synchronisation…|Hors ligne|Erreur|—/, "scénario 1b : état de la synchro");
+  assert.match(await p.evaluer("document.querySelector('#profil [data-ligne=matieres]').textContent"), /9 sur 9/, "scénario 1b : compte des matières");
+  await p.cliquer("#profil [data-ligne=matieres]");
+  assert.equal(await titre(), "Matières", "scénario 1b : Matières non ouvertes");
+  assert.equal(await p.evaluer("document.querySelectorAll('#profil .f-param-inter[role=switch]').length"), 9, "scénario 1b : 9 interrupteurs");
+  // 2 : couper une matière la retire du fil ; la dernière ne se coupe pas
+  await p.cliquer("#profil .f-param-inter[data-id=maths]");
+  assert.equal(await p.evaluer("reglages.matieresExclues.includes('maths') && !contenusRetenus().some((c) => c.matiere === 'maths')"), true, "scénario 2 : maths toujours dans le fil");
+  await p.evaluer(`document.querySelectorAll('#profil .f-param-inter[aria-checked=true]').forEach((b) => b.click())`);
+  assert.equal(await p.evaluer("document.querySelectorAll('#profil .f-param-inter[aria-checked=true]').length"), 1, "scénario 2 : dernière matière coupée");
+  await p.cliquer("#profil .f-param-retour");
+  assert.match(await p.evaluer("document.querySelector('#profil [data-ligne=matieres]').textContent"), /1 sur 9/, "scénario 2 : compte non mis à jour");
+  await p.cliquer("#profil [data-ligne=formats]");
+  assert.equal(await titre(), "Types de jeux", "scénario 2 : Types de jeux non ouverts");
+  assert.equal(await p.evaluer("document.querySelectorAll('#profil .f-param-inter').length"), await p.evaluer("Object.keys(NOMS_FORMATS).length"), "scénario 2 : interrupteurs de jeux");
+  await p.cliquer("#profil .f-param-inter[data-id=vrai_faux]");
+  assert.equal(await p.evaluer("reglages.formatsExclus.includes('vrai_faux') && !contenusRetenus().some((c) => c.format === 'vrai_faux')"), true, "scénario 2 : vrai/faux toujours dans le fil");
+  await p.evaluer("reglages.matieresExclues = []; reglages.formatsExclus = []; ecrireReglages(reglages)");
+  await p.cliquer("#profil .f-param-retour");
+  // 6 : effacer sa progression en deux appuis ; le Profil repart de zéro
+  await p.cliquer("#profil [data-action=effacer]");
+  assert.equal(await p.evaluer("document.querySelector('#profil [data-action=effacer]').textContent"), "Confirmer : tout effacer", "scénario 6 : pas de confirmation");
+  assert.ok(await p.evaluer("Object.keys(lireResultats()).length") > 0, "scénario 6 : effacé dès le premier appui");
+  await p.cliquer("#profil [data-action=effacer]");
+  assert.equal(await p.evaluer("Object.keys(lireResultats()).length"), 0, "scénario 6 : progression non effacée");
+  await p.cliquer("#profil .f-param-retour");
+  assert.equal(await p.evaluer("document.querySelector('#profil [data-stat=notions] b').textContent"), "0", "scénario 6 : notions du profil pas remises à zéro");
+  assert.equal(await p.evaluer(visible("#nav")), true, "scénario 1b : barre du bas absente au retour sur le Profil");
+  assert.equal(await p.evaluer("document.getElementById('reglages')"), null, "scénario 1b : l'ancienne boîte Réglages existe encore");
+  console.log("1b, 2 et 6 : Paramètres");
+
   for (const x of [a, p]) {
     assert.deepEqual(x.violationsCsp, [], "violations CSP");
     assert.deepEqual(x.erreurs, [], "erreurs");

@@ -68,7 +68,7 @@ const Profil = (() => {
     const bouton = liste.length > MATIERES_VISIBLES
       ? el("button", { class: "f-profil-tout", type: "button", "aria-expanded": String(toutVoir) }, toutVoir ? "Moins" : "Tout voir")
       : null;
-    bouton?.addEventListener("click", () => { toutVoir = !toutVoir; rafraichir(); });
+    bouton?.addEventListener("click", () => { toutVoir = !toutVoir; rendre(); });
     return el("section", { class: "f-profil-bloc", "aria-label": "Tes matières" },
       el("div", { class: "f-profil-bloc-tete" }, el("h2", {}, "Tes matières"), bouton),
       el("ul", { class: "f-profil-matieres" }, ...visibles.map((m) => {
@@ -80,18 +80,18 @@ const Profil = (() => {
       })));
   }
 
-  function rendre() {
+  function rendreProfil() {
     const p = profilCharge();
     const notions = notionsParEtat();
     const allumees = notions.filter((n) => n.etat === "maitrisee").length;
     const roueBtn = el("button", { class: "f-profil-roue", type: "button", "aria-label": "Paramètres" });
     roueBtn.innerHTML = roue;
-    roueBtn.addEventListener("click", () => ouvrirParametres());
+    roueBtn.addEventListener("click", () => empiler("parametres"));
     const modifier = el("button", { class: "f-profil-modifier", type: "button" }, "Modifier mon profil");
     modifier.disabled = !p;
-    modifier.addEventListener("click", () => Profil.ouvrirModifier?.());
+    modifier.addEventListener("click", () => empiler("modifier"));
     const ligne = [p?.prenom, p?.etablissement, p ? "BUT info 1" : null].filter(Boolean).join(" · ");
-    ecran.replaceChildren(el("div", { class: "f-accueil-col f-profil-col" },
+    return el("div", { class: "f-accueil-col f-profil-col" },
       roueBtn,
       el("div", { class: "f-profil-tete" },
         Portail.avatar(p?.avatar, 104),
@@ -103,13 +103,132 @@ const Profil = (() => {
         stat("record", lireRecordSurvie(), "record"),
         stat("notions", allumees, "notions")),
       blocSemaine(),
-      blocMatieres(matieres(notions))));
+      blocMatieres(matieres(notions)));
   }
 
-  // Paramètres : en attendant leur écran, l'ancienne boîte de réglages
-  function ouvrirParametres() { ouvrirReglages(); }
+  // ---------- Paramètres : une liste sobre, groupée ----------
+  const chevron = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>';
+  function entete(titre) {
+    const retour = el("button", { class: "f-param-retour", type: "button", "aria-label": "Retour" });
+    retour.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>';
+    retour.addEventListener("click", depiler);
+    return el("div", { class: "f-param-haut" }, retour, el("h1", { class: "f-param-titre" }, titre));
+  }
+  const groupe = (titre, ...lignes) => el("section", { class: "f-param-groupe" },
+    titre ? el("h2", {}, titre) : null, el("div", { class: "f-param-carte" }, ...lignes));
+  // Une ligne : bouton (action ou sous-page, avec chevron) ou simple texte
+  function ligne(cle, libelle, valeur, action, { chevronne = false } = {}) {
+    const val = el("span", { class: "f-param-valeur" }, valeur ?? "");
+    if (chevronne) val.insertAdjacentHTML("beforeend", chevron);
+    if (!action) return el("div", { class: "f-param-ligne", "data-ligne": cle }, el("span", {}, libelle), val);
+    const b = el("button", { class: "f-param-ligne", type: "button", "data-ligne": cle }, el("span", {}, libelle), val);
+    b.addEventListener("click", action);
+    return b;
+  }
+  // Action sensible : un premier appui demande confirmation pendant 4 s
+  function actionConfirmee(cle, libelle, confirmation, faire) {
+    const b = el("button", { class: "f-param-ligne f-param-danger", type: "button", "data-action": cle }, libelle);
+    let minuteur = null;
+    b.addEventListener("click", async () => {
+      if (!b.classList.contains("confirmer")) {
+        b.classList.add("confirmer");
+        b.textContent = confirmation;
+        minuteur = setTimeout(() => { b.classList.remove("confirmer"); b.textContent = libelle; }, 4000);
+        return;
+      }
+      clearTimeout(minuteur);
+      b.classList.remove("confirmer");
+      await faire(b);
+    });
+    return b;
+  }
 
-  function rafraichir() { if (estOuvert() && donnees) rendre(); }
+  const TEXTES_ETAT = { ok: "À jour", synchro: "Synchronisation…", "hors-ligne": "Hors ligne", erreur: "Erreur, touche pour réessayer", deconnecte: "—" };
+  const texteEtat = () => TEXTES_ETAT[typeof Compte !== "undefined" ? Compte.etat() : "deconnecte"] || "—";
+  const surTotal = (exclus, total) => `${total - exclus} sur ${total}`;
+
+  function rendreParametres() {
+    const message = el("p", { class: "f-param-message", role: "status" });
+    const nbFormats = Object.keys(NOMS_FORMATS).length;
+    const exclusMatieres = donnees.matieres.filter((m) => reglages.matieresExclues.includes(m.id)).length;
+    const exclusFormats = Object.keys(NOMS_FORMATS).filter((f) => reglages.formatsExclus.includes(f)).length;
+    const surErreur = (err) => { message.textContent = Compte.messageErreur(err); };
+    const effacer = actionConfirmee("effacer", "Effacer ma progression", "Confirmer : tout effacer", (b) => {
+      effacerProgression();
+      b.textContent = "Progression effacée";
+    });
+    const supprimer = actionConfirmee("supprimer", "Supprimer mon compte", "Confirmer : supprimer le compte", async (b) => {
+      b.disabled = true;
+      try { await Compte.supprimer(); } catch (err) { b.disabled = false; b.textContent = "Supprimer mon compte"; surErreur(err); }
+    });
+    const deconnecter = el("button", { class: "f-param-ligne", type: "button", "data-action": "deconnecter" }, "Se déconnecter");
+    deconnecter.addEventListener("click", () => Compte.deconnecter().catch(surErreur));
+    navigator.serviceWorker?.controller?.postMessage("version");
+    return el("div", { class: "f-accueil-col f-param-col" },
+      entete("Paramètres"),
+      groupe("Jeu",
+        ligne("matieres", "Matières", surTotal(exclusMatieres, donnees.matieres.length), () => empiler("matieres"), { chevronne: true }),
+        ligne("formats", "Types de jeux", exclusFormats ? surTotal(exclusFormats, nbFormats) : "Tous", () => empiler("formats"), { chevronne: true })),
+      groupe("Compte",
+        ligne("email", "E-mail", Compte.utilisateur()?.email || "—"),
+        ligne("sync", "Synchronisation", texteEtat(), () => Compte.synchroniser()),
+        ligne("donnees", "Tes données et export", null, () => Donnees.ouvrir(), { chevronne: true })),
+      groupe(null, deconnecter),
+      message,
+      el("section", { class: "f-param-groupe f-param-sensible" }, el("h2", {}, "Zone sensible"),
+        el("div", { class: "f-param-carte" }, effacer, supprimer),
+        el("p", { class: "f-param-note" }, "Supprimer le compte efface ta progression, en ligne et sur cet appareil.")),
+      el("p", { class: "f-param-version", id: "version" }, versionAppli ? `Version ${versionAppli}` : "Version inconnue (hors ligne ou premier lancement)"));
+  }
+
+  // Matières ou types de jeux : un interrupteur par élément ; le dernier actif ne se coupe pas (le fil serait vide)
+  function rendreInterrupteurs(titre, intro, elements, exclus) {
+    const inters = elements.map(({ id, nom, matiere }) => {
+      const b = el("button", { class: "f-param-ligne f-param-inter", type: "button", role: "switch", "data-id": id,
+        "aria-checked": String(!exclus.includes(id)) },
+        matiere ? el("span", { class: "f-param-pastille", "data-matiere": id, "aria-hidden": "true" }) : null,
+        el("span", { class: "f-param-nom" }, nom), el("span", { class: "f-param-curseur", "aria-hidden": "true" }));
+      b.addEventListener("click", () => {
+        const devient = b.getAttribute("aria-checked") !== "true";
+        if (!devient && inters.filter((x) => x.getAttribute("aria-checked") === "true").length === 1) {
+          b.classList.remove("secoue"); void b.offsetWidth; b.classList.add("secoue");
+          return;
+        }
+        b.setAttribute("aria-checked", String(devient));
+        basculerDans(exclus, id, devient);
+        reglages.maj = new Date().toISOString();
+        ecrireReglages(reglages);
+        reglagesModifies = true;
+      });
+      return b;
+    });
+    return el("div", { class: "f-accueil-col f-param-col" },
+      entete(titre), el("p", { class: "f-param-intro" }, intro), el("div", { class: "f-param-carte" }, ...inters));
+  }
+
+  // ---------- Pile d'écrans : profil → paramètres → matières | formats ; profil → modifier ----------
+  let pile = ["profil"];
+  const RENDUS = {
+    profil: rendreProfil,
+    parametres: rendreParametres,
+    matieres: () => rendreInterrupteurs("Matières", "Les cartes des matières coupées ne sortent plus dans tes sessions.",
+      donnees.matieres.map((m) => ({ id: m.id, nom: m.nom, matiere: true })), reglages.matieresExclues),
+    formats: () => rendreInterrupteurs("Types de jeux", "Les jeux coupés ne sortent plus dans tes sessions.",
+      Object.entries(NOMS_FORMATS).map(([id, nom]) => ({ id, nom })), reglages.formatsExclus),
+    modifier: () => rendreModifier(),
+  };
+  function rendre() {
+    const haut = pile[pile.length - 1];
+    ecran.dataset.vue = haut;
+    Nav.afficher(haut === "profil" ? "aucun" : null);
+    ecran.replaceChildren(RENDUS[haut]());
+    ecran.scrollTo({ top: 0 });
+  }
+  function empiler(vue) { pile.push(vue); rendre(); }
+  function depiler() { if (pile.length > 1) pile.pop(); rendre(); }
+
+  // Une synchro ou un nouveau profil : on redessine, sauf le formulaire en cours de saisie
+  function rafraichir() { if (estOuvert() && donnees && pile[pile.length - 1] !== "modifier") rendre(); }
 
   function ouvrir() {
     if (!donnees || fil.classList.contains("verrouille")) return;
@@ -117,12 +236,24 @@ const Profil = (() => {
     if (typeof Portail !== "undefined" && Portail.estOuvert()) return;
     accueil.classList.add("cache");
     toutVoir = false;
+    pile = ["profil"];
     ecran.classList.remove("cache");
     document.body.classList.add("profil-ouvert");
-    Nav.afficher("aucun");
     rendre();
-    ecran.scrollTo({ top: 0 });
   }
+  function ouvrirParametres() {
+    ouvrir();
+    if (estOuvert()) empiler("parametres");
+  }
+
+  // « Modifier mon profil » : écrit en tâche 6
+  function rendreModifier() { return el("div", { class: "f-accueil-col" }, entete("Modifier mon profil")); }
+
+  // La ligne « Synchronisation » suit l'état du compte sans redessiner l'écran (confirmations en cours gardées)
+  addEventListener("facettes:etat", () => {
+    const valeur = ecran.querySelector('[data-ligne="sync"] .f-param-valeur');
+    if (valeur) valeur.textContent = texteEtat();
+  });
 
   // Mini-avatar de l'en-tête : celui du compte, ou un rond neutre tant que le profil n'est pas lu
   function majEntete() {
@@ -132,5 +263,5 @@ const Profil = (() => {
   addEventListener("facettes:profil", () => { majEntete(); rafraichir(); });
   majEntete();
 
-  return { ouvrir, rafraichir, estOuvert, ouvrirParametres, semaine, matieres };
+  return { ouvrir, rafraichir, estOuvert, ouvrirParametres, empiler, depiler, semaine, matieres };
 })();

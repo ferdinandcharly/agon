@@ -25,11 +25,10 @@ const Compte = (() => {
 
   let utilisateur = null;
   let etat = "deconnecte";   // deconnecte | synchro | ok | hors-ligne | erreur
-  let derniereSynchro = null;
   let minuteur = null;
   let enCours = null;
   let aRefaire = false;
-  let conteneur = null;      // section « Compte » des réglages, redessinée à chaque changement
+  let conteneur = null;      // panneau de connexion (portail), redessiné à chaque changement
   let emailEnAttente = null; // adresse à qui on vient d'envoyer un code
   let profil;               // undefined = pas encore lu, null = pas de pseudo, { pseudo } ; sans pseudo, les parties attendent
   let recordAMoi = true;     // le record de cet appareil appartient-il au compte connecté (pas à un compte précédent) ?
@@ -179,6 +178,7 @@ const Compte = (() => {
   function changerEtat(nouveau) {
     etat = nouveau;
     dessiner();
+    dispatchEvent(new Event("facettes:etat"));   // ligne « Synchronisation » des Paramètres
   }
 
   // Lit la ligne du compte, fusionne avec cet appareil, écrit le résultat des deux côtés
@@ -203,7 +203,6 @@ const Compte = (() => {
           .upsert({ user_id: utilisateur.id, ...fusion, maj: new Date().toISOString() });
         if (e2) throw e2;
         await envoyerParties();
-        derniereSynchro = new Date();
         changerEtat("ok");
         dispatchEvent(new Event("facettes:synchro"));   // amis.js : pastille ; app.js : notions publiées
         if (change) window.apresSynchro?.();
@@ -277,26 +276,6 @@ const Compte = (() => {
       return "Tu as déjà un pseudo : il va s'afficher.";
     if (erreur.code === "23505") return "Déjà pris : essaie un autre pseudo.";
     return messageErreur(erreur);
-  }
-
-  // Crée le profil (et publie le record déjà fait sur cet appareil) ou change le pseudo
-  async function enregistrerPseudo(pseudo) {
-    const invalide = messagePseudo(pseudo);
-    if (invalide) throw Object.assign(new Error(invalide), { messageAffiche: invalide });
-    const requete = profil
-      ? sb.from("profils").update({ pseudo }).eq("user_id", utilisateur.id)
-      : sb.from("profils").insert({ pseudo });
-    const { error } = await requete;
-    if (error?.code === "23505" && /profils_pkey/.test(`${error.message} ${error.details || ""}`)) {
-      await lireProfil();   // le profil existait déjà : on l'affiche au lieu de dire « Déjà pris »
-      return;
-    }
-    if (error) throw Object.assign(error, { messageAffiche: messagePseudo(pseudo, error) });
-    const premier = !profil;
-    changerProfil({ ...profil, pseudo });
-    // Le record de l'appareil n'est publié que s'il appartient à ce compte
-    if (premier && recordAMoi && lireRecordSurvie() > 0) publierPartie(lireRecordSurvie());
-    await synchroniser();
   }
 
   // Profil complet du portail : pseudo et avatar (publics), prénom et établissement (privés), parcours
@@ -378,15 +357,7 @@ const Compte = (() => {
     await sb.auth.signOut({ scope: "local" }).catch(() => {});
   }
 
-  // ---------- Section « Compte » des réglages ----------
-  function texteEtat() {
-    if (etat === "synchro") return "Synchronisation…";
-    if (etat === "hors-ligne") return "Hors ligne : la synchro reprendra au retour du réseau.";
-    if (etat === "erreur") return "Synchro impossible pour l'instant. Elle sera retentée.";
-    if (derniereSynchro) return `Synchronisé à ${derniereSynchro.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}.`;
-    return "Pas encore synchronisé.";
-  }
-
+  // ---------- Panneau de connexion (portail, étape 2) ----------
   // Bouton qui désactive le formulaire pendant l'appel et affiche l'erreur éventuelle
   function surEnvoi(formulaire, message, action) {
     formulaire.addEventListener("submit", async (e) => {
@@ -400,24 +371,6 @@ const Compte = (() => {
         message.textContent = err?.messageAffiche || messageErreur(err);
       }
     });
-  }
-
-  // Sans pseudo : le formulaire (obligatoire pour le classement). Avec : le pseudo et « Changer ».
-  let changementPseudo = false;
-  function blocPseudo(message) {
-    if (profil === undefined) return el("p", { class: "f-discret f-pseudo" }, "Chargement de ton pseudo…");
-    if (profil && !changementPseudo) {
-      return el("p", { class: "f-pseudo" }, "Pseudo : ", el("b", {}, profil.pseudo), " ",
-        el("button", { class: "f-lien", type: "button", onclick: () => { changementPseudo = true; dessiner(); } }, "Changer"));
-    }
-    const champ = el("input", { class: "f-champ", type: "text", autocomplete: "nickname", required: "", maxlength: "20",
-      placeholder: "Ton pseudo", "aria-label": "Pseudo", value: profil?.pseudo || "" });
-    const formulaire = el("form", { class: "f-compte-form" }, champ,
-      el("button", { class: "f-option f-compte-valider", type: "submit" }, "Valider"));
-    surEnvoi(formulaire, message, async () => { await enregistrerPseudo(champ.value.trim()); changementPseudo = false; });
-    return el("div", { class: "f-pseudo" },
-      el("p", { class: "f-discret" }, profil ? "Ton nouveau pseudo :" : "Choisis ton pseudo pour apparaître dans le classement. Il sera visible des autres joueurs."),
-      formulaire);
   }
 
   // Un redessin (à chaque synchro) ne doit pas effacer ce qu'on est en train de taper
@@ -440,40 +393,8 @@ const Compte = (() => {
       return;
     }
 
-    if (utilisateur) {
-      const supprimerBtn = el("button", { class: "f-option f-danger", type: "button" }, "Supprimer mon compte");
-      let minuteurSuppr = null;
-      supprimerBtn.addEventListener("click", async () => {
-        if (!supprimerBtn.classList.contains("confirmer")) {
-          supprimerBtn.classList.add("confirmer");
-          supprimerBtn.textContent = "Confirmer : supprimer le compte";
-          minuteurSuppr = setTimeout(() => {
-            supprimerBtn.classList.remove("confirmer");
-            supprimerBtn.textContent = "Supprimer mon compte";
-          }, 4000);
-          return;
-        }
-        clearTimeout(minuteurSuppr);
-        supprimerBtn.disabled = true;
-        try { await supprimer(); }
-        catch (err) { supprimerBtn.disabled = false; message.textContent = messageErreur(err); }
-      });
-      conteneur.replaceChildren(
-        el("p", {}, "Connecté avec ", el("b", {}, utilisateur.email || "ton adresse")),
-        blocPseudo(message),
-        el("p", { class: "f-discret" }, texteEtat()),
-        el("div", { class: "f-choix deux f-compte-actions" },
-          el("button", { class: "f-option", type: "button", onclick: () => synchroniser() }, "Synchroniser"),
-          el("button", { class: "f-option", type: "button",
-            onclick: () => deconnecter().catch((err) => { message.textContent = messageErreur(err); }) }, "Se déconnecter")),
-        message,
-        el("button", { class: "f-option f-donnees-ouvrir", type: "button",
-          onclick: () => { if (typeof Donnees !== "undefined") Donnees.ouvrir(); } }, "Tes données et export"),
-        el("p", { class: "f-discret f-compte-note" },
-          "Supprimer le compte efface ta progression, en ligne et sur cet appareil."),
-        supprimerBtn);
-      return;
-    }
+    // Connecté : le compte se gère dans Paramètres (profil.js) ; ce panneau ne sert qu'à se connecter
+    if (utilisateur) { conteneur.replaceChildren(); return; }
 
     if (emailEnAttente) {
       const champ = el("input", { class: "f-champ", type: "text", inputmode: "numeric", autocomplete: "one-time-code",
@@ -538,6 +459,9 @@ const Compte = (() => {
     profil: () => profil,
     lireProfil,
     etat: () => etat,
+    deconnecter,
+    supprimer,
+    messageErreur,
     // Admin = posé en base dans app_metadata (que l'utilisateur ne peut pas modifier) ; à jour avec le jeton
     estAdmin: () => utilisateur?.app_metadata?.admin === true,
     messagePseudo,

@@ -286,25 +286,9 @@ h1, h2, h3 { font-family: var(--police); }
 .f-reglages h3 { font-size: 20px; font-weight: 800; letter-spacing: -0.01em; }
 .f-reglages .f-discret { font-size: 15px; margin-top: 2px; }
 .f-fermer { padding: 8px 14px; font-weight: 700; }
-.f-reglages-bas { display: flex; justify-content: center; }
-.f-zero { padding: 6px 10px; border: 0; background: none; color: var(--gris); font: 700 14px var(--police); text-decoration: underline; cursor: pointer; }
-.f-zero.confirmer { color: #D23B53; }
-
-.f-pastilles { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
-.f-pastille {
-  display: inline-flex; align-items: center; gap: 8px; padding: 7px 14px 8px;
-  border: var(--trait); border-radius: 999px; background: var(--papier); color: var(--gris);
-  font: 600 15px var(--police); cursor: pointer; box-shadow: none;
-  transition: background-color .15s, box-shadow .15s, transform .1s;
-}
-.f-pastille::before { content: ""; width: 12px; height: 12px; border: 2px solid var(--encre); border-radius: 50%; background: var(--papier); }
-.f-pastille[aria-pressed="true"] { color: var(--encre); box-shadow: var(--ombre-petite); }
-.f-pastille[aria-pressed="true"]::before { background: var(--pastille, var(--encre)); }
-.f-pastille:active { transform: translate(2px, 2px); }
-.f-pastille.secoue { animation: f-secoue .3s; }
 
 
-.f-danger { text-align: center; font-weight: 700; margin-top: 12px; width: 100%; }
+
 
 /* ---------- Compte ---------- */
 .f-compte { display: grid; gap: 10px; margin-top: 10px; }
@@ -315,23 +299,16 @@ h1, h2, h3 { font-family: var(--police); }
 }
 .f-champ:focus-visible { outline: 3px solid var(--c, #7B4DFF); outline-offset: 2px; }
 .f-compte-valider { text-align: center; font-weight: 700; }
-.f-compte-actions .f-option { text-align: center; font-weight: 600; }
 .f-compte-msg { font-size: 15px; font-weight: 600; color: #B0003A; }
 .f-compte-msg:empty { display: none; }
-.f-compte-note { font-size: 14px; }
-.f-pseudo { display: grid; gap: 8px; }
-.f-pseudo .f-lien { display: inline; margin-left: 4px; }
 .f-turnstile { min-height: 65px; }
-.f-donnees-ouvrir { text-align: center; font-weight: 600; }
 
 /* ---------- Tes données ---------- */
 .f-donnees { display: grid; gap: 12px; font-size: 16px; line-height: 1.45; }
 .f-donnees a { color: var(--encre); font-weight: 700; }
 .f-donnees-export, .f-donnees-enregistrer { text-align: center; font-weight: 700; margin-top: 4px; }   /* place réservée au widget anti-robot, pour éviter un saut */
-.f-compte .f-danger { margin-top: 0; }
 .f-lien { justify-self: start; padding: 0; border: 0; background: none; font: 600 15px var(--police); color: var(--encre); text-decoration: underline; cursor: pointer; }
 @media (max-width: 380px) { .f-compte-form { grid-template-columns: minmax(0, 1fr); } }
-.f-danger.confirmer { background: var(--rate); }
 
 /* ---------- Texte à trous ---------- */
 .f-phrase { font-size: 21px; font-weight: 600; line-height: 1.45; letter-spacing: -0.01em; }
@@ -442,8 +419,6 @@ h1, h2, h3 { font-family: var(--police); }
 /* Avant la capture, le titre reste caché : il apparaîtra collé lettre par lettre (pas de clignotement) */
 .f-otage:not(.capture):not(.termine) .f-lettre { opacity: 0; }
 
-/* Numéro de version, en bas des réglages */
-.f-version { padding: 0 18px 18px; font-size: 13px; color: var(--gris); text-align: center; }
 
 /* Étiquette « Nouvelle version » posée en bas de l'écran */
 .f-maj {
@@ -679,6 +654,48 @@ h1, h2, h3 { font-family: var(--police); }
 .f-classement-ligne.bleu { background: #8FA3FF; }
 .f-classement-ligne.moi { outline: 3px solid #00C08B; outline-offset: 2px; box-shadow: 3px 3px 0 #00C08B; }
 .f-classement-sep { text-align: center; color: #CFC9E8; font-weight: 800; letter-spacing: .2em; }
+
+/* ---------- Paramètres : listes en cartes blanches groupées, interrupteurs ---------- */
+.f-param-col { gap: 8px; }
+.f-param-haut { display: flex; align-items: center; gap: 4px; min-height: 48px; }
+.f-param-retour {
+  display: grid; place-items: center; width: 44px; height: 44px; margin-left: -10px; padding: 0;
+  border: 0; background: none; color: #FFFFFF; cursor: pointer;
+}
+.f-param-retour svg { width: 26px; height: 26px; }
+.f-param-titre { font-size: 30px; font-weight: 800; font-stretch: 80%; letter-spacing: -0.03em; line-height: 1; }
+.f-param-groupe { display: grid; gap: 8px; margin-top: 14px; }
+.f-param-groupe h2 { margin-inline: 4px; color: #B9B4D6; font-size: 13px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+.f-param-sensible h2 { color: #FF8A8A; }
+.f-param-carte { display: grid; border: var(--trait); border-radius: 18px; background: var(--papier); color: var(--encre); overflow: hidden; }
+.f-param-ligne {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; min-height: 54px; padding: 0 16px;
+  border: 0; background: none; color: var(--encre); font: 600 17px var(--police); text-align: left;
+}
+button.f-param-ligne { cursor: pointer; }
+.f-param-ligne + .f-param-ligne { border-top: 1.5px solid #E6E3F0; }
+.f-param-valeur { display: flex; align-items: center; gap: 6px; min-width: 0; color: var(--gris); font-size: 15px; font-weight: 500; overflow-wrap: anywhere; text-align: right; }
+.f-param-valeur svg { flex: none; width: 18px; height: 18px; }
+.f-param-danger { color: #B42323; }
+.f-param-danger.confirmer { background: var(--rate); }
+.f-param-note, .f-param-intro { margin-inline: 4px; color: #B9B4D6; font-size: 14px; }
+.f-param-intro { margin-bottom: 6px; font-size: 15px; }
+.f-param-message { color: #FF8FA8; font-weight: 600; }
+.f-param-message:empty { display: none; }
+.f-param-version { margin-top: 18px; color: #8A84A6; font-size: 13px; text-align: center; }
+.f-param-nom { flex: 1; }
+.f-param-pastille { flex: none; width: 16px; height: 16px; border: 2px solid var(--encre); border-radius: 50%; background: var(--c); }
+.f-param-curseur {
+  position: relative; flex: none; width: 50px; height: 30px; border: 2px solid var(--encre); border-radius: 999px;
+  background: #D9D6E5; transition: background-color .15s;
+}
+.f-param-curseur::after {
+  content: ""; position: absolute; top: 2px; left: 2px; width: 22px; height: 22px; box-sizing: border-box;
+  border: 2px solid var(--encre); border-radius: 50%; background: #FFFFFF; transition: translate .15s;
+}
+.f-param-inter[aria-checked="true"] .f-param-curseur { background: #00C08B; }
+.f-param-inter[aria-checked="true"] .f-param-curseur::after { translate: 20px 0; }
+.f-param-inter.secoue { animation: f-secoue .3s; }
 
 /* ---------- Profil : sobre, sans ombres d'autocollant ---------- */
 /* La mini-avatar de l'en-tête : l'avatar remplit le rond ; masquée sur le profil (la roue prend sa place) */

@@ -181,12 +181,11 @@ try {
   await s.aller(serveur.url);
   await s.attendreQue("!document.getElementById('lancement') && typeof donnees !== 'undefined' && !!donnees", 8000);
   await attendre(800);
-  await s.evaluer(`(() => { Compte.client().rpc = async () => ({ error: null });   // pas de vrai Supabase en test
-    const zone = document.createElement("div"); zone.id = "zone-test"; document.body.append(zone); Compte.afficherDans(zone); })()`);
-  await s.attendreQue("[...document.querySelectorAll('#zone-test button')].some((b) => /Supprimer mon compte/.test(b.textContent))", 5000);
-  const cliquerSupprimer = `[...document.querySelectorAll('#zone-test button')].find((b) => /supprimer/i.test(b.textContent)).click()`;
-  await s.evaluer(cliquerSupprimer);
-  await s.evaluer(cliquerSupprimer);   // confirmation
+  await s.evaluer(`Compte.client().rpc = async () => ({ error: null })`);   // pas de vrai Supabase en test
+  await s.cliquer("#btn-reglages");
+  await s.cliquer("#profil .f-profil-roue");
+  await s.cliquer("#profil [data-action=supprimer]");
+  await s.cliquer("#profil [data-action=supprimer]");   // confirmation
   await s.attendreQue("!Compte.utilisateur()", 8000);
   await attendre(300);
   const apres = await s.evaluer(`({ res: Object.keys(lireResultats()).length, vinyles: lireCollection().vinyles })`);

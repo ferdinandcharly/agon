@@ -988,8 +988,8 @@ function construireFil() {
 function carteVide() {
   return el("section", { class: "f-ecran" }, el("div", { class: "f-carte f-fin" },
     el("h2", {}, "Aucune carte à afficher"),
-    el("p", { class: "f-discret" }, "Les matières et les jeux cochés dans les réglages ne donnent aucune carte."),
-    el("button", { class: "btn btn-principal", type: "button", onclick: ouvrirReglages }, "Ouvrir les réglages")));
+    el("p", { class: "f-discret" }, "Les matières et les jeux cochés dans les paramètres ne donnent aucune carte."),
+    el("button", { class: "btn btn-principal", type: "button", onclick: () => Profil.ouvrirParametres() }, "Ouvrir les paramètres")));
 }
 
 function carteFin() {
@@ -1015,9 +1015,9 @@ function carteFinCiblee() {
 function carteVideCiblee() {
   return el("section", { class: "f-ecran" }, el("div", { class: "f-carte f-fin" },
     el("h2", {}, "Aucune carte à afficher"),
-    el("p", { class: "f-discret" }, "Les jeux cochés dans les réglages ne donnent aucune carte ici."),
+    el("p", { class: "f-discret" }, "Les jeux cochés dans les paramètres ne donnent aucune carte ici."),
     el("button", { class: "btn btn-principal", type: "button", onclick: retourDiscotheque }, "Retour à la discothèque"),
-    el("button", { class: "btn btn-secondaire", type: "button", onclick: ouvrirReglages }, "Ouvrir les réglages")));
+    el("button", { class: "btn btn-secondaire", type: "button", onclick: () => Profil.ouvrirParametres() }, "Ouvrir les paramètres")));
 }
 
 function carteRetourMenu() {
@@ -1199,53 +1199,13 @@ function icone(d) {
 
 document.getElementById("btn-accueil").addEventListener("click", afficherAccueil);
 
-// ---------- Réglages et progression ----------
-const dialogue = document.getElementById("reglages");
+// ---------- Réglages et progression (écrans dans profil.js) ----------
 let reglagesModifies = false;
-
-// Une pastille à cocher (aria-pressed). Interdit de décocher la dernière d'un groupe : le fil serait vide.
-function pastille(texte, active, couleur, basculer) {
-  const b = el("button", { class: "f-pastille", type: "button", "aria-pressed": String(active) }, texte);
-  if (couleur) b.style.setProperty("--pastille", couleur);
-  b.addEventListener("click", () => {
-    const groupe = b.parentElement;
-    const actives = groupe.querySelectorAll('[aria-pressed="true"]').length;
-    const devient = b.getAttribute("aria-pressed") !== "true";
-    if (!devient && actives === 1) {
-      b.classList.remove("secoue"); void b.offsetWidth; b.classList.add("secoue");
-      return;
-    }
-    b.setAttribute("aria-pressed", String(devient));
-    basculer(devient);
-    reglages.maj = new Date().toISOString();
-    ecrireReglages(reglages);
-    reglagesModifies = true;
-  });
-  return b;
-}
 
 function basculerDans(liste, valeur, actif) {
   const i = liste.indexOf(valeur);
   if (actif && i >= 0) liste.splice(i, 1);
   if (!actif && i < 0) liste.push(valeur);
-}
-
-
-function remplirReglages() {
-  const couleurDe = (id) => {
-    const temoin = el("span", { "data-matiere": id });
-    document.body.append(temoin);
-    const c = getComputedStyle(temoin).getPropertyValue("--c").trim();
-    temoin.remove();
-    return c;
-  };
-  document.getElementById("choix-matieres").replaceChildren(...donnees.matieres.map((m) =>
-    pastille(m.nom, !reglages.matieresExclues.includes(m.id), couleurDe(m.id),
-      (actif) => basculerDans(reglages.matieresExclues, m.id, actif))));
-  document.getElementById("choix-formats").replaceChildren(...Object.entries(NOMS_FORMATS).map(([id, nom]) =>
-    pastille(nom, !reglages.formatsExclus.includes(id), null,
-      (actif) => basculerDans(reglages.formatsExclus, id, actif))));
-  if (typeof Compte !== "undefined") Compte.afficherDans(document.getElementById("compte"));
 }
 
 // Après chaque synchro réussie : le nombre de notions allumées vu par les amis
@@ -1257,58 +1217,26 @@ addEventListener("facettes:synchro", () => {
 // Le fil en cours n'est pas reconstruit, pour ne pas couper une partie.
 window.apresSynchro = () => {
   if (!donnees) return;
-  if (dialogue.open) remplirReglages();
-  else if (!accueil.classList.contains("cache")) remplirAccueil();
+  if (!accueil.classList.contains("cache")) remplirAccueil();
   else if (!ecranDiscotheque.classList.contains("cache")) Discotheque.rafraichir();
   else if (!ecranAmis.classList.contains("cache")) Amis.recharger();
   else if (Profil.estOuvert()) Profil.rafraichir();
 };
 
-function ouvrirReglages() {
-  if (!donnees) return;
-  reglagesModifies = false;
-  navigator.serviceWorker?.controller?.postMessage("version");
-  btnZero.classList.remove("confirmer");
-  btnZero.textContent = "Effacer ma progression";
-  remplirReglages();
-  dialogue.showModal();
-}
-dialogue.addEventListener("close", () => {
-  if (!accueil.classList.contains("cache")) remplirAccueil();   // stats et compte de cartes à jour
-  else if (!ecranDiscotheque.classList.contains("cache")) Discotheque.rafraichir();
-  else if (!ecranClassement.classList.contains("cache")) Classement.recharger();
-  else if (!ecranAmis.classList.contains("cache")) Amis.recharger();
-  else if (Profil.estOuvert()) Profil.rafraichir();
-  else if (reglagesModifies) construireFil();
-});
 document.getElementById("btn-reglages").addEventListener("click", () => Profil.ouvrir());
-document.getElementById("btn-fermer-reglages").addEventListener("click", () => dialogue.close());
-// Toucher le fond grisé autour du panneau le ferme aussi
-dialogue.addEventListener("click", (e) => { if (e.target === dialogue) dialogue.close(); });
 
-// Effacer en deux temps : le premier appui demande confirmation pendant 4 s
-const btnZero = document.getElementById("btn-zero");
-let minuteurZero = null;
-btnZero.addEventListener("click", () => {
-  if (!btnZero.classList.contains("confirmer")) {
-    btnZero.classList.add("confirmer");
-    btnZero.textContent = "Confirmer : tout effacer";
-    minuteurZero = setTimeout(() => {
-      btnZero.classList.remove("confirmer");
-      btnZero.textContent = "Effacer ma progression";
-    }, 4000);
-    return;
-  }
-  clearTimeout(minuteurZero);
+// Effacer sa progression (Paramètres, après confirmation) : les résultats seulement, pas la collection ni le record.
+// La date de remise voyage avec les réglages : les autres appareils effacent aussi leurs anciens résultats.
+function effacerProgression() {
   try { localStorage.removeItem(CLE_RESULTATS); } catch { /* tant pis */ }
-  // La date de remise voyage avec les réglages : les autres appareils effacent aussi leurs anciens résultats
   reglages.remise = new Date().toISOString();
   ecrireReglages(reglages);
   session.joues = session.reussis = 0;
   afficherScore();
-  btnZero.classList.remove("confirmer");
-  btnZero.textContent = "Progression effacée";
-});
+}
+
+// Version de l'appli (réponse du service worker), affichée en bas des Paramètres
+let versionAppli = null;
 
 // ---------- Navigation : une carte à la fois ----------
 // Le défilement natif part trop loin avec l'élan (doigt, trackpad, molette). Le fil n'accepte donc
@@ -1320,7 +1248,7 @@ function indexCourant() { return Math.round(fil.scrollTop / fil.clientHeight); }
 let indexCible = null;
 let minuteurCible = null;
 function allerDe(sens) {
-  if (fil.classList.contains("verrouille") || fil.classList.contains("cache") || dialogue.open) return;
+  if (fil.classList.contains("verrouille") || fil.classList.contains("cache") || document.querySelector("dialog[open]")) return;
   const dernier = fil.children.length - 1;
   const depart = indexCible ?? indexCourant();
   const cible = Math.min(dernier, Math.max(0, depart + sens));
@@ -1384,7 +1312,7 @@ fil.addEventListener("wheel", (e) => {
 
 // Clavier sur ordinateur : flèches, Page suivante/précédente et espace
 document.addEventListener("keydown", (e) => {
-  if (e.ctrlKey || e.altKey || e.metaKey || dialogue.open || fil.classList.contains("verrouille")) return;
+  if (e.ctrlKey || e.altKey || e.metaKey || document.querySelector("dialog[open]") || fil.classList.contains("verrouille")) return;
   if (e.target.closest("input, textarea, select, [contenteditable]")) return;   // on tape du texte
   if (typeof Portail !== "undefined" && Portail.estOuvert()) return;
   if (e.target.closest("button") && e.key === " ") return;
@@ -1439,7 +1367,10 @@ if ("serviceWorker" in navigator) {
       "Nouvelle version : toucher pour recharger"));
   });
   navigator.serviceWorker.addEventListener("message", (e) => {
-    if (e.data?.version) document.getElementById("version").textContent = `Version ${e.data.version.replace(/^[a-z]+-/, "")}`;
+    if (!e.data?.version) return;
+    versionAppli = e.data.version.replace(/^[a-z]+-/, "");
+    const zone = document.getElementById("version");
+    if (zone) zone.textContent = `Version ${versionAppli}`;
   });
 }
 demarrer();

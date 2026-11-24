@@ -61,7 +61,7 @@ const Classement = (() => {
   function invitation(texte) {
     return el("div", { class: "f-classement-invitation" },
       el("p", {}, texte),
-      el("button", { class: "f-option f-classement-connexion", type: "button", onclick: ouvrirReglages }, "Ouvrir mon compte"));
+      el("button", { class: "f-option f-classement-connexion", type: "button", onclick: () => Profil.ouvrir() }, "Ouvrir mon compte"));
   }
 
   // Charge l'onglet courant : en ligne → la base (et le cache) ; sinon → le cache s'il existe
