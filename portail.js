@@ -92,8 +92,7 @@ const Portail = (() => {
     const zone = el("div", { class: "f-compte f-portail-compte" });
     const retour = el("button", { class: "f-portail-retour", type: "button" }, "← Retour");
     retour.addEventListener("click", () => ouvrir(1));
-    const contenu = cadre(2, "Crée ton compte",
-      el("p", { class: "f-arbre-intro" }, "Pas de mot de passe : tu reçois un code par e-mail."), zone, retour);
+    const contenu = cadre(2, "Connecte-toi ou crée ton compte", zone, retour);   // « Pas de mot de passe » est dit dans le panneau
     if (typeof Compte !== "undefined") Compte.afficherDans(zone);
     return contenu;
   }
