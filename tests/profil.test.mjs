@@ -153,26 +153,40 @@ try {
     couleur: document.querySelector('#profil [data-couleur="rose"]').getAttribute("aria-pressed"),
     symbole: document.querySelector('#profil [data-symbole="coeur"]').getAttribute("aria-pressed") })`);
   assert.deepEqual(pre, { pseudo: "Zoe_1", prenom: "Zoé", etab: "IUT", couleur: "true", symbole: "true" }, "scénario 5 : champs non préremplis");
+  const forme = await p.evaluer(`(() => {
+    const b = document.querySelector("#profil .f-modifier-enregistrer");
+    const tailles = [...document.querySelectorAll("#profil .f-portail-couleur, #profil .f-portail-symbole")]
+      .map((x) => Math.min(x.getBoundingClientRect().width, x.getBoundingClientRect().height));
+    return { annuler: !!document.querySelector("#profil .f-param-annuler"), retour: !!document.querySelector("#profil .f-param-retour"),
+      gros: b?.classList.contains("f-lancer-session"), texte: b?.textContent, messageAvant: b?.previousElementSibling?.classList.contains("f-portail-message"),
+      plusPetit: Math.min(...tailles) };
+  })()`);
+  assert.deepEqual({ ...forme, plusPetit: forme.plusPetit >= 44 }, { annuler: false, retour: true, gros: true, texte: "Enregistrer", messageAvant: true, plusPetit: true },
+    `scénario 5 : forme de l'écran Modifier (${JSON.stringify(forme)})`);
   // Format invalide : erreur sous le pseudo, on reste
   await p.evaluer(`document.getElementById("profil-pseudo").value = "a b"`);
-  await p.cliquer("#profil .f-param-enregistrer");
+  await p.cliquer("#profil .f-modifier-enregistrer");
   await attendre(200);
   assert.notEqual(await p.evaluer(`document.querySelector('#profil [data-champ="pseudo"]').textContent`), "", "scénario 5 : pas d'erreur de format");
   assert.equal(await p.evaluer("document.querySelector('#profil .f-param-titre').textContent"), "Modifier mon profil", "scénario 5 : écran quitté malgré l'erreur");
   // Pseudo déjà pris : message sous le champ, profil inchangé
   await p.evaluer(`Compte.enregistrerProfil = async () => { throw { code: "23505", message: "profils_pseudo_key", messageAffiche: "Déjà pris : essaie un autre pseudo." }; };
     document.getElementById("profil-pseudo").value = "Pris_1"`);
-  await p.cliquer("#profil .f-param-enregistrer");
+  await p.cliquer("#profil .f-modifier-enregistrer");
   await attendre(200);
   assert.match(await p.evaluer(`document.querySelector('#profil [data-champ="pseudo"]').textContent`), /Déjà pris/, "scénario 5 : pseudo pris non signalé");
   // Annuler : retour au profil, rien de changé
-  await p.cliquer("#profil .f-param-annuler");
+  await p.cliquer("#profil .f-param-retour");
   assert.equal(await p.evaluer("document.querySelector('#profil .f-profil-pseudo').textContent"), "Zoe_1", "scénario 5 : Annuler a changé le profil");
   // Enregistrer réussi : retour au profil
   await p.cliquer("#profil .f-profil-modifier");
-  await p.evaluer(`Compte.enregistrerProfil = async (infos) => { window.__enregistre = infos; };
+  await p.evaluer(`window.__appels = 0;
+    Compte.enregistrerProfil = async (infos) => { window.__appels++; window.__enregistre = infos; await new Promise((ok) => setTimeout(ok, 100)); };
     document.getElementById("profil-prenom").value = "Zoéa"`);
-  await p.cliquer("#profil .f-param-enregistrer");
+  await p.evaluer(`(() => { const b = document.querySelector("#profil .f-modifier-enregistrer"); b.click(); b.click(); })()`);
+  await attendre(300);
+  assert.equal(await p.evaluer("window.__appels"), 1, "scénario 5 : double appui → deux envois");
+  assert.equal(await p.evaluer("document.querySelector('#profil .f-profil-ok')?.textContent"), "Profil mis à jour", "scénario 5 : pas de message de réussite");
   await attendre(200);
   assert.equal(await p.evaluer("!!document.querySelector('#profil .f-profil-pseudo')"), true, "scénario 5 : pas de retour au profil");
   assert.deepEqual(await p.evaluer("window.__enregistre"), { pseudo: "Zoe_1", prenom: "Zoéa", etablissement: "IUT", avatar: "rose-coeur", parcours: "but-info-1" }, "scénario 5 : valeurs envoyées");
@@ -188,7 +202,7 @@ try {
   // 9 (relecture) : un enregistrement qui finit après avoir quitté le profil ne touche pas à l'écran affiché
   await p.cliquer("#profil .f-profil-modifier");
   await p.evaluer(`Compte.enregistrerProfil = () => new Promise((ok) => { window.__finir = ok; })`);
-  await p.cliquer("#profil .f-param-enregistrer");
+  await p.cliquer("#profil .f-modifier-enregistrer");
   await p.evaluer("afficherAccueil()");
   await p.evaluer("window.__finir()");
   await attendre(200);
