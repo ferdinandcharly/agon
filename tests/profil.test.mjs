@@ -176,6 +176,29 @@ try {
   assert.deepEqual(await p.evaluer("window.__enregistre"), { pseudo: "Zoe_1", prenom: "Zoéa", etablissement: "IUT", avatar: "rose-coeur", parcours: "but-info-1" }, "scénario 5 : valeurs envoyées");
   console.log("5 : modifier mon profil");
 
+  // 8 (relecture) : une synchro sans changement de profil ne redessine pas les Paramètres (confirmation gardée)
+  await p.evaluer("Profil.ouvrirParametres()");
+  await p.cliquer("#profil [data-action=supprimer]");
+  await p.evaluer("Compte.lireProfil()");
+  await attendre(200);
+  assert.equal(await p.evaluer("document.querySelector('#profil [data-action=supprimer]').textContent"), "Confirmer : supprimer le compte", "scénario 8 : confirmation annulée par une synchro");
+  await p.evaluer("Profil.ouvrir()");
+  // 9 (relecture) : un enregistrement qui finit après avoir quitté le profil ne touche pas à l'écran affiché
+  await p.cliquer("#profil .f-profil-modifier");
+  await p.evaluer(`Compte.enregistrerProfil = () => new Promise((ok) => { window.__finir = ok; })`);
+  await p.cliquer("#profil .f-param-enregistrer");
+  await p.evaluer("afficherAccueil()");
+  await p.evaluer("window.__finir()");
+  await attendre(200);
+  assert.deepEqual(await p.evaluer(`[document.querySelector("#nav [aria-current]")?.dataset.onglet, Profil.estOuvert()]`), ["accueil", false], "scénario 9 : le profil a repris la main");
+  // 10 (relecture) : pas de mini-avatar pendant une session de cartes (elle ferait quitter la session)
+  await p.evaluer("montrerFil('session')");
+  await attendre(300);
+  assert.equal(await p.evaluer("getComputedStyle(document.getElementById('btn-reglages')).visibility"), "hidden", "scénario 10 : mini-avatar visible dans le fil");
+  await p.evaluer("afficherAccueil()");
+  assert.equal(await p.evaluer("getComputedStyle(document.getElementById('btn-reglages')).visibility"), "visible", "scénario 10 : mini-avatar cachée sur l'accueil");
+  console.log("8-10 : corrections de la relecture");
+
   // 7 : captures iPhone (Profil, Paramètres) et PC (Profil)
   await p.evaluer("Profil.ouvrir()");
   await attendre(400);

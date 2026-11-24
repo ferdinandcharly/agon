@@ -1046,6 +1046,7 @@ function afficherAccueil() {
   if (typeof Portail !== "undefined" && Portail.estOuvert()) return;   // compte obligatoire : rien derrière le portail
   observateurEcrans.disconnect();
   fil.classList.add("cache");
+  document.body.classList.remove("fil-ouvert");
   cacherEcrans();
   accueil.classList.remove("cache");
   Nav.afficher("accueil");
@@ -1062,6 +1063,7 @@ function montrerFil(mode, cible = null) {
   cibleFil = cible;
   accueil.classList.add("cache");
   cacherEcrans();
+  document.body.classList.add("fil-ouvert");   // pas de mini-avatar : elle ferait quitter la session
   Nav.afficher(null);
   fil.classList.remove("cache");
   construireFil();

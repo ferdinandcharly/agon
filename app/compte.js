@@ -93,8 +93,9 @@ const Compte = (() => {
   // Profil : undefined = pas encore lu, null = pas de profil, sinon { pseudo, avatar, prenom, etablissement, parcours }.
   // Chaque changement est signalé (mini-avatar de l'en-tête, écran Profil).
   function changerProfil(p) {
+    const change = JSON.stringify(p) !== JSON.stringify(profil);   // chaque synchro relit le profil : souvent identique
     profil = p;
-    dispatchEvent(new Event("facettes:profil"));
+    if (change) dispatchEvent(new Event("facettes:profil"));
   }
 
   async function lireProfil() {
