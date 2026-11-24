@@ -357,6 +357,35 @@ try {
   assert.ok(etape2.champ >= 300, `scénario 16 : champ e-mail écrasé (${etape2.champ} px)`);
   console.log("16 : finitions");
 
+  // 17 (relecture) : une partie finie remet le ✕ dans son état normal
+  await q.evaluer("afficherAccueil()");
+  await q.cliquer(".f-bouton-survie");
+  await q.cliquer(".f-ecran[data-matiere='survie'] .f-lancer");
+  await q.cliquer("#btn-quitter");
+  await q.evaluer("window.abandonnerSurvie()");   // fin de partie venue d'ailleurs (erreur, chrono à zéro)
+  assert.doesNotMatch(await q.evaluer("document.getElementById('btn-quitter').textContent"), /Abandonner/, "scénario 17 : ✕ resté en confirmation");
+  // 18 (relecture) : un profil lu vide efface le profil gardé ; une suppression refusée ne laisse pas « Synchronisation… »
+  const t = await edge.nouvelAppareil();
+  await t.aller(serveur.url);
+  await t.attendreQue(pret, 8000);
+  await attendre(500);
+  const r18 = await t.evaluer(`(async () => {
+    localStorage.setItem("agon.profil", JSON.stringify({ user_id: Compte.utilisateur().id, pseudo: "Ancien" }));
+    const sb = Compte.client();
+    sb.from = () => ({ select: () => ({ maybeSingle: async () => ({ data: null, error: null }) }) });
+    await Compte.lireProfil();
+    const cache = localStorage.getItem("agon.profil");
+    // La synchro du démarrage est encore en vol (Supabase bloqué en test) : la suppression refusée ne doit pas la laisser afficher
+    sb.rpc = async () => ({ error: { message: "refusé" } });
+    let refus = null;
+    try { await Compte.supprimer(); } catch (e) { refus = e.message; }
+    return { cache, refus, etat: Compte.etat() };
+  })()`);
+  assert.equal(r18.cache, null, "scénario 18 : profil gardé malgré un profil lu vide");
+  assert.equal(r18.refus, "refusé", "scénario 18 : refus non remonté");
+  assert.notEqual(r18.etat, "synchro", "scénario 18 : écran bloqué sur « Synchronisation… »");
+  console.log("17-18 : corrections de la relecture");
+
   // 7 : captures iPhone (Profil, Paramètres) et PC (Profil)
   await p.evaluer("Profil.ouvrir()");
   await attendre(400);

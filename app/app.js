@@ -353,6 +353,7 @@ function creerEcranSurvie() {
     fini = true;
     window.abandonnerSurvie = null;
     document.removeEventListener("visibilitychange", surVisibilite);
+    remettreQuitter();   // un « Abandonner ? » en attente ne doit pas survivre à la partie
     restant = Math.max(0, restant);
     afficher();
     const nouveauRecord = points > record;

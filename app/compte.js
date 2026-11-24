@@ -97,8 +97,10 @@ const Compte = (() => {
   function changerProfil(p) {
     const change = JSON.stringify(p) !== JSON.stringify(profil);   // chaque synchro relit le profil : souvent identique
     profil = p;
-    if (p && typeof p === "object" && utilisateur)
-      try { localStorage.setItem(CLE_PROFIL, JSON.stringify({ ...p, user_id: utilisateur.id })); } catch { /* tant pis */ }
+    try {
+      if (p && typeof p === "object" && utilisateur) localStorage.setItem(CLE_PROFIL, JSON.stringify({ ...p, user_id: utilisateur.id }));
+      else if (p === null) localStorage.removeItem(CLE_PROFIL);   // ce compte n'a pas (plus) de profil
+    } catch { /* tant pis */ }
     if (change) dispatchEvent(new Event("facettes:profil"));
   }
 
@@ -114,8 +116,10 @@ const Compte = (() => {
   }
 
   async function lireProfil() {
+    const id = utilisateur?.id;
     const { data, error } = await sb.from("profils").select("pseudo, avatar, prenom, etablissement, parcours").maybeSingle();
     if (error) throw error;
+    if (utilisateur?.id !== id) return;   // le compte a changé pendant la lecture : ce profil n'est plus le sien
     changerProfil(data);
   }
 
@@ -303,6 +307,7 @@ const Compte = (() => {
 
   // Profil complet du portail : pseudo et avatar (publics), prénom et établissement (privés), parcours
   async function enregistrerProfil({ pseudo, avatar, prenom, etablissement, parcours }) {
+    const idAvant = utilisateur?.id;
     const invalide = messagePseudo(pseudo);
     if (invalide) throw Object.assign(new Error(invalide), { messageAffiche: invalide });
     const ligne = { pseudo, avatar, prenom: prenom || null, etablissement: etablissement || null, parcours: parcours || "but-info-1" };
@@ -314,7 +319,7 @@ const Compte = (() => {
     }
     if (error) throw Object.assign(error, { messageAffiche: messagePseudo(pseudo, error) });
     const premier = !profil;
-    changerProfil({ ...ligne });
+    if (utilisateur?.id === idAvant) changerProfil({ ...ligne });
     if (premier && recordAMoi && lireRecordSurvie() > 0) publierPartie(lireRecordSurvie());
     await synchroniser();
   }
@@ -371,8 +376,16 @@ const Compte = (() => {
     clearTimeout(minuteur);
     minuteur = null;
     suppression = true;   // une synchro en vol verra le drapeau (ou le compte disparu) et n'écrira rien
-    const { error } = await sb.rpc("supprimer_mon_compte");
-    if (error) { suppression = false; throw error; }
+    try {
+      const { error } = await sb.rpc("supprimer_mon_compte");
+      if (error) throw error;
+    } catch (err) {
+      // Refusée : le compte reste ; la synchro interrompue et l'envoi annulé reprennent
+      suppression = false;
+      changerEtat(navigator.onLine === false ? "hors-ligne" : "erreur");
+      programmer();
+      throw err;
+    }
     ecrireFile(lireFile().filter((p) => p.user_id !== utilisateur?.id));   // les parties du compte supprimé
     oublierCachesDuCompte();
     try { localStorage.removeItem(CLE_COMPTE); } catch { /* tant pis */ }
