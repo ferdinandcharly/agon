@@ -73,12 +73,14 @@ try {
       r[c.id] = { vu: 1, ok: 1, ko: 0, derniereOk: true, boite: 2, dernier: new Date().toISOString() };
     localStorage.setItem("agon.resultats", JSON.stringify(r));
   })()`);
-  await p.cliquer("#btn-reglages");
+  await p.cliquer("#nav [data-onglet=profil]");
   await attendre(300);
   assert.equal(await p.evaluer(visible("#profil")), true, "scénario 1a : profil caché");
   assert.equal(await p.evaluer(visible("#accueil")), false, "scénario 1a : accueil visible");
   assert.equal(await p.evaluer(visible("#nav")), true, "scénario 1a : barre du bas cachée");
-  assert.equal(await p.evaluer("document.querySelectorAll('#nav [aria-current]').length"), 0, "scénario 1a : un onglet actif");
+  assert.equal(await p.evaluer("document.querySelector('#nav [aria-current]')?.dataset.onglet"), "profil", "scénario 1a : onglet Profil non actif");
+  assert.equal(await p.evaluer("document.getElementById('btn-reglages')"), null, "scénario 1a : bouton rond encore dans l'en-tête");
+  assert.equal(await p.evaluer("document.querySelector('#profil .f-profil-tete .f-avatar-initiale')?.textContent"), "T", "scénario 1a : pas d'initiale sans profil");
   assert.equal(await p.evaluer("document.querySelector('#profil .f-profil-pseudo').textContent"), "…", "scénario 1a : pseudo hors ligne");
   assert.equal(await p.evaluer("document.querySelector('#profil [data-stat=notions] b').textContent"), "1", "scénario 3 : notions allumées");
   assert.equal(await p.evaluer("document.querySelectorAll('#profil .f-profil-matiere').length"), 4, "scénario 3 : 4 matières");
@@ -191,13 +193,32 @@ try {
   await p.evaluer("window.__finir()");
   await attendre(200);
   assert.deepEqual(await p.evaluer(`[document.querySelector("#nav [aria-current]")?.dataset.onglet, Profil.estOuvert()]`), ["accueil", false], "scénario 9 : le profil a repris la main");
-  // 10 (relecture) : pas de mini-avatar pendant une session de cartes (elle ferait quitter la session)
-  await p.evaluer("montrerFil('session')");
-  await attendre(300);
-  assert.equal(await p.evaluer("getComputedStyle(document.getElementById('btn-reglages')).visibility"), "hidden", "scénario 10 : mini-avatar visible dans le fil");
-  await p.evaluer("afficherAccueil()");
-  assert.equal(await p.evaluer("getComputedStyle(document.getElementById('btn-reglages')).visibility"), "visible", "scénario 10 : mini-avatar cachée sur l'accueil");
-  console.log("8-10 : corrections de la relecture");
+  console.log("8-9 : corrections de la relecture");
+
+  // 11 : profil gardé sur l'appareil (affiché hors ligne au démarrage) ; celui d'un autre compte est ignoré
+  const MOI = "00000000-0000-4000-8000-000000000001";
+  const avecCache = async (cache) => {
+    const d = await edge.nouvelAppareil();
+    await d.avantPage(`localStorage.setItem("agon.compte", "${MOI}"); localStorage.setItem("agon.profil", ${JSON.stringify(JSON.stringify(cache))});`);
+    await d.aller(serveur.url);
+    await d.attendreQue(pret, 8000);
+    await attendre(500);
+    await d.cliquer("#nav [data-onglet=profil]");
+    const r = await d.evaluer(`({ pseudo: document.querySelector("#profil .f-profil-pseudo").textContent,
+      avatar: document.querySelector("#profil .f-profil-tete .f-avatar")?.dataset.avatar || null,
+      invitation: !!document.querySelector("#profil .f-profil-invitation") })`);
+    assert.deepEqual(d.erreurs, [], "scénario 11 : erreurs");
+    return { d, r };
+  };
+  const mien = await avecCache({ user_id: MOI, ...ZOE });
+  assert.deepEqual(mien.r, { pseudo: "Zoe_1", avatar: "rose-coeur", invitation: false }, "scénario 11 : profil en cache non affiché");
+  const autre = await avecCache({ user_id: "11111111-1111-4111-8111-111111111111", ...ZOE });
+  assert.equal(autre.r.pseudo, "…", "scénario 11 : profil d'un autre compte affiché");
+  const defaut = await avecCache({ user_id: MOI, ...ZOE, avatar: "violet-facette" });
+  assert.equal(defaut.r.invitation, true, "scénario 11 : pas d'invitation pour l'avatar par défaut");
+  await defaut.d.cliquer("#profil .f-profil-invitation");
+  assert.equal(await defaut.d.evaluer("document.querySelector('#profil .f-param-titre')?.textContent"), "Modifier mon profil", "scénario 11 : l'invitation n'ouvre pas Modifier");
+  console.log("11 : profil gardé sur l'appareil");
 
   // 7 : captures iPhone (Profil, Paramètres) et PC (Profil)
   await p.evaluer("Profil.ouvrir()");

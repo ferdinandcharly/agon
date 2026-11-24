@@ -35,6 +35,7 @@ const Compte = (() => {
   const CLE_COMPTE = "agon.compte";        // dernier compte connecté sur cet appareil
   const CLE_CLASSEMENT = "agon.classement"; // cache du classement (pseudos des autres) : propre à un compte
   const CLE_NOTIONS = "agon.notions.publiees";   // dernier nombre de notions allumées envoyé au profil
+  const CLE_PROFIL = "agon.profil";        // dernier profil lu (avec son user_id) : affiché dès le démarrage, hors ligne aussi
 
   // Publie le nombre de notions allumées (vu par les amis) s'il a changé ; silencieux en cas d'échec
   async function publierNotions(n) {
@@ -51,7 +52,7 @@ const Compte = (() => {
 
   // Caches propres à un compte (pseudos des autres, amis, dernière visite, notions publiées)
   function oublierCachesDuCompte() {
-    for (const cle of [CLE_CLASSEMENT, "agon.amis", "agon.amis.vu", CLE_NOTIONS])
+    for (const cle of [CLE_CLASSEMENT, "agon.amis", "agon.amis.vu", CLE_NOTIONS, CLE_PROFIL])
       try { localStorage.removeItem(cle); } catch { /* tant pis */ }
     if (typeof Amis !== "undefined") Amis.oublier();   // pastille de l'onglet Amis
   }
@@ -95,7 +96,20 @@ const Compte = (() => {
   function changerProfil(p) {
     const change = JSON.stringify(p) !== JSON.stringify(profil);   // chaque synchro relit le profil : souvent identique
     profil = p;
+    if (p && typeof p === "object" && utilisateur)
+      try { localStorage.setItem(CLE_PROFIL, JSON.stringify({ ...p, user_id: utilisateur.id })); } catch { /* tant pis */ }
     if (change) dispatchEvent(new Event("facettes:profil"));
+  }
+
+  // Pour l'affichage (écran Profil) : le profil lu, sinon le dernier connu de CE compte sur l'appareil, sinon null.
+  // Compte.profil() garde son sens (undefined = pas encore lu) pour le portail, le classement et les amis.
+  function profilAffiche() {
+    if (profil && typeof profil === "object") return profil;
+    if (!utilisateur) return null;
+    try {
+      const { user_id, ...cache } = JSON.parse(localStorage.getItem(CLE_PROFIL)) || {};
+      return user_id === utilisateur.id && typeof cache.pseudo === "string" ? cache : null;
+    } catch { return null; }
   }
 
   async function lireProfil() {
@@ -261,6 +275,7 @@ const Compte = (() => {
         oublierCachesDuCompte();
       }
       try { localStorage.setItem(CLE_COMPTE, utilisateur.id); } catch { /* tant pis */ }
+      if (profilAffiche()) dispatchEvent(new Event("facettes:profil"));   // le profil gardé s'affiche sans attendre la synchro
       setTimeout(synchroniser, 0);
     }
     else dessiner();
@@ -458,6 +473,7 @@ const Compte = (() => {
     publierNotions,
     enregistrerProfil,
     profil: () => profil,
+    profilAffiche,
     lireProfil,
     etat: () => etat,
     deconnecter,

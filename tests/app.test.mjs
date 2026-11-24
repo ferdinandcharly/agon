@@ -119,7 +119,7 @@ try {
   await e.attendreQue("!document.getElementById('lancement')", 8000);
   assert.equal(await e.evaluer("!!document.querySelector('#accueil .f-accueil-titre')"), false, "scénario 7 : phrase perso sur l'accueil");
   assert.match(await e.evaluer("document.querySelector('meta[name=viewport]').content"), /maximum-scale=1/, "scénario 7 : zoom encore permis");
-  const toucher = await e.evaluer(`[".f-lancer-session", ".f-bouton-survie", ".f-menu", ".f-accueil-date"].map((s) => getComputedStyle(document.querySelector(s)).touchAction)`);
+  const toucher = await e.evaluer(`[".f-lancer-session", ".f-bouton-survie", "#nav [data-onglet=profil]", ".f-accueil-date"].map((s) => getComputedStyle(document.querySelector(s)).touchAction)`);
   assert.ok(toucher.every((v) => v === "manipulation"), `scénario 7 : double tap encore actif (${toucher})`);
   await e.evaluer("Profil.ouvrirParametres()");
   await attendre(500);

@@ -1038,7 +1038,6 @@ const ecranProfil = document.getElementById("profil");
 // Les écrans pleins (hors accueil et fil) : un seul visible à la fois
 function cacherEcrans() {
   for (const e of [ecranDiscotheque, ecranClassement, ecranAmis, ecranProfil]) e.classList.add("cache");
-  document.body.classList.remove("profil-ouvert");
 }
 
 function afficherAccueil() {
@@ -1224,8 +1223,6 @@ window.apresSynchro = () => {
   else if (!ecranAmis.classList.contains("cache")) Amis.recharger();
   else if (Profil.estOuvert()) Profil.rafraichir();
 };
-
-document.getElementById("btn-reglages").addEventListener("click", () => Profil.ouvrir());
 
 // Effacer sa progression (Paramètres, après confirmation) : les résultats seulement, pas la collection ni le record.
 // La date de remise voyage avec les réglages : les autres appareils effacent aussi leurs anciens résultats.

@@ -1,4 +1,4 @@
-// Facettes — barre d'onglets du bas : Disco · Accueil · Amis (comme une app).
+// Facettes — barre d'onglets du bas : Disco · Accueil · Amis · Profil (comme une app).
 // Visible sur l'accueil, la discothèque, l'écran Amis et le classement ; cachée dans le fil de cartes.
 // Chargé avant app.js : les écrans qu'elle ouvre (afficherAccueil, Discotheque, Amis) sont lus au clic.
 "use strict";
@@ -11,10 +11,11 @@ const Nav = (() => {
     disco: () => Discotheque.ouvrir(),
     accueil: () => afficherAccueil(),
     amis: () => { if (typeof Amis !== "undefined") Amis.ouvrir(); },
+    profil: () => { if (typeof Profil !== "undefined") Profil.ouvrir(); },
   };
   barre.querySelectorAll("button[data-onglet]").forEach((b) => b.addEventListener("click", () => ouvrir[b.dataset.onglet]()));
 
-  // onglet : "disco" | "accueil" | "amis" | "aucun" (barre sans onglet actif : classement, profil) | null (barre cachée)
+  // onglet : "disco" | "accueil" | "amis" | "profil" | "aucun" (barre sans onglet actif : classement) | null (barre cachée)
   function afficher(onglet) {
     barre.classList.toggle("cache", onglet === null);
     document.body.classList.toggle("avec-nav", onglet !== null);

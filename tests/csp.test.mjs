@@ -34,7 +34,7 @@ try {
     await attendre(800);
     await a.cliquer("#btn-accueil");
     // Profil
-    await a.cliquer("#btn-reglages");
+    await a.cliquer("#nav [data-onglet=profil]");
     await attendre(500);
 
     const sansStyleEnLigne = await a.evaluer(`fetch("index.html").then((r) => r.text()).then((t) => !/class="tuile"[^>]*style=/.test(t))`);

@@ -102,7 +102,7 @@ try {
   assert.equal(await c8.evaluer(`document.activeElement === document.querySelector("#portail input[type=email]")`), true, "scénario 8 : focus perdu");
   // Scénario 9 : depuis le Classement, la mini-avatar ouvre le Profil et cache le classement
   await a.evaluer(`Classement.ouvrir()`);
-  await a.cliquer("#btn-reglages");
+  await a.cliquer("#nav [data-onglet=profil]");
   assert.deepEqual(await a.evaluer(`[document.getElementById("classement").classList.contains("cache"), Profil.estOuvert()]`), [true, true], "scénario 9 : profil non ouvert depuis le classement");
   // Scénario 10 : erreurs réseau reconnues, y compris celle de Safari
   assert.equal(await a.evaluer(`Classement.estErreurReseau({ message: "Load failed" })`), true, "scénario 10 : « Load failed » (Safari)");
