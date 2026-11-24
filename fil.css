@@ -335,7 +335,7 @@ body.fil-ouvert .f-quitter { display: grid; }
 /* ---------- Associer ---------- */
 .f-paires { display: grid; grid-template-columns: 1fr 1.45fr; gap: 10px; align-items: start; }
 .f-paires .f-colonne { display: grid; gap: 10px; }
-.f-paires .f-option { font-size: 15px; padding: 10px 11px; }
+.f-paires .f-option { min-height: 44px; font-size: 15px; padding: 10px 11px; }
 .f-paires .f-gauche { font-family: var(--mono); font-weight: 700; font-size: 14px; }
 /* Paires trouvées : une bande verte par paire, qui se pose au-dessus des boutons restants */
 .f-faites { display: grid; gap: 8px; }
