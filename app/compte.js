@@ -91,10 +91,17 @@ const Compte = (() => {
     }
   }
 
+  // Profil : undefined = pas encore lu, null = pas de profil, sinon { pseudo, avatar, prenom, etablissement, parcours }.
+  // Chaque changement est signalé (mini-avatar de l'en-tête, écran Profil).
+  function changerProfil(p) {
+    profil = p;
+    dispatchEvent(new Event("facettes:profil"));
+  }
+
   async function lireProfil() {
-    const { data, error } = await sb.from("profils").select("pseudo").maybeSingle();
+    const { data, error } = await sb.from("profils").select("pseudo, avatar, prenom, etablissement, parcours").maybeSingle();
     if (error) throw error;
-    profil = data;
+    changerProfil(data);
   }
 
   // ---------- Fusion ----------
@@ -232,7 +239,7 @@ const Compte = (() => {
     const avant = utilisateur?.id;
     utilisateur = session?.user ?? null;
     if (!utilisateur) {
-      profil = undefined;
+      changerProfil(undefined);
       oublierCachesDuCompte();
       changerEtat("deconnecte");
       // portail.js : retour au début (aussi pour une session gardée mais refusée au démarrage)
@@ -240,7 +247,7 @@ const Compte = (() => {
       return;
     }
     if (utilisateur.id !== avant) {
-      profil = undefined;
+      changerProfil(undefined);
       dispatchEvent(new Event("facettes:connexion"));   // portail.js : étape suivante
       // Un autre compte que le précédent sur cet appareil : ni ses parties ni son record ne passent à celui-ci
       let precedent = null;
@@ -286,7 +293,7 @@ const Compte = (() => {
     }
     if (error) throw Object.assign(error, { messageAffiche: messagePseudo(pseudo, error) });
     const premier = !profil;
-    profil = { pseudo };
+    changerProfil({ ...profil, pseudo });
     // Le record de l'appareil n'est publié que s'il appartient à ce compte
     if (premier && recordAMoi && lireRecordSurvie() > 0) publierPartie(lireRecordSurvie());
     await synchroniser();
@@ -305,7 +312,7 @@ const Compte = (() => {
     }
     if (error) throw Object.assign(error, { messageAffiche: messagePseudo(pseudo, error) });
     const premier = !profil;
-    profil = { pseudo };
+    changerProfil({ ...ligne });
     if (premier && recordAMoi && lireRecordSurvie() > 0) publierPartie(lireRecordSurvie());
     await synchroniser();
   }
@@ -367,7 +374,7 @@ const Compte = (() => {
     oublierCachesDuCompte();
     try { localStorage.removeItem(CLE_COMPTE); } catch { /* tant pis */ }
     viderProgressionLocale();
-    profil = undefined;
+    changerProfil(undefined);
     await sb.auth.signOut({ scope: "local" }).catch(() => {});
   }
 
@@ -529,6 +536,8 @@ const Compte = (() => {
     publierNotions,
     enregistrerProfil,
     profil: () => profil,
+    lireProfil,
+    etat: () => etat,
     // Admin = posé en base dans app_metadata (que l'utilisateur ne peut pas modifier) ; à jour avec le jeton
     estAdmin: () => utilisateur?.app_metadata?.admin === true,
     messagePseudo,

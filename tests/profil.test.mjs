@@ -41,6 +41,22 @@ try {
   assert.equal(fusion.x, undefined, "scénario 4 : clé distante invalide gardée");
   console.log("4 : activité de la semaine");
 
+  // 2b : le profil lu contient avatar, prénom, établissement et parcours ; un événement signale chaque changement
+  const ZOE = { pseudo: "Zoe_1", avatar: "rose-coeur", prenom: "Zoé", etablissement: "IUT", parcours: "but-info-1" };
+  const r2 = await a.evaluer(`(async () => {
+    let vus = 0;
+    addEventListener("facettes:profil", () => { vus++; });
+    Compte.client().from = () => ({ select: (cols) => { window.__colonnes = cols;
+      return { maybeSingle: async () => ({ data: ${JSON.stringify(ZOE)}, error: null }) }; } });
+    await Compte.lireProfil();
+    return { profil: Compte.profil(), vus, colonnes: window.__colonnes, etat: Compte.etat() };
+  })()`);
+  assert.deepEqual(r2.profil, ZOE, "scénario 2b : profil incomplet");
+  assert.ok(r2.vus >= 1, "scénario 2b : pas d'événement facettes:profil");
+  assert.match(r2.colonnes, /avatar/, "scénario 2b : colonnes lues");
+  assert.ok(["deconnecte", "synchro", "ok", "hors-ligne", "erreur"].includes(r2.etat), `scénario 2b : état ${r2.etat}`);
+  console.log("2b : profil complet");
+
   for (const x of [a]) {
     assert.deepEqual(x.violationsCsp, [], "violations CSP");
     assert.deepEqual(x.erreurs, [], "erreurs");
