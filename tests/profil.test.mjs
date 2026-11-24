@@ -176,7 +176,23 @@ try {
   assert.deepEqual(await p.evaluer("window.__enregistre"), { pseudo: "Zoe_1", prenom: "Zoéa", etablissement: "IUT", avatar: "rose-coeur", parcours: "but-info-1" }, "scénario 5 : valeurs envoyées");
   console.log("5 : modifier mon profil");
 
-  for (const x of [a, p]) {
+  // 7 : captures iPhone (Profil, Paramètres) et PC (Profil)
+  await p.evaluer("Profil.ouvrir()");
+  await attendre(400);
+  await p.capture("tests/captures/profil-iPhone.png");
+  await p.evaluer("Profil.empiler('parametres')");
+  await attendre(400);
+  await p.capture("tests/captures/parametres-iPhone.png");
+  const pc = await edge.nouvelAppareil({ largeur: 1280, hauteur: 800, mobile: false });
+  await pc.aller(serveur.url);
+  await pc.attendreQue(pret, 8000);
+  await attendre(500);
+  await pc.evaluer("Profil.ouvrir()");
+  await attendre(400);
+  await pc.capture("tests/captures/profil-PC.png");
+  console.log("7 : captures");
+
+  for (const x of [a, p, pc]) {
     assert.deepEqual(x.violationsCsp, [], "violations CSP");
     assert.deepEqual(x.erreurs, [], "erreurs");
   }

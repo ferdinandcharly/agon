@@ -71,7 +71,7 @@ d'un lot qui liste ses `documents` les marque « transformés en cartes ».
 
 ## Classement Survie
 
-Pseudo (Réglages → Compte), parties de Survie publiées (file locale `agon.parties`, envoyée à la synchro),
+Pseudo (Profil → Modifier mon profil), parties de Survie publiées (file locale `agon.parties`, envoyée à la synchro),
 écran « Classement » : « Cette semaine » (depuis lundi, heure de Paris) et « Record ». La Survie tire toujours dans
 toutes les matières pour que les scores se comparent. Base : `profils`, `parties_survie` (lisibles par leur seul
 auteur), `classement()` qui ne renvoie que rang, pseudo et score ; limites anti-abus par trigger.
