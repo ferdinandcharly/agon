@@ -57,7 +57,50 @@ try {
   assert.ok(["deconnecte", "synchro", "ok", "hors-ligne", "erreur"].includes(r2.etat), `scénario 2b : état ${r2.etat}`);
   console.log("2b : profil complet");
 
-  for (const x of [a]) {
+  // 1a et 3 : écran Profil (session simulée hors ligne : profil jamais lu → pseudo « … »)
+  const p = await edge.nouvelAppareil();
+  await p.aller(serveur.url);
+  await p.attendreQue(pret, 8000);
+  await attendre(500);
+  const visible = (sel) => `(() => { const e = document.querySelector(${JSON.stringify(sel)});
+    return !!e && !e.classList.contains("cache") && getComputedStyle(e).display !== "none"; })()`;
+  // Une notion entière réussie → 1 notion allumée
+  await p.evaluer(`(() => {
+    const cartes = donnees.contenus.filter((c) => contenuValide(c));
+    const premiere = cartes.find((c) => c.format !== "fiche");
+    const r = {};
+    for (const c of cartes.filter((c) => c.matiere === premiere.matiere && c.notion === premiere.notion && c.format !== "fiche"))
+      r[c.id] = { vu: 1, ok: 1, ko: 0, derniereOk: true, boite: 2, dernier: new Date().toISOString() };
+    localStorage.setItem("agon.resultats", JSON.stringify(r));
+  })()`);
+  await p.cliquer("#btn-reglages");
+  await attendre(300);
+  assert.equal(await p.evaluer(visible("#profil")), true, "scénario 1a : profil caché");
+  assert.equal(await p.evaluer(visible("#accueil")), false, "scénario 1a : accueil visible");
+  assert.equal(await p.evaluer(visible("#nav")), true, "scénario 1a : barre du bas cachée");
+  assert.equal(await p.evaluer("document.querySelectorAll('#nav [aria-current]').length"), 0, "scénario 1a : un onglet actif");
+  assert.equal(await p.evaluer("document.querySelector('#profil .f-profil-pseudo').textContent"), "…", "scénario 1a : pseudo hors ligne");
+  assert.equal(await p.evaluer("document.querySelector('#profil [data-stat=notions] b').textContent"), "1", "scénario 3 : notions allumées");
+  assert.equal(await p.evaluer("document.querySelectorAll('#profil .f-profil-matiere').length"), 4, "scénario 3 : 4 matières");
+  await p.cliquer("#profil .f-profil-tout");
+  assert.equal(await p.evaluer("document.querySelectorAll('#profil .f-profil-matiere').length"), await p.evaluer("donnees.matieres.length"), "scénario 3 : Tout voir");
+  await p.cliquer("#profil .f-profil-tout");
+  assert.equal(await p.evaluer("document.querySelectorAll('#profil .f-profil-matiere').length"), 4, "scénario 3 : Moins");
+  assert.equal(await p.evaluer("document.querySelectorAll('#profil .f-profil-jour').length"), 7, "scénario 3 : 7 jours");
+  const r3 = await p.evaluer(`(() => {
+    const s = Profil.semaine({ "2026-11-24": 11, "2026-11-23": 4 }, new Date(2026, 10, 24));
+    const m = Profil.matieres([
+      { matiere: { id: "sys", nom: "Systèmes" }, etat: "maitrisee" }, { matiere: { id: "sys", nom: "Systèmes" }, etat: "maitrisee" },
+      { matiere: { id: "sys", nom: "Systèmes" }, etat: "en_cours" }, { matiere: { id: "bd", nom: "BD" }, etat: "maitrisee" }]);
+    return { s, m };
+  })()`);
+  assert.equal(r3.s.length, 7, "scénario 3 : semaine de 7 jours");
+  assert.deepEqual([r3.s[0].lettre, r3.s[0].jour, r3.s[0].nb], ["L", "2026-11-23", 4], "scénario 3 : lundi");
+  assert.deepEqual([r3.s[1].nb, r3.s[1].aujourdhui, r3.s[2].futur], [11, true, true], "scénario 3 : mardi / mercredi");
+  assert.deepEqual(r3.m.map((x) => [x.id, x.faites, x.total]), [["bd", 1, 1], ["sys", 2, 3]], "scénario 3 : matières triées");
+  console.log("1a et 3 : écran Profil");
+
+  for (const x of [a, p]) {
     assert.deepEqual(x.violationsCsp, [], "violations CSP");
     assert.deepEqual(x.erreurs, [], "erreurs");
   }

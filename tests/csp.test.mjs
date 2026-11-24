@@ -33,10 +33,9 @@ try {
     await a.cliquer(".f-ecran[data-matiere='survie'] .f-choix .f-option");
     await attendre(800);
     await a.cliquer("#btn-accueil");
-    // Réglages
+    // Profil
     await a.cliquer("#btn-reglages");
     await attendre(500);
-    await a.cliquer("#btn-fermer-reglages");
 
     const sansStyleEnLigne = await a.evaluer(`fetch("index.html").then((r) => r.text()).then((t) => !/class="tuile"[^>]*style=/.test(t))`);
     assert.equal(sansStyleEnLigne, true, `${nom} : des tuiles du lancement ont encore un attribut style`);

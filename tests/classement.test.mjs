@@ -100,12 +100,10 @@ try {
   await c8.evaluer(`Compte.afficherDans(document.querySelector("#portail .f-portail-compte"))`);
   assert.equal(await c8.evaluer(`document.querySelector("#portail input[type=email]").value`), "en-cours@ex.fr", "scénario 8 : saisie perdue au redessin");
   assert.equal(await c8.evaluer(`document.activeElement === document.querySelector("#portail input[type=email]")`), true, "scénario 8 : focus perdu");
-  // Scénario 9 : fermer les réglages recharge l'écran Classement s'il est affiché
+  // Scénario 9 : depuis le Classement, la mini-avatar ouvre le Profil et cache le classement
   await a.evaluer(`Classement.ouvrir()`);
-  await a.evaluer(`document.querySelector("#classement .f-classement-zone").append(Object.assign(document.createElement("i"), { className: "temoin" }))`);
   await a.cliquer("#btn-reglages");
-  await a.cliquer("#btn-fermer-reglages");
-  assert.equal(await a.evaluer(`!!document.querySelector("#classement .temoin")`), false, "scénario 9 : classement non rechargé");
+  assert.deepEqual(await a.evaluer(`[document.getElementById("classement").classList.contains("cache"), Profil.estOuvert()]`), [true, true], "scénario 9 : profil non ouvert depuis le classement");
   // Scénario 10 : erreurs réseau reconnues, y compris celle de Safari
   assert.equal(await a.evaluer(`Classement.estErreurReseau({ message: "Load failed" })`), true, "scénario 10 : « Load failed » (Safari)");
   assert.equal(await a.evaluer(`Classement.estErreurReseau({ message: "TypeError: Failed to fetch" })`), true, "scénario 10 : Failed to fetch");

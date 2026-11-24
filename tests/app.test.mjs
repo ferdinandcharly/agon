@@ -121,7 +121,7 @@ try {
   assert.match(await e.evaluer("document.querySelector('meta[name=viewport]').content"), /maximum-scale=1/, "scénario 7 : zoom encore permis");
   const toucher = await e.evaluer(`[".f-lancer-session", ".f-bouton-survie", ".f-menu", ".f-accueil-date"].map((s) => getComputedStyle(document.querySelector(s)).touchAction)`);
   assert.ok(toucher.every((v) => v === "manipulation"), `scénario 7 : double tap encore actif (${toucher})`);
-  await e.cliquer("#btn-reglages");
+  await e.evaluer("Profil.ouvrir(); Profil.ouvrirParametres()");
   await attendre(500);
   const r7 = await e.evaluer(`(() => { const d = document.getElementById("reglages");
     return { haut: Math.round(d.getBoundingClientRect().top), titres: [...d.querySelectorAll("h3")].map((h) => h.textContent) }; })()`);

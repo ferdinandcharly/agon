@@ -14,7 +14,7 @@ const Nav = (() => {
   };
   barre.querySelectorAll("button[data-onglet]").forEach((b) => b.addEventListener("click", () => ouvrir[b.dataset.onglet]()));
 
-  // onglet : "disco" | "accueil" | "amis" | "classement" (barre sans onglet actif) | null (barre cachée)
+  // onglet : "disco" | "accueil" | "amis" | "aucun" (barre sans onglet actif : classement, profil) | null (barre cachée)
   function afficher(onglet) {
     barre.classList.toggle("cache", onglet === null);
     document.body.classList.toggle("avec-nav", onglet !== null);
