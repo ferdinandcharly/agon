@@ -140,6 +140,7 @@ const Compte = (() => {
       : { vinyles: local.collection.vinyles, disquesOr: local.collection.disquesOr };
     collection.dernierJour = [local.collection.dernierJour, cd.dernierJour]
       .filter((j) => typeof j === "string").sort().pop() || null;
+    collection.jours = fusionnerJours(local.collection.jours, cd.jours);
 
     return {
       resultats: fusionnerResultats(local.resultats, distant.resultats, remise),
@@ -532,6 +533,7 @@ const Compte = (() => {
     estAdmin: () => utilisateur?.app_metadata?.admin === true,
     messagePseudo,
     fileDe,
+    fusionner,
     fusionReglages,
     client: () => sb,
     utilisateur: () => utilisateur,

@@ -91,7 +91,11 @@ function enregistrerResultat(id, reussi) {
   r.dernier = new Date().toISOString();
   resultats[id] = r;
   try { localStorage.setItem(CLE_RESULTATS, JSON.stringify(resultats)); } catch { /* tant pis */ }
-  changementLocal();
+  // Une réponse de plus aujourd'hui (pour « Cette semaine » du profil) ; ecrireCollection programme la synchro
+  const collection = lireCollection();
+  const jour = jourLocal();
+  collection.jours[jour] = Math.min(5000, (collection.jours[jour] || 0) + 1);
+  ecrireCollection(collection);
 }
 
 // Réglages : on stocke ce qui est EXCLU, pour qu'une nouvelle matière ou un nouveau jeu soit actif par défaut.
@@ -135,19 +139,42 @@ let reglages = lireReglages();
 // ---------- Tube du jour et collection de vinyles ----------
 // Chaque jour, une question en tête du fil ; une seule chance. Réussie = un vinyle ; 7 vinyles = un disque d'or.
 // Rien ne se perd si on saute un jour : pas de série à casser, la collection ne fait que grandir.
-function jourDuJour() {
-  const d = new Date();
+// Date locale (pas UTC) au format AAAA-MM-JJ : la journée de la personne, pas celle de Greenwich
+function jourLocal(d = new Date()) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
+function jourDuJour() { return jourLocal(); }
+
+// Activité : nombre de réponses par jour, sur les 14 derniers jours (aujourd'hui compris).
+// Vient aussi d'autres appareils : on ne garde que des dates strictes et des entiers raisonnables.
+const JOURS_GARDES = 14;
+function normaliserJours(j, aujourdhui = jourLocal()) {
+  const propre = {};
+  if (!j || typeof j !== "object" || Array.isArray(j)) return propre;
+  const [a, m, d] = aujourdhui.split("-").map(Number);
+  const limite = jourLocal(new Date(a, m - 1, d - (JOURS_GARDES - 1)));
+  for (const [jour, n] of Object.entries(j)) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(jour) || jour < limite || jour > aujourdhui) continue;
+    if (Number.isInteger(n) && n >= 0 && n <= 5000) propre[jour] = n;
+  }
+  return propre;
+}
+// Deux appareils : pour chaque jour, le plus grand compte gagne (aucun ne voit les réponses de l'autre)
+function fusionnerJours(a, b, aujourdhui = jourLocal()) {
+  const fusion = { ...normaliserJours(a, aujourdhui) };
+  for (const [jour, n] of Object.entries(normaliserJours(b, aujourdhui))) fusion[jour] = Math.max(fusion[jour] || 0, n);
+  return fusion;
+}
+
 function lireCollection() {
   try {
     const v = JSON.parse(localStorage.getItem(CLE_COLLECTION));
     if (v && typeof v === "object") {
       return { vinyles: Number(v.vinyles) || 0, disquesOr: Number(v.disquesOr) || 0,
-               dernierJour: typeof v.dernierJour === "string" ? v.dernierJour : null };
+               dernierJour: typeof v.dernierJour === "string" ? v.dernierJour : null, jours: normaliserJours(v.jours) };
     }
   } catch { /* collection vide */ }
-  return { vinyles: 0, disquesOr: 0, dernierJour: null };
+  return { vinyles: 0, disquesOr: 0, dernierJour: null, jours: {} };
 }
 function ecrireCollection(c) {
   try { localStorage.setItem(CLE_COLLECTION, JSON.stringify(c)); } catch { /* tant pis */ }
