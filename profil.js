@@ -5,15 +5,13 @@
 
 const Profil = (() => {
   const ecran = document.getElementById("profil");
-  const boutonEntete = document.getElementById("btn-reglages");
   const LETTRES = ["L", "M", "M", "J", "V", "S", "D"];
   const MATIERES_VISIBLES = 4;
   let toutVoir = false;
 
   const estOuvert = () => !ecran.classList.contains("cache");
   const profilCharge = () => {
-    const p = typeof Compte !== "undefined" ? Compte.profil() : undefined;
-    return p && typeof p === "object" ? p : null;
+    return typeof Compte !== "undefined" ? Compte.profilAffiche() : null;
   };
 
   // Semaine en cours, lundi → dimanche : nombre de réponses par jour (jours = collection.jours)
@@ -41,6 +39,20 @@ const Profil = (() => {
   }
 
   const roue = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>';
+
+  // Sans profil connu : un rond neutre avec l'initiale de l'e-mail (pas le motif par défaut, qui ressemble au logo)
+  function initiale(taille) {
+    const lettre = (Compte.utilisateur()?.email || "?").trim().charAt(0).toUpperCase() || "?";
+    const a = el("span", { class: "f-avatar f-avatar-initiale", "aria-hidden": "true" }, lettre);
+    a.style.setProperty("--taille-avatar", `${taille}px`);
+    return a;
+  }
+  // Avatar encore celui mis par défaut en base : on invite à en choisir un
+  function invitation() {
+    const b = el("button", { class: "f-profil-invitation", type: "button" }, "Choisis ton avatar : celui-ci est celui par défaut.");
+    b.addEventListener("click", () => empiler("modifier"));
+    return b;
+  }
 
   function stat(cle, valeur, libelle) {
     return el("div", { class: "f-profil-stat", "data-stat": cle }, el("b", {}, String(valeur)), el("span", {}, libelle));
@@ -94,10 +106,11 @@ const Profil = (() => {
     return el("div", { class: "f-accueil-col f-profil-col" },
       roueBtn,
       el("div", { class: "f-profil-tete" },
-        Portail.avatar(p?.avatar, 104),
+        p ? Portail.avatar(p.avatar, 104) : initiale(104),
         el("h1", { class: "f-profil-pseudo" }, p?.pseudo || "…"),
         ligne ? el("p", { class: "f-profil-ligne" }, ligne) : null,
-        modifier),
+        modifier,
+        p?.avatar === "violet-facette" ? invitation() : null),
       el("div", { class: "f-profil-stats" },
         stat("vinyles", lireCollection().vinyles, "vinyles"),
         stat("record", lireRecordSurvie(), "record"),
@@ -221,7 +234,7 @@ const Profil = (() => {
     if (!estOuvert()) return;   // ex. un enregistrement fini après qu'on est parti ailleurs : on ne reprend pas la main
     const haut = pile[pile.length - 1];
     ecran.dataset.vue = haut;
-    Nav.afficher(haut === "profil" ? "aucun" : null);
+    Nav.afficher(haut === "profil" ? "profil" : null);
     ecran.replaceChildren(RENDUS[haut]());
     ecran.scrollTo({ top: 0 });
   }
@@ -239,7 +252,6 @@ const Profil = (() => {
     toutVoir = false;
     pile = ["profil"];
     ecran.classList.remove("cache");
-    document.body.classList.add("profil-ouvert");
     rendre();
   }
   function ouvrirParametres() {
@@ -274,13 +286,7 @@ const Profil = (() => {
     if (valeur) valeur.textContent = texteEtat();
   });
 
-  // Mini-avatar de l'en-tête : celui du compte, ou un rond neutre tant que le profil n'est pas lu
-  function majEntete() {
-    const p = profilCharge();
-    boutonEntete.replaceChildren(p ? Portail.avatar(p.avatar, 36) : el("span", { class: "f-avatar-vide", "aria-hidden": "true" }));
-  }
-  addEventListener("facettes:profil", () => { majEntete(); rafraichir(); });
-  majEntete();
+  addEventListener("facettes:profil", rafraichir);
 
   return { ouvrir, rafraichir, estOuvert, ouvrirParametres, empiler, depiler, semaine, matieres };
 })();
