@@ -355,7 +355,8 @@ const Compte = (() => {
     await sb.auth.signOut({ scope: "local" });
   }
 
-  // Supprime le compte et sa progression en ligne (RGPD) ; ce qui est sur cet appareil reste
+  // Supprime le compte et sa progression, en ligne (RGPD) et sur cet appareil : sinon le prochain compte
+  // (même recréé avec la même adresse) la reprendrait, l'appareil paraissant jamais connecté
   async function supprimer() {
     clearTimeout(minuteur);
     minuteur = null;
@@ -364,6 +365,7 @@ const Compte = (() => {
     ecrireFile(lireFile().filter((p) => p.user_id !== utilisateur?.id));   // les parties du compte supprimé
     oublierCachesDuCompte();
     try { localStorage.removeItem(CLE_COMPTE); } catch { /* tant pis */ }
+    viderProgressionLocale();
     profil = undefined;
     await sb.auth.signOut({ scope: "local" }).catch(() => {});
   }
@@ -460,7 +462,7 @@ const Compte = (() => {
         el("button", { class: "f-option f-donnees-ouvrir", type: "button",
           onclick: () => { if (typeof Donnees !== "undefined") Donnees.ouvrir(); } }, "Tes données et export"),
         el("p", { class: "f-discret f-compte-note" },
-          "Supprimer le compte efface ta progression en ligne. Celle de cet appareil reste."),
+          "Supprimer le compte efface ta progression, en ligne et sur cet appareil."),
         supprimerBtn);
       return;
     }
