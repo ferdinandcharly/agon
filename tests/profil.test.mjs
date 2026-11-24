@@ -136,6 +136,46 @@ try {
   assert.equal(await p.evaluer("document.getElementById('reglages')"), null, "scénario 1b : l'ancienne boîte Réglages existe encore");
   console.log("1b, 2 et 6 : Paramètres");
 
+  // 5 : modifier son profil (profil lu simulé ; enregistrement simulé)
+  await p.evaluer(`(async () => {
+    Compte.client().from = () => ({ select: () => ({ maybeSingle: async () => ({ data: ${JSON.stringify(ZOE)}, error: null }) }) });
+    await Compte.lireProfil();
+    Profil.ouvrir();
+  })()`);
+  assert.equal(await p.evaluer("document.querySelector('#profil .f-profil-pseudo').textContent"), "Zoe_1", "scénario 5 : profil non affiché");
+  assert.equal(await p.evaluer("document.querySelector('#profil .f-profil-ligne').textContent"), "Zoé · IUT · BUT info 1", "scénario 5 : ligne d'identité");
+  await p.cliquer("#profil .f-profil-modifier");
+  assert.equal(await p.evaluer("document.querySelector('#profil .f-param-titre').textContent"), "Modifier mon profil", "scénario 5 : écran non ouvert");
+  const pre = await p.evaluer(`({ pseudo: document.getElementById("profil-pseudo").value, prenom: document.getElementById("profil-prenom").value,
+    etab: document.getElementById("profil-etablissement").value,
+    couleur: document.querySelector('#profil [data-couleur="rose"]').getAttribute("aria-pressed"),
+    symbole: document.querySelector('#profil [data-symbole="coeur"]').getAttribute("aria-pressed") })`);
+  assert.deepEqual(pre, { pseudo: "Zoe_1", prenom: "Zoé", etab: "IUT", couleur: "true", symbole: "true" }, "scénario 5 : champs non préremplis");
+  // Format invalide : erreur sous le pseudo, on reste
+  await p.evaluer(`document.getElementById("profil-pseudo").value = "a b"`);
+  await p.cliquer("#profil .f-param-enregistrer");
+  await attendre(200);
+  assert.notEqual(await p.evaluer(`document.querySelector('#profil [data-champ="pseudo"]').textContent`), "", "scénario 5 : pas d'erreur de format");
+  assert.equal(await p.evaluer("document.querySelector('#profil .f-param-titre').textContent"), "Modifier mon profil", "scénario 5 : écran quitté malgré l'erreur");
+  // Pseudo déjà pris : message sous le champ, profil inchangé
+  await p.evaluer(`Compte.enregistrerProfil = async () => { throw { code: "23505", message: "profils_pseudo_key", messageAffiche: "Déjà pris : essaie un autre pseudo." }; };
+    document.getElementById("profil-pseudo").value = "Pris_1"`);
+  await p.cliquer("#profil .f-param-enregistrer");
+  await attendre(200);
+  assert.match(await p.evaluer(`document.querySelector('#profil [data-champ="pseudo"]').textContent`), /Déjà pris/, "scénario 5 : pseudo pris non signalé");
+  // Annuler : retour au profil, rien de changé
+  await p.cliquer("#profil .f-param-annuler");
+  assert.equal(await p.evaluer("document.querySelector('#profil .f-profil-pseudo').textContent"), "Zoe_1", "scénario 5 : Annuler a changé le profil");
+  // Enregistrer réussi : retour au profil
+  await p.cliquer("#profil .f-profil-modifier");
+  await p.evaluer(`Compte.enregistrerProfil = async (infos) => { window.__enregistre = infos; };
+    document.getElementById("profil-prenom").value = "Zoéa"`);
+  await p.cliquer("#profil .f-param-enregistrer");
+  await attendre(200);
+  assert.equal(await p.evaluer("!!document.querySelector('#profil .f-profil-pseudo')"), true, "scénario 5 : pas de retour au profil");
+  assert.deepEqual(await p.evaluer("window.__enregistre"), { pseudo: "Zoe_1", prenom: "Zoéa", etablissement: "IUT", avatar: "rose-coeur", parcours: "but-info-1" }, "scénario 5 : valeurs envoyées");
+  console.log("5 : modifier mon profil");
+
   for (const x of [a, p]) {
     assert.deepEqual(x.violationsCsp, [], "violations CSP");
     assert.deepEqual(x.erreurs, [], "erreurs");

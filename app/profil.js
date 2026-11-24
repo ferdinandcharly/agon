@@ -246,8 +246,26 @@ const Profil = (() => {
     if (estOuvert()) empiler("parametres");
   }
 
-  // « Modifier mon profil » : écrit en tâche 6
-  function rendreModifier() { return el("div", { class: "f-accueil-col" }, entete("Modifier mon profil")); }
+  // « Modifier mon profil » : le formulaire du portail, prérempli ; le parcours ne se change pas (un seul)
+  function rendreModifier() {
+    const p = profilCharge() || {};
+    const formulaire = Portail.formulaireProfil({ valeurs: p, prefixe: "profil", surValider: async (infos) => {
+      await Compte.enregistrerProfil({ ...infos, parcours: p.parcours || "but-info-1" });
+      depiler();
+    } });
+    const annuler = el("button", { class: "f-param-annuler", type: "button" }, "Annuler");
+    annuler.addEventListener("click", depiler);
+    const enregistrer = el("button", { class: "f-param-enregistrer", type: "button" }, "Enregistrer");
+    enregistrer.addEventListener("click", async () => {
+      enregistrer.disabled = true;
+      try { await formulaire.valider(); } finally { enregistrer.disabled = false; }
+    });
+    return el("div", { class: "f-accueil-col f-param-col f-modifier-col" },
+      el("div", { class: "f-param-haut f-modifier-haut" }, annuler, el("h1", { class: "f-param-titre" }, "Modifier mon profil"), enregistrer),
+      formulaire.element,
+      el("p", { class: "f-param-note" }, "Parcours : BUT informatique · 1re année"),
+      formulaire.message);
+  }
 
   // La ligne « Synchronisation » suit l'état du compte sans redessiner l'écran (confirmations en cours gardées)
   addEventListener("facettes:etat", () => {
