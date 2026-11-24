@@ -697,6 +697,14 @@ button.f-param-ligne { cursor: pointer; }
 .f-param-inter[aria-checked="true"] .f-param-curseur::after { translate: 20px 0; }
 .f-param-inter.secoue { animation: f-secoue .3s; }
 
+.f-modifier-col { gap: 16px; }
+.f-modifier-haut { justify-content: space-between; }
+.f-modifier-haut .f-param-titre { font-size: 20px; font-stretch: 100%; letter-spacing: 0; text-align: center; }
+.f-param-annuler, .f-param-enregistrer { min-height: 44px; padding: 0; border: 0; background: none; font: 600 16px var(--police); cursor: pointer; }
+.f-param-annuler { color: #B9B4D6; }
+.f-param-enregistrer { color: #FFC21A; font-weight: 800; }
+.f-param-enregistrer:disabled { opacity: .5; }
+
 /* ---------- Profil : sobre, sans ombres d'autocollant ---------- */
 /* La mini-avatar de l'en-tête : l'avatar remplit le rond ; masquée sur le profil (la roue prend sa place) */
 .f-menu .f-avatar { width: 100%; height: 100%; border: 0; }
