@@ -226,6 +226,7 @@ const Portail = (() => {
     setTimeout(() => { if (estOuvert() && etape === 2) relancer.classList.remove("cache"); }, 8000);
   });
   addEventListener("facettes:synchro", suiteSelonProfil);
+  addEventListener("facettes:profil", suiteSelonProfil);   // profil lu vide : « Présente-toi » même si la suite de la synchro échoue
   // Déconnexion ou suppression du compte : retour au début
   addEventListener("facettes:deconnexion", () => ouvrir(1));
 

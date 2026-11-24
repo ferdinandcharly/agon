@@ -28,6 +28,7 @@ const Compte = (() => {
   let minuteur = null;
   let enCours = null;
   let aRefaire = false;
+  let suppression = false;   // suppression du compte en cours : aucune synchro ne doit plus rien écrire
   let conteneur = null;      // panneau de connexion (portail), redessiné à chaque changement
   let emailEnAttente = null; // adresse à qui on vient d'envoyer un code
   let profil;               // undefined = pas encore lu, null = pas de pseudo, { pseudo } ; sans pseudo, les parties attendent
@@ -125,7 +126,8 @@ const Compte = (() => {
   }
 
   function fusionnerResultats(a, b, remise) {
-    const tout = { ...a };
+    const valide = (r) => r && typeof r === "object" && !Array.isArray(r);
+    const tout = Object.fromEntries(Object.entries(a && typeof a === "object" ? a : {}).filter(([, r]) => valide(r)));
     for (const [id, r] of Object.entries(b && typeof b === "object" ? b : {})) {
       if (!r || typeof r !== "object") continue;
       if (!tout[id] || (r.dernier || "") > (tout[id].dernier || "")) tout[id] = r;
@@ -202,21 +204,26 @@ const Compte = (() => {
     clearTimeout(minuteur);
     minuteur = null;
     if (enCours) { aRefaire = true; return enCours; }
+    const id = utilisateur.id;
+    // Après chaque attente : le compte a pu changer ou être supprimé entre-temps → on n'écrit plus rien
+    const perimee = () => suppression || utilisateur?.id !== id;
     enCours = (async () => {
       changerEtat("synchro");
       try {
         // Le profil d'abord : un échec ailleurs ne doit pas laisser croire qu'il n'y a pas de pseudo
-        try { await lireProfil(); } catch { /* on réessaiera à la prochaine synchro */ }
+        try { await lireProfil(); } catch (err) { console.warn("[Facettes] lecture du profil :", err); }
         const { data, error } = await sb.from("progression")
           .select("resultats, reglages, collection, survie").maybeSingle();
         if (error) throw error;
+        if (perimee()) return;
         const local = lireLocal();
         const fusion = data ? fusionner(local, data) : local;
         const change = JSON.stringify(fusion) !== JSON.stringify(local);
         if (change) ecrireLocal(fusion);
         const { error: e2 } = await sb.from("progression")
-          .upsert({ user_id: utilisateur.id, ...fusion, maj: new Date().toISOString() });
+          .upsert({ user_id: id, ...fusion, maj: new Date().toISOString() });
         if (e2) throw e2;
+        if (perimee()) return;
         await envoyerParties();
         changerEtat("ok");
         dispatchEvent(new Event("facettes:synchro"));   // amis.js : pastille ; app.js : notions publiées
@@ -363,14 +370,16 @@ const Compte = (() => {
   async function supprimer() {
     clearTimeout(minuteur);
     minuteur = null;
+    suppression = true;   // une synchro en vol verra le drapeau (ou le compte disparu) et n'écrira rien
     const { error } = await sb.rpc("supprimer_mon_compte");
-    if (error) throw error;
+    if (error) { suppression = false; throw error; }
     ecrireFile(lireFile().filter((p) => p.user_id !== utilisateur?.id));   // les parties du compte supprimé
     oublierCachesDuCompte();
     try { localStorage.removeItem(CLE_COMPTE); } catch { /* tant pis */ }
     viderProgressionLocale();
     changerProfil(undefined);
     await sb.auth.signOut({ scope: "local" }).catch(() => {});
+    suppression = false;
   }
 
   // ---------- Panneau de connexion (portail, étape 2) ----------

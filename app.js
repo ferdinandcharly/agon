@@ -74,7 +74,9 @@ function changementLocal() { if (typeof Compte !== "undefined") Compte.programme
 function lireResultats() {
   try {
     const valeur = JSON.parse(localStorage.getItem(CLE_RESULTATS));
-    return valeur && typeof valeur === "object" && !Array.isArray(valeur) ? valeur : {};
+    if (!valeur || typeof valeur !== "object" || Array.isArray(valeur)) return {};
+    // Une entrée abîmée (null, nombre…) est ignorée : elle bloquerait la synchro
+    return Object.fromEntries(Object.entries(valeur).filter(([, r]) => r && typeof r === "object" && !Array.isArray(r)));
   } catch { return {}; }
 }
 function enregistrerResultat(id, reussi) {
