@@ -8,6 +8,7 @@ const Profil = (() => {
   const LETTRES = ["L", "M", "M", "J", "V", "S", "D"];
   const MATIERES_VISIBLES = 4;
   let toutVoir = false;
+  let messageOk = false;   // « Profil mis à jour » au prochain affichage du profil
 
   const estOuvert = () => !ecran.classList.contains("cache");
   const profilCharge = () => {
@@ -103,7 +104,7 @@ const Profil = (() => {
     modifier.disabled = !p;
     modifier.addEventListener("click", () => empiler("modifier"));
     const ligne = [p?.prenom, p?.etablissement, p ? "BUT info 1" : null].filter(Boolean).join(" · ");
-    return el("div", { class: "f-accueil-col f-profil-col" },
+    const col = el("div", { class: "f-accueil-col f-profil-col" },
       roueBtn,
       el("div", { class: "f-profil-tete" },
         p ? Portail.avatar(p.avatar, 104) : initiale(104),
@@ -117,6 +118,13 @@ const Profil = (() => {
         stat("notions", allumees, "notions")),
       blocSemaine(),
       blocMatieres(matieres(notions)));
+    if (messageOk) {
+      messageOk = false;
+      const ok = el("p", { class: "f-profil-ok", role: "status" }, "Profil mis à jour");
+      col.querySelector(".f-profil-tete").append(ok);
+      setTimeout(() => ok.remove(), 3000);
+    }
+    return col;
   }
 
   // ---------- Paramètres : une liste sobre, groupée ----------
@@ -264,20 +272,22 @@ const Profil = (() => {
     const p = profilCharge() || {};
     const formulaire = Portail.formulaireProfil({ valeurs: p, prefixe: "profil", surValider: async (infos) => {
       await Compte.enregistrerProfil({ ...infos, parcours: p.parcours || "but-info-1" });
+      messageOk = true;
       depiler();
     } });
-    const annuler = el("button", { class: "f-param-annuler", type: "button" }, "Annuler");
-    annuler.addEventListener("click", depiler);
-    const enregistrer = el("button", { class: "f-param-enregistrer", type: "button" }, "Enregistrer");
+    // Gros bouton sous le pouce, comme « C'est parti » du portail ; l'erreur s'affiche juste au-dessus
+    const enregistrer = el("button", { class: "f-lancer-session f-modifier-enregistrer", type: "button" },
+      el("span", { class: "f-lancer-texte" }, el("b", {}, "Enregistrer")));
     enregistrer.addEventListener("click", async () => {
-      enregistrer.disabled = true;
+      enregistrer.disabled = true;   // un double appui n'envoie qu'une fois
       try { await formulaire.valider(); } finally { enregistrer.disabled = false; }
     });
     return el("div", { class: "f-accueil-col f-param-col f-modifier-col" },
-      el("div", { class: "f-param-haut f-modifier-haut" }, annuler, el("h1", { class: "f-param-titre" }, "Modifier mon profil"), enregistrer),
+      entete("Modifier mon profil"),
       formulaire.element,
       el("p", { class: "f-param-note" }, "Parcours : BUT informatique · 1re année"),
-      formulaire.message);
+      formulaire.message,
+      enregistrer);
   }
 
   // La ligne « Synchronisation » suit l'état du compte sans redessiner l'écran (confirmations en cours gardées)

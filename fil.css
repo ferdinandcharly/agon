@@ -698,12 +698,11 @@ button.f-param-ligne { cursor: pointer; }
 .f-param-inter.secoue { animation: f-secoue .3s; }
 
 .f-modifier-col { gap: 16px; }
-.f-modifier-haut { justify-content: space-between; }
-.f-modifier-haut .f-param-titre { font-size: 20px; font-stretch: 100%; letter-spacing: 0; text-align: center; }
-.f-param-annuler, .f-param-enregistrer { min-height: 44px; padding: 0; border: 0; background: none; font: 600 16px var(--police); cursor: pointer; }
-.f-param-annuler { color: #B9B4D6; }
-.f-param-enregistrer { color: #FFC21A; font-weight: 800; }
-.f-param-enregistrer:disabled { opacity: .5; }
+.f-modifier-enregistrer { position: sticky; bottom: max(16px, env(safe-area-inset-bottom)); justify-content: center; margin-top: 4px; font-size: 18px; }
+.f-modifier-col .f-param-note { margin-inline: 0; }
+.f-modifier-col .f-portail-erreur:empty { min-height: 0; }
+.f-modifier-enregistrer:disabled { opacity: .6; }
+.f-profil-ok { color: #B9F6CA; font-weight: 700; }
 
 /* ---------- Profil : sobre, sans ombres d'autocollant ---------- */
 .f-profil-col { gap: 20px; }
@@ -945,15 +944,16 @@ body.portail-ouvert .f-accueil:not(#portail), body.portail-ouvert .f-maj { displ
   padding: 11px 12px; border: var(--trait); border-radius: 12px; background: var(--papier); color: var(--encre); font: 600 16px var(--police);
 }
 .f-portail-erreur { min-height: 1em; color: #FF8FA8; font-weight: 600; }
-.f-portail-avatar { display: flex; gap: 14px; align-items: center; }
+/* Aperçu au-dessus, choix en dessous : des pastilles de 44 px tiennent en largeur */
+.f-portail-avatar { display: grid; justify-items: center; gap: 12px; }
 .f-portail-avatar > .f-portail-apercu .f-avatar { box-shadow: 3px 3px 0 #FFFFFF; }
 .f-portail-choix { display: grid; gap: 8px; min-width: 0; }
-.f-portail-couleurs, .f-portail-symboles { display: flex; flex-wrap: wrap; gap: 6px; }
+.f-portail-couleurs, .f-portail-symboles { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }   /* 7 × 44 px + 6 × 6 px tiennent sur 354 px */
 .f-portail-couleur {
-  width: 30px; height: 30px; padding: 0; border: 2px solid var(--encre); border-radius: 50%; background: var(--avatar); cursor: pointer;
+  width: 44px; height: 44px; padding: 0; border: 2px solid var(--encre); border-radius: 50%; background: var(--avatar); cursor: pointer;
 }
 .f-portail-symbole {
-  display: grid; place-items: center; width: 34px; height: 34px; padding: 0; border: 2px solid #3A3260; border-radius: 10px;
+  display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 2px solid #3A3260; border-radius: 10px;
   background: none; color: #FFFFFF; cursor: pointer;
 }
 .f-portail-symbole svg { width: 20px; height: 20px; }
