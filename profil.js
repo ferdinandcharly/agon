@@ -218,6 +218,7 @@ const Profil = (() => {
     modifier: () => rendreModifier(),
   };
   function rendre() {
+    if (!estOuvert()) return;   // ex. un enregistrement fini après qu'on est parti ailleurs : on ne reprend pas la main
     const haut = pile[pile.length - 1];
     ecran.dataset.vue = haut;
     Nav.afficher(haut === "profil" ? "aucun" : null);
