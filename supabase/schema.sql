@@ -58,7 +58,7 @@ grant execute on function public.supprimer_mon_compte() to authenticated;
 -- (tâche « purge-comptes-inactifs »). Schéma private non exposé, exécution révoquée pour tous les rôles API.
 
 -- Classement Survie (migration « classement », détail dans migrations/2026-11-20-classement.sql) :
--- profils (pseudo unique sans casse, seule colonne modifiable) et parties_survie (id fourni par l'appli,
+-- profils (pseudo unique sans casse ; modifiables : pseudo, puis avatar, prénom, établissement, parcours depuis « portail ») et parties_survie (id fourni par l'appli,
 -- score 0-300, parcours), lisibles et modifiables par leur seul auteur ; trigger private.verifier_partie
 -- (date plausible, 5 s entre deux parties, 300 par 24 h) ; public.classement(periode, p_parcours) en
 -- security definer : top 50 + la ligne de l'appelant, sans aucune date ni identifiant.

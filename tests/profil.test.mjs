@@ -323,6 +323,40 @@ try {
   assert.deepEqual(q.erreurs, [], "scénario 15 : erreurs");
   console.log("15 : bouton ✕, abandon et pause de la Survie");
 
+  // 16 (bilan) : finitions — cibles de 44 px, en-tête opaque hors du fil, portail étape 2
+  const mesure = (d, sel) => d.evaluer(`(() => { const e = document.querySelector(${JSON.stringify(sel)}); if (!e) return null;
+    const r = e.getBoundingClientRect(); return Math.round(Math.min(r.width, r.height)); })()`);
+  const fond = () => q.evaluer("getComputedStyle(document.querySelector('.f-entete')).backgroundColor");
+  assert.notEqual(await fond(), "rgba(0, 0, 0, 0)", "scénario 16 : en-tête transparent sur l'accueil");
+  await q.evaluer("montrerFil('session')");
+  assert.equal(await fond(), "rgba(0, 0, 0, 0)", "scénario 16 : en-tête opaque dans le fil (cache les cartes)");
+  await q.evaluer("afficherAccueil(); Discotheque.ouvrir()");
+  await attendre(400);
+  const petits = {};
+  for (const sel of ["#discotheque .f-piste-jouer", "#discotheque .f-case"]) petits[sel] = await mesure(q, sel);
+  await q.evaluer("Classement.ouvrir()");
+  await attendre(300);
+  petits.onglet = await mesure(q, "#classement .f-classement-onglet");
+  await q.evaluer("Donnees.ouvrir()");
+  await attendre(600);   // la boîte s'ouvre avec une animation (léger zoom)
+  petits.fermer = await mesure(q, "#donnees .f-fermer");
+  await q.evaluer("document.getElementById('donnees').close()");
+  const sansCompte = await edge.nouvelAppareil({ connecte: false });
+  await sansCompte.aller(serveur.url);
+  await sansCompte.attendreQue("!document.getElementById('lancement') && !!document.querySelector('#portail .f-portail-continuer')", 8000);
+  await sansCompte.cliquer("#portail .f-portail-continuer");
+  await sansCompte.attendreQue("!!document.querySelector('#portail input[type=email]')", 5000);
+  petits.retour = await mesure(sansCompte, "#portail .f-portail-retour");
+  petits.tesDonnees = await mesure(sansCompte, "#portail .f-compte .f-lien");
+  for (const [cle, v] of Object.entries(petits)) assert.ok(v !== null && v >= 44, `scénario 16 : cible ${cle} = ${v} px`);
+  const etape2 = await sansCompte.evaluer(`({ titre: document.querySelector("#portail h1").textContent,
+    motDePasse: (document.getElementById("portail").innerText.match(/Pas de mot de passe/g) || []).length,
+    champ: Math.round(document.querySelector("#portail input[type=email]").getBoundingClientRect().width) })`);
+  assert.equal(etape2.titre, "Connecte-toi ou crée ton compte", "scénario 16 : titre de l'étape 2");
+  assert.equal(etape2.motDePasse, 1, "scénario 16 : « Pas de mot de passe » répété");
+  assert.ok(etape2.champ >= 300, `scénario 16 : champ e-mail écrasé (${etape2.champ} px)`);
+  console.log("16 : finitions");
+
   // 7 : captures iPhone (Profil, Paramètres) et PC (Profil)
   await p.evaluer("Profil.ouvrir()");
   await attendre(400);
@@ -337,6 +371,7 @@ try {
   await pc.evaluer("Profil.ouvrir()");
   await attendre(400);
   await pc.capture("tests/captures/profil-PC.png");
+  assert.ok(await pc.evaluer("document.getElementById('nav').getBoundingClientRect().width") <= 560, "scénario 16 : barre du bas étalée sur PC");
   console.log("7 : captures");
 
   for (const x of [a, p, pc]) {
