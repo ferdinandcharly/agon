@@ -163,6 +163,26 @@ try {
   assert.deepEqual([jamais.res, jamais.vinyles], [1, 5], "scénario 14 : un appareil jamais connecté perd sa progression");
   console.log("14 : progression d'un autre compte non reprise");
 
+  // 15 : supprimer le compte vide aussi la progression de l'appareil (sinon le compte recréé la reprend)
+  const s = await edge.nouvelAppareil();
+  await s.avantPage(`if (!sessionStorage.getItem("posee")) { sessionStorage.setItem("posee", "1");
+    localStorage.setItem("agon.resultats", ${RES}); localStorage.setItem("agon.collection", ${COL}); }`);
+  await s.aller(serveur.url);
+  await s.attendreQue("!document.getElementById('lancement') && typeof donnees !== 'undefined' && !!donnees", 8000);
+  await attendre(800);
+  await s.evaluer(`(() => { Compte.client().rpc = async () => ({ error: null });   // pas de vrai Supabase en test
+    const zone = document.createElement("div"); zone.id = "zone-test"; document.body.append(zone); Compte.afficherDans(zone); })()`);
+  await s.attendreQue("[...document.querySelectorAll('#zone-test button')].some((b) => /Supprimer mon compte/.test(b.textContent))", 5000);
+  const cliquerSupprimer = `[...document.querySelectorAll('#zone-test button')].find((b) => /supprimer/i.test(b.textContent)).click()`;
+  await s.evaluer(cliquerSupprimer);
+  await s.evaluer(cliquerSupprimer);   // confirmation
+  await s.attendreQue("!Compte.utilisateur()", 8000);
+  await attendre(300);
+  const apres = await s.evaluer(`({ res: Object.keys(lireResultats()).length, vinyles: lireCollection().vinyles })`);
+  assert.deepEqual([apres.res, apres.vinyles], [0, 0], `scénario 15 : la progression du compte supprimé reste sur l'appareil (${JSON.stringify(apres)})`);
+  assert.deepEqual(s.erreurs, [], "scénario 15 : erreurs");
+  console.log("15 : suppression du compte → progression de l'appareil effacée");
+
   for (const x of [a, b, c]) {
     assert.deepEqual(x.violationsCsp, [], "violations CSP");
     assert.deepEqual(x.erreurs, [], "erreurs");
