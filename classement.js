@@ -121,7 +121,7 @@ const Classement = (() => {
       onglets,
       el("div", { class: "f-classement-zone", role: "tabpanel", "aria-live": "polite" })));
     ecran.classList.remove("cache");
-    Nav.afficher("classement");
+    Nav.afficher("aucun");
     ecran.scrollTo({ top: 0 });
     charger();
   }

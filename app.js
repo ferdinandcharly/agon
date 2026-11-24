@@ -1034,15 +1034,19 @@ const COULEUR_NUIT = "#16112B";
 const ecranDiscotheque = document.getElementById("discotheque");
 const ecranClassement = document.getElementById("classement");
 const ecranAmis = document.getElementById("amis");
+const ecranProfil = document.getElementById("profil");
+// Les écrans pleins (hors accueil et fil) : un seul visible à la fois
+function cacherEcrans() {
+  for (const e of [ecranDiscotheque, ecranClassement, ecranAmis, ecranProfil]) e.classList.add("cache");
+  document.body.classList.remove("profil-ouvert");
+}
 
 function afficherAccueil() {
   if (fil.classList.contains("verrouille")) return;   // pas de fuite pendant une Prise d'otage
   if (typeof Portail !== "undefined" && Portail.estOuvert()) return;   // compte obligatoire : rien derrière le portail
   observateurEcrans.disconnect();
   fil.classList.add("cache");
-  ecranDiscotheque.classList.add("cache");
-  ecranClassement.classList.add("cache");
-  ecranAmis.classList.add("cache");
+  cacherEcrans();
   accueil.classList.remove("cache");
   Nav.afficher("accueil");
   zoneScore.classList.add("cache");
@@ -1057,9 +1061,7 @@ function montrerFil(mode, cible = null) {
   modeFil = mode;
   cibleFil = cible;
   accueil.classList.add("cache");
-  ecranDiscotheque.classList.add("cache");
-  ecranClassement.classList.add("cache");
-  ecranAmis.classList.add("cache");
+  cacherEcrans();
   Nav.afficher(null);
   fil.classList.remove("cache");
   construireFil();
@@ -1259,6 +1261,7 @@ window.apresSynchro = () => {
   else if (!accueil.classList.contains("cache")) remplirAccueil();
   else if (!ecranDiscotheque.classList.contains("cache")) Discotheque.rafraichir();
   else if (!ecranAmis.classList.contains("cache")) Amis.recharger();
+  else if (Profil.estOuvert()) Profil.rafraichir();
 };
 
 function ouvrirReglages() {
@@ -1275,9 +1278,10 @@ dialogue.addEventListener("close", () => {
   else if (!ecranDiscotheque.classList.contains("cache")) Discotheque.rafraichir();
   else if (!ecranClassement.classList.contains("cache")) Classement.recharger();
   else if (!ecranAmis.classList.contains("cache")) Amis.recharger();
+  else if (Profil.estOuvert()) Profil.rafraichir();
   else if (reglagesModifies) construireFil();
 });
-document.getElementById("btn-reglages").addEventListener("click", ouvrirReglages);
+document.getElementById("btn-reglages").addEventListener("click", () => Profil.ouvrir());
 document.getElementById("btn-fermer-reglages").addEventListener("click", () => dialogue.close());
 // Toucher le fond grisé autour du panneau le ferme aussi
 dialogue.addEventListener("click", (e) => { if (e.target === dialogue) dialogue.close(); });
