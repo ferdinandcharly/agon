@@ -1048,7 +1048,6 @@ function carteRetourMenu() {
 
 // ---------- Accueil (mosaïque) ----------
 const accueil = document.getElementById("accueil");
-const COULEUR_NUIT = "#16112B";
 
 const ecranDiscotheque = document.getElementById("discotheque");
 const ecranClassement = document.getElementById("classement");
@@ -1057,6 +1056,7 @@ const ecranProfil = document.getElementById("profil");
 // Les écrans pleins (hors accueil et fil) : un seul visible à la fois
 function cacherEcrans() {
   for (const e of [ecranDiscotheque, ecranClassement, ecranAmis, ecranProfil]) e.classList.add("cache");
+  document.body.classList.remove("vue-profil");
 }
 
 function afficherAccueil() {
@@ -1069,8 +1069,8 @@ function afficherAccueil() {
   accueil.classList.remove("cache");
   Nav.afficher("accueil");
   zoneScore.classList.add("cache");
-  metaTheme.setAttribute("content", COULEUR_NUIT);
-  document.documentElement.style.setProperty("--fond-actif", COULEUR_NUIT);
+  metaTheme.setAttribute("content", Apparence.fondEcrans());
+  document.documentElement.style.setProperty("--fond-actif", Apparence.fondEcrans());
   remplirAccueil();
   accueil.scrollTo({ top: 0 });
 }
