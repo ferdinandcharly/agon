@@ -116,6 +116,25 @@ try {
   assert.deepEqual(clairAuto, ["clair", "clair", "#FAF8F4"], "scénario 4 : Auto en système clair");
   console.log("4 : thème effectif et contraste");
 
+  // 5 : taille de l'affichage — zoom appliqué, rien ne déborde à 375 px en « Très grande »
+  const z = await ouvrir({ matieresExclues: [], formatsExclus: [], maj: "2026-11-25T08:00:00Z", apparence: { theme: "sombre", taille: "tres-grande" } },
+    { largeur: 375, hauteur: 667 });
+  assert.equal(await z.evaluer("getComputedStyle(document.body).zoom"), "1.25", "scénario 5 : zoom non appliqué");
+  for (const [nom, js] of Object.entries({ accueil: "afficherAccueil()", profil: "Profil.ouvrir()", parametres: "Profil.ouvrirParametres()",
+    discotheque: "Discotheque.ouvrir()", session: "montrerFil('session')" })) {
+    await z.evaluer(js);
+    await attendre(500);
+    const r = await z.evaluer(`(() => { const ecran = [...document.querySelectorAll(".f-accueil:not(.cache), #fil:not(.cache)")][0];
+      const nav = document.getElementById("nav").getBoundingClientRect();
+      return { deborde: Math.max(document.documentElement.scrollWidth, ecran ? ecran.scrollWidth * 1.25 : 0) > innerWidth + 1,
+        nav: getComputedStyle(document.getElementById("nav")).display === "none" || (nav.right <= innerWidth + 1 && nav.bottom <= innerHeight + 1) }; })()`);
+    assert.deepEqual(r, { deborde: false, nav: true }, `scénario 5 : ${nom} déborde en très grande taille`);
+  }
+  await z.evaluer("Profil.ouvrirParametres()");
+  await z.cliquer('#profil .f-segment button[data-valeur="normale"]');
+  assert.equal(await z.evaluer("getComputedStyle(document.body).zoom"), "1", "scénario 5 : retour à la taille normale");
+  console.log("5 : taille de l'affichage");
+
   for (const x of appareils) {
     assert.deepEqual(x.violationsCsp, [], "violations CSP");
     assert.deepEqual(x.erreurs, [], "erreurs");

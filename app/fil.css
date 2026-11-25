@@ -1046,3 +1046,7 @@ body.portail-ouvert .f-accueil:not(#portail), body.portail-ouvert .f-maj { displ
 
 /* Liens du panneau de connexion (« Tes données », « Changer d'adresse ») : cibles de 44 px */
 .f-compte .f-lien { min-height: 44px; }
+
+/* Taille de l'affichage (Paramètres › Apparence) : tout grandit ensemble, texte et cibles (les tailles sont en px) */
+:root[data-taille="grande"] body { zoom: 1.12; }
+:root[data-taille="tres-grande"] body { zoom: 1.25; }
