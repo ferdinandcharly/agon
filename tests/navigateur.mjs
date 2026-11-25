@@ -118,6 +118,7 @@ export async function lancerEdge() {
       },
       async encoche(haut, bas) { await cdp("Emulation.setSafeAreaInsetsOverride", { insets: { top: haut, bottom: bas, left: 0, right: 0 } }, sessionId); },   // marges d'un vrai iPhone
       async avantPage(source) { await cdp("Page.addScriptToEvaluateOnNewDocument", { source }, sessionId); },   // avant les scripts de la page
+      async media(theme) { await cdp("Emulation.setEmulatedMedia", { features: [{ name: "prefers-color-scheme", value: theme }] }, sessionId); },   // "light" | "dark"
       async bloquerUrls(motifs) { await cdp("Network.setBlockedURLs", { urls: motifs }, sessionId); },
       async capture(chemin) {
         const { data } = await cdp("Page.captureScreenshot", { format: "png" }, sessionId);

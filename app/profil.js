@@ -39,7 +39,6 @@ const Profil = (() => {
       .map(({ ordre, ...m }) => m);
   }
 
-  const roue = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>';
 
   // Sans profil connu : un rond neutre avec l'initiale de l'e-mail (pas le motif par défaut, qui ressemble au logo)
   function initiale(taille) {
@@ -97,15 +96,11 @@ const Profil = (() => {
     const p = profilCharge();
     const notions = notionsParEtat();
     const allumees = notions.filter((n) => n.etat === "maitrisee").length;
-    const roueBtn = el("button", { class: "f-profil-roue", type: "button", "aria-label": "Paramètres" });
-    roueBtn.innerHTML = roue;
-    roueBtn.addEventListener("click", () => empiler("parametres"));
     const modifier = el("button", { class: "f-profil-modifier", type: "button" }, "Modifier mon profil");
     modifier.disabled = !p;
     modifier.addEventListener("click", () => empiler("modifier"));
     const ligne = [p?.prenom, p?.etablissement, p ? "BUT info 1" : null].filter(Boolean).join(" · ");
     const col = el("div", { class: "f-accueil-col f-profil-col" },
-      roueBtn,
       el("div", { class: "f-profil-tete" },
         p ? Portail.avatar(p.avatar, 104) : initiale(104),
         el("h1", { class: "f-profil-pseudo" }, p?.pseudo || "…"),
@@ -266,6 +261,7 @@ const Profil = (() => {
     if (!estOuvert()) return;   // ex. un enregistrement fini après qu'on est parti ailleurs : on ne reprend pas la main
     const haut = pile[pile.length - 1];
     ecran.dataset.vue = haut;
+    document.body.classList.toggle("vue-profil", haut === "profil");   // roue des Paramètres de l'en-tête
     Nav.afficher(haut === "profil" ? "profil" : null);
     ecran.replaceChildren(RENDUS[haut]());
     ecran.scrollTo({ top: 0 });
@@ -321,6 +317,7 @@ const Profil = (() => {
   });
 
   addEventListener("facettes:profil", rafraichir);
+  document.getElementById("btn-parametres").addEventListener("click", () => { if (estOuvert()) empiler("parametres"); });
 
   return { ouvrir, rafraichir, estOuvert, ouvrirParametres, empiler, depiler, semaine, matieres };
 })();

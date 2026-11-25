@@ -183,7 +183,7 @@ try {
   await attendre(800);
   await s.evaluer(`Compte.client().rpc = async () => ({ error: null })`);   // pas de vrai Supabase en test
   await s.cliquer("#nav [data-onglet=profil]");
-  await s.cliquer("#profil .f-profil-roue");
+  await s.cliquer("#btn-parametres");
   await s.cliquer("#profil [data-action=supprimer]");
   await s.cliquer("#profil [data-action=supprimer]");   // confirmation
   await s.attendreQue("!Compte.utilisateur()", 8000);

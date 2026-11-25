@@ -104,9 +104,17 @@ try {
   assert.deepEqual(r3.m.map((x) => [x.id, x.faites, x.total]), [["bd", 1, 1], ["sys", 2, 3]], "scénario 3 : matières triées");
   console.log("1a et 3 : écran Profil");
 
+  // 1c : la roue est vraiment visible et touchable (rien ne la recouvre), et seulement sur le Profil
+  const sousLeDoigt = `(() => { const b = document.getElementById("btn-parametres"); if (!b) return "absente";
+    const r = b.getBoundingClientRect(); if (!r.width) return "cachée";
+    return document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2)?.closest("#btn-parametres") ? "ok" : "recouverte"; })()`;
+  assert.equal(await p.evaluer(sousLeDoigt), "ok", "scénario 1c : roue des Paramètres invisible ou recouverte");
+  await p.evaluer("afficherAccueil()");
+  assert.equal(await p.evaluer(sousLeDoigt), "cachée", "scénario 1c : roue visible hors du Profil");
+  await p.cliquer("#nav [data-onglet=profil]");
   // 1b : Profil → Paramètres → Matières → retour → retour
   const titre = () => p.evaluer("document.querySelector('#profil .f-param-titre')?.textContent || ''");
-  await p.cliquer("#profil .f-profil-roue");
+  await p.cliquer("#btn-parametres");
   assert.equal(await titre(), "Paramètres", "scénario 1b : Paramètres non ouverts");
   assert.equal(await p.evaluer(visible("#nav")), false, "scénario 1b : barre du bas sur les Paramètres");
   assert.match(await p.evaluer("document.querySelector('#profil [data-ligne=sync]').textContent"), /À jour|Synchronisation…|Hors ligne|Erreur|—/, "scénario 1b : état de la synchro");

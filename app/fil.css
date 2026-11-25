@@ -90,11 +90,14 @@ body:not(.fil-ouvert) .f-entete { background: var(--encre); padding-bottom: 10px
 @media (min-width: 700px) {
   .f-entete, .f-nav { max-width: 560px; margin-inline: auto; }
   .f-nav { border-radius: 20px 20px 0 0; }
-  .f-profil-roue { right: calc((100vw - 560px) / 2 + 16px); }
 }
 /* ✕ : seulement pendant le fil */
 .f-quitter { display: none; width: 44px; height: 44px; }
 body.fil-ouvert .f-quitter { display: grid; }
+/* Roue des Paramètres : seulement sur l'écran Profil */
+.f-parametres { display: none; width: 44px; height: 44px; }
+body.vue-profil .f-parametres { display: grid; }
+.f-parametres svg { width: 22px; height: 22px; }
 .f-quitter.confirmer { width: auto; padding: 0 14px; border-radius: 999px; background: var(--rate); font: 800 15px var(--police); }
 
 /* ---------- Le fil ----------
@@ -737,13 +740,6 @@ button.f-param-ligne { cursor: pointer; }
   min-height: 44px; padding: 0 6px; border: 0; background: none; color: #FFC21A;
   font: 700 14px var(--police); text-decoration: underline; cursor: pointer;
 }
-/* La roue occupe le coin de l'en-tête, sur l'axe de la pilule « Facettes » */
-.f-profil-roue {
-  position: fixed; z-index: 11; top: calc(var(--haut) - 2px); right: max(16px, env(safe-area-inset-right));
-  display: grid; place-items: center; width: 44px; height: 44px; padding: 0;
-  border: 2px solid #3A3260; border-radius: 50%; background: none; color: #FFFFFF; cursor: pointer;
-}
-.f-profil-roue svg { width: 24px; height: 24px; }
 .f-profil-tete { display: grid; justify-items: center; gap: 6px; text-align: center; }
 .f-profil-tete .f-avatar { border: 3px solid #FFFFFF; }
 .f-profil-pseudo { margin-top: 8px; font-size: 30px; font-weight: 800; font-stretch: 85%; letter-spacing: -0.02em; line-height: 1; overflow-wrap: anywhere; }
@@ -799,7 +795,7 @@ button.f-param-ligne { cursor: pointer; }
 .f-pochette-face {
   position: relative; z-index: 1; display: flex; flex-direction: column; justify-content: space-between; align-items: flex-start;
   width: 100%; height: 100%; padding: 10px; border: var(--trait); border-radius: 12px; background: var(--c);
-  color: var(--encre); box-shadow: 4px 4px 0 #FFFFFF; text-align: left; overflow: hidden;
+  color: var(--sur, var(--encre)); box-shadow: 4px 4px 0 #FFFFFF;   /* texte blanc sur les matières foncées, comme le fil */ text-align: left; overflow: hidden;
   transform: translateZ(0);   /* calque à part : Safari dessine sinon le vinyle animé par-dessus la face */
 }
 .f-pochette-face::after {   /* cercles décoratifs de pochette */

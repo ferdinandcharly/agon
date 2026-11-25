@@ -22,6 +22,7 @@
   <script src="apparence.js"></script>
   <link rel="stylesheet" href="theme.css">
   <link rel="stylesheet" href="fil.css">
+  <link rel="stylesheet" href="clair.css">
 </head>
 <body>
 
@@ -37,6 +38,8 @@
 <header class="f-entete">
   <button class="f-marque" id="btn-accueil" type="button" aria-label="Facettes, retour à l'accueil"><svg class="f-symbole" viewBox="0 0 256 256" aria-hidden="true"><g transform="translate(-10 12)"><rect x="82" y="32" width="42" height="42" rx="10" fill="#7B4DFF"/><rect x="32" y="82" width="42" height="42" rx="10" fill="#7B4DFF"/><rect x="82" y="82" width="42" height="42" rx="10" fill="#FF5FA2"/><rect x="132" y="82" width="42" height="42" rx="10" fill="#FF6B3D"/><rect x="182" y="82" width="42" height="42" rx="10" fill="#FFC21A"/><rect x="32" y="132" width="42" height="42" rx="10" fill="#FF5FA2"/><rect x="82" y="132" width="42" height="42" rx="10" fill="#FF6B3D"/><rect x="132" y="132" width="42" height="42" rx="10" fill="#FFC21A"/><rect x="182" y="132" width="42" height="42" rx="10" fill="#00C08B"/><rect x="82" y="182" width="42" height="42" rx="10" fill="#FFC21A"/><rect x="132" y="182" width="42" height="42" rx="10" fill="#00C08B"/><rect x="132" y="32" width="42" height="42" rx="10" fill="#16112B" transform="translate(24 -24) rotate(15 153 53)"/></g></svg>Facettes</button>
   <span class="f-score cache" id="score" aria-live="polite"></span>
+  <!-- Roue des Paramètres : dans l'en-tête (au-dessus de tout), visible seulement sur l'écran Profil -->
+  <button class="f-menu f-parametres" id="btn-parametres" type="button" aria-label="Paramètres"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
   <!-- Quitter la session (visible seulement pendant le fil ; en Survie, demande confirmation) -->
   <button class="f-menu f-quitter" id="btn-quitter" type="button" aria-label="Quitter la session"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
 </header>

@@ -67,6 +67,55 @@ try {
   assert.deepEqual(r3b, { theme: "clair", taille: "tres-grande", reglage: { theme: "clair", taille: "tres-grande" }, maj: true }, "scénario 3 : choix non appliqué");
   console.log("3 : rubrique Apparence");
 
+  // 4 : thème effectif (Auto suit le système) et audit de contraste automatique dans les deux thèmes
+  const AUDIT = `(() => {
+    const lum = (c) => { const [r, g, b] = c.match(/[\\d.]+/g).slice(0, 3).map(Number).map((v) => { v /= 255; return v <= .03928 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4; });
+      return .2126 * r + .7152 * g + .0722 * b; };
+    const alpha = (c) => { const p = c.match(/[\\d.]+/g); return p.length > 3 ? Number(p[3]) : 1; };
+    const fond = (e) => { for (let x = e; x; x = x.parentElement) { const s = getComputedStyle(x);
+      if (s.backgroundImage !== "none") return null; if (alpha(s.backgroundColor) > .5) return s.backgroundColor; }
+      return getComputedStyle(document.body).backgroundColor; };
+    const echecs = [];
+    for (const e of document.querySelectorAll("body *")) {
+      if (![...e.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim())) continue;
+      if (!/[\\p{L}\\p{N}]/u.test(e.textContent)) continue;   // symbole seul (▶, ✕…) : une icône, pas du texte
+      if (e.closest("[aria-hidden=true], .cache, #fil, #lancement, svg") || !e.getClientRects().length) continue;
+      const r = e.getBoundingClientRect(); if (r.bottom < 0 || r.top > innerHeight || r.width < 1) continue;
+      const s = getComputedStyle(e); if (s.visibility === "hidden" || Number(s.opacity) < .9) continue;
+      const f = fond(e); if (!f) continue;
+      const [a, b] = [lum(s.color), lum(f)].sort((x, y) => y - x);
+      const ratio = (a + .05) / (b + .05);
+      const grand = parseFloat(s.fontSize) >= 24 || (parseFloat(s.fontSize) >= 18.6 && Number(s.fontWeight) >= 700);
+      if (ratio < (grand ? 3 : 4.5)) echecs.push(\`\${e.tagName.toLowerCase()}.\${[...e.classList].join(".")} « \${e.textContent.trim().slice(0, 25)} » \${ratio.toFixed(2)}\`);
+    }
+    return echecs;
+  })()`;
+  const ECRANS = { accueil: "afficherAccueil()", profil: "Profil.ouvrir()", parametres: "Profil.ouvrirParametres()",
+    matieres: "Profil.ouvrirParametres(); Profil.empiler('matieres')", modifier: "Profil.ouvrir(); Profil.empiler('modifier')",
+    discotheque: "Discotheque.ouvrir()", classement: "Classement.ouvrir()", amis: "Amis.ouvrir()" };
+  for (const theme of ["sombre", "clair"]) {
+    const d = await ouvrir({ matieresExclues: [], formatsExclus: [], maj: "2026-11-25T08:00:00Z", apparence: { theme, taille: "normale" } });
+    assert.equal(await d.evaluer("Apparence.effectif()"), theme, `scénario 4 : thème effectif ${theme}`);
+    const tous = [];
+    for (const [nom, js] of Object.entries(ECRANS)) {
+      await d.evaluer(js);
+      await attendre(700);
+      for (const x of await d.evaluer(AUDIT)) tous.push(`${nom} : ${x}`);
+    }
+    assert.deepEqual(tous, [], `scénario 4 : contraste insuffisant en ${theme}`);
+  }
+  // Auto : suit le thème du système, en direct
+  const auto = await ouvrir();
+  await auto.media("dark");
+  await attendre(200);
+  const sombreAuto = await auto.evaluer(`[Apparence.effectif(), document.documentElement.dataset.effectif, document.querySelector('meta[name="theme-color"]').content]`);
+  await auto.media("light");
+  await attendre(200);
+  const clairAuto = await auto.evaluer(`[Apparence.effectif(), document.documentElement.dataset.effectif, document.querySelector('meta[name="theme-color"]').content]`);
+  assert.deepEqual(sombreAuto, ["sombre", "sombre", "#16112B"], "scénario 4 : Auto en système sombre");
+  assert.deepEqual(clairAuto, ["clair", "clair", "#FAF8F4"], "scénario 4 : Auto en système clair");
+  console.log("4 : thème effectif et contraste");
+
   for (const x of appareils) {
     assert.deepEqual(x.violationsCsp, [], "violations CSP");
     assert.deepEqual(x.erreurs, [], "erreurs");
