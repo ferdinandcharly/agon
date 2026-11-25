@@ -111,8 +111,9 @@ function lireReglages() {
       maj: typeof v?.maj === "string" ? v.maj : null,
       remise: typeof v?.remise === "string" ? v.remise : null,
       notions: lireCases(v?.notions),
+      apparence: Apparence.normaliser(v?.apparence),
     };
-  } catch { return { matieresExclues: [], formatsExclus: [], maj: null, remise: null, notions: {} }; }
+  } catch { return { matieresExclues: [], formatsExclus: [], maj: null, remise: null, notions: {}, apparence: Apparence.normaliser() }; }
 }
 
 // Cases par notion : « À venir » (pas encore vue en cours) ou « DS passé ». Clé « matiere/notion ».
@@ -1235,6 +1236,7 @@ addEventListener("facettes:synchro", () => {
 // Une synchro a rapporté du nouveau (autre appareil) : on redessine ce qui est à l'écran.
 // Le fil en cours n'est pas reconstruit, pour ne pas couper une partie.
 window.apresSynchro = () => {
+  Apparence.appliquer(lireReglages().apparence);   // thème ou taille changés sur un autre appareil
   if (!donnees) return;
   if (!accueil.classList.contains("cache")) remplirAccueil();
   else if (!ecranDiscotheque.classList.contains("cache")) Discotheque.rafraichir();

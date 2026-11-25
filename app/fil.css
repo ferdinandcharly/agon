@@ -716,6 +716,20 @@ button.f-param-ligne { cursor: pointer; }
 .f-modifier-enregistrer:disabled { opacity: .6; }
 .f-profil-ok { color: #B9F6CA; font-weight: 700; }
 
+/* Apparence : sélecteurs segmentés (thème, taille) */
+.f-param-apparence { gap: 12px; padding: 12px 14px; }
+.f-param-reglage { display: grid; gap: 8px; }
+.f-param-reglage-nom { font-size: 15px; font-weight: 700; }
+.f-segment { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; padding: 4px; border-radius: 12px; background: #EFEAE0; }
+.f-segment button {
+  min-height: 44px; border: 2px solid transparent; border-radius: 9px; background: none; color: var(--gris);
+  font: 700 14px var(--police); cursor: pointer;
+}
+.f-segment button[aria-pressed="true"] { border-color: var(--encre); background: #FFFFFF; color: var(--encre); box-shadow: 2px 2px 0 var(--encre); font-weight: 800; }
+.f-segment-taille button:nth-child(1) { font-size: 13px; }
+.f-segment-taille button:nth-child(2) { font-size: 16px; }
+.f-segment-taille button:nth-child(3) { font-size: 19px; }
+
 /* ---------- Profil : sobre, sans ombres d'autocollant ---------- */
 .f-profil-col { gap: 20px; }
 .f-avatar-initiale { background: #E9E4FF; color: var(--encre); font: 800 calc(var(--taille-avatar, 40px) * .42) var(--police); }

@@ -168,6 +168,28 @@ const Profil = (() => {
   const texteEtat = () => TEXTES_ETAT[typeof Compte !== "undefined" ? Compte.etat() : "deconnecte"] || "—";
   const surTotal = (exclus, total) => `${total - exclus} sur ${total}`;
 
+  // Sélecteur segmenté (3 boutons) : effet immédiat, réglage synchronisé comme les autres
+  const CHOIX_APPARENCE = {
+    theme: [["auto", "Auto"], ["sombre", "Sombre"], ["clair", "Clair"]],
+    taille: [["normale", "Aa", "Normale"], ["grande", "Aa", "Grande"], ["tres-grande", "Aa", "Très grande"]],
+  };
+  function segment(cle, libelle) {
+    const boutons = CHOIX_APPARENCE[cle].map(([valeur, texte, nom]) => {
+      const b = el("button", { type: "button", "data-valeur": valeur, "aria-pressed": String(reglages.apparence[cle] === valeur),
+        ...(nom ? { "aria-label": nom } : {}) }, texte);
+      b.addEventListener("click", () => {
+        reglages.apparence = { ...reglages.apparence, [cle]: valeur };
+        reglages.maj = new Date().toISOString();
+        ecrireReglages(reglages);
+        Apparence.appliquer(reglages.apparence);
+        boutons.forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+      });
+      return b;
+    });
+    return el("div", { class: "f-param-reglage" }, el("span", { class: "f-param-reglage-nom" }, libelle),
+      el("div", { class: `f-segment f-segment-${cle}`, role: "group", "aria-label": libelle }, ...boutons));
+  }
+
   function rendreParametres() {
     const message = el("p", { class: "f-param-message", role: "status" });
     const nbFormats = Object.keys(NOMS_FORMATS).length;
@@ -187,6 +209,8 @@ const Profil = (() => {
     navigator.serviceWorker?.controller?.postMessage("version");
     return el("div", { class: "f-accueil-col f-param-col" },
       entete("Paramètres"),
+      el("section", { class: "f-param-groupe" }, el("h2", {}, "Apparence"),
+        el("div", { class: "f-param-carte f-param-apparence" }, segment("theme", "Thème"), segment("taille", "Taille de l'affichage"))),
       groupe("Jeu",
         ligne("matieres", "Matières", surTotal(exclusMatieres, donnees.matieres.length), () => empiler("matieres"), { chevronne: true }),
         ligne("formats", "Types de jeux", exclusFormats ? surTotal(exclusFormats, nbFormats) : "Tous", () => empiler("formats"), { chevronne: true })),

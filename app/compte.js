@@ -150,7 +150,8 @@ const Compte = (() => {
     const fusion = distantPlusRecent
       ? { matieresExclues: rd.matieresExclues, formatsExclus: rd.formatsExclus, maj: rd.maj,
           // Un appareil resté sur une ancienne version n'envoie pas de cases : on garde celles d'ici
-          notions: rd.notions === undefined ? (local.notions || {}) : lireCases(rd.notions) }
+          notions: rd.notions === undefined ? (local.notions || {}) : lireCases(rd.notions),
+          apparence: rd.apparence === undefined ? local.apparence : Apparence.normaliser(rd.apparence) }
       : { ...local, notions: local.notions || {} };
     fusion.remise = remise;
     return fusion;
