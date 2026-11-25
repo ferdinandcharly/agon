@@ -20,7 +20,10 @@
 
 /* ---------- Fonds, en-tête, barre du bas ---------- */
 :root[data-effectif="clair"] .f-accueil { background: var(--papier-fond); color: var(--encre); }
-:root[data-effectif="clair"] body:not(.fil-ouvert) .f-entete { background: var(--papier-fond); }
+:root[data-effectif="clair"] body:not(.fil-ouvert) .f-entete {
+  /* Appli installée sur iPhone : la barre d'état garde un texte blanc (choisi au lancement) → bande encre derrière elle */
+  background: linear-gradient(var(--encre) 0 env(safe-area-inset-top, 0px), var(--papier-fond) 0);
+}
 :root[data-effectif="clair"] .f-nav { background: #FFFFFF; border-top-color: var(--filet-clair); }
 :root[data-effectif="clair"] .f-nav button { color: var(--texte-3); }
 :root[data-effectif="clair"] .f-nav button[aria-current="page"] { color: var(--accent-texte-clair); background: var(--surface-2); }

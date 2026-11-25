@@ -19,6 +19,15 @@ async function ouvrir(reglages = null, options = {}) {
   await attendre(400);
   return d;
 }
+async function ouvrirPortail(reglages) {
+  const d = await edge.nouvelAppareil({ connecte: false });
+  appareils.push(d);
+  await d.avantPage(`localStorage.setItem("agon.reglages", ${JSON.stringify(JSON.stringify(reglages))});`);
+  await d.aller(serveur.url);
+  await d.attendreQue("!document.getElementById('lancement') && !!document.querySelector('#portail .f-portail-continuer')", 8000);
+  await attendre(400);
+  return d;
+}
 let echec = null;
 try {
   // 1 : réglage lu, normalisé, appliqué avant le rendu
@@ -92,7 +101,18 @@ try {
   })()`;
   const ECRANS = { accueil: "afficherAccueil()", profil: "Profil.ouvrir()", parametres: "Profil.ouvrirParametres()",
     matieres: "Profil.ouvrirParametres(); Profil.empiler('matieres')", modifier: "Profil.ouvrir(); Profil.empiler('modifier')",
-    discotheque: "Discotheque.ouvrir()", classement: "Classement.ouvrir()", amis: "Amis.ouvrir()" };
+    discotheque: "Discotheque.ouvrir()", classement: "Classement.ouvrir()", amis: "Amis.ouvrir()",
+    // États remplis (données simulées, comme dans amis.test et classement.test)
+    amisRemplis: `Amis.ouvrir(); document.querySelector("#amis .f-amis-zone").replaceChildren(Amis.rendre({ amis: [
+      { pseudo: "Lucas", avatar: "vert-coeur", relation: "ami", notions: 26, record: 42, record_le: "2026-11-23T10:00:00Z" },
+      { pseudo: "Max", relation: "recue", notions: null, record: null, record_le: null },
+      { pseudo: "Léa", relation: "envoyee", notions: null, record: null, record_le: null }],
+      classement: [{ rang: 1, pseudo: "Lucas", score: 42, moi: false, notions: 26 }, { rang: 2, pseudo: "Ferdi", score: 38, moi: true, notions: 30 }],
+      periode: "record", monRecord: 38, vuLe: "2026-11-22T00:00:00Z" }))`,
+    classementRempli: `Classement.ouvrir(); document.querySelector("#classement .f-classement-zone").replaceChildren(Classement.rendre([
+      { rang: 1, pseudo: "Ferdi", score: 42, moi: false }, { rang: 2, pseudo: "Bastien", score: 40, moi: false },
+      { rang: 3, pseudo: "Lou", score: 31, moi: false }, { rang: 63, pseudo: "Moi", score: 4, moi: true }],
+      { periode: "semaine", date: new Date().toISOString(), debut: Classement.lundiCourant(), horsLigne: true }))` };
   for (const theme of ["sombre", "clair"]) {
     const d = await ouvrir({ matieresExclues: [], formatsExclus: [], maj: "2026-11-25T08:00:00Z", apparence: { theme, taille: "normale" } });
     assert.equal(await d.evaluer("Apparence.effectif()"), theme, `scénario 4 : thème effectif ${theme}`);
@@ -102,8 +122,22 @@ try {
       await attendre(700);
       for (const x of await d.evaluer(AUDIT)) tous.push(`${nom} : ${x}`);
     }
+    // Portail (sans session) : étapes 1, 2 et 3
+    const sansCompte = await ouvrirPortail({ matieresExclues: [], formatsExclus: [], maj: "2026-11-25T08:00:00Z", apparence: { theme, taille: "normale" } });
+    for (const etape of [1, 2, 3]) {
+      await sansCompte.evaluer(`Portail.ouvrir(${etape})`);
+      await attendre(500);
+      for (const x of await sansCompte.evaluer(AUDIT)) tous.push(`portail ${etape} : ${x}`);
+    }
     assert.deepEqual(tous, [], `scénario 4 : contraste insuffisant en ${theme}`);
   }
+  // Appli installée (encoche) en clair : bande encre sous la barre d'état, dont le texte reste blanc
+  const enc = await ouvrir({ matieresExclues: [], formatsExclus: [], maj: "2026-11-25T08:00:00Z", apparence: { theme: "clair", taille: "normale" } });
+  await enc.encoche(47, 34);
+  await attendre(300);
+  const bande = await enc.evaluer(`(() => { const e = document.querySelector(".f-entete"); const r = e.getBoundingClientRect();
+    return r.top <= 0 ? getComputedStyle(e).backgroundImage : "en-tête pas collé en haut"; })()`);
+  assert.match(bande, /linear-gradient\(rgb\(22, 17, 43\)/, `scénario 4 : pas de bande encre sous la barre d'état (${bande})`);
   // Auto : suit le thème du système, en direct
   const auto = await ouvrir();
   await auto.media("dark");
