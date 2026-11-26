@@ -69,6 +69,26 @@ try {
   await a.couperReseau(false);
   console.log("4 : export hors ligne immédiat");
 
+  // 5 : confidentialité — mentionnée dans le texte, et ses deux réglages exportés avec le profil
+  assert.match(texte, /confidentialité/, "les réglages de confidentialité ne sont pas mentionnés");
+  assert.match(texte, /sauf si tu te retires du classement/, "le retrait du classement n'est pas mentionné");
+  const c = await edge.nouvelAppareil();
+  await c.aller(serveur.url);
+  await c.attendreQue("!document.getElementById('lancement') && typeof Donnees !== 'undefined'", 8000);
+  const colonnes = await c.evaluer(`(async () => {
+    const lu = {};
+    const sb = Compte.client();
+    sb.from = (table) => ({ select: (cols) => { lu[table] = cols;
+      const r = { data: null, error: null };
+      return { maybeSingle: async () => r, order: async () => r }; } });
+    sb.rpc = async () => ({ data: null, error: null });
+    await Donnees.exporter();
+    return lu.profils || "";
+  })()`);
+  assert.match(colonnes, /visible_classement/, "export : visible_classement absent");
+  assert.match(colonnes, /demandes_amis/, "export : demandes_amis absent");
+  console.log("5 : confidentialité dans le texte et l'export");
+
   assert.deepEqual(a.violationsCsp, [], "violations CSP");
   assert.deepEqual(a.erreurs.filter((e) => !/Failed to fetch|NetworkError|ERR_INTERNET_DISCONNECTED/.test(e)), [], "erreurs");
   console.log("OK — Tes données (4 scénarios)");
