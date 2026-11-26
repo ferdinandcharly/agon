@@ -33,7 +33,7 @@ const Donnees = (() => {
         const { data: ligne, error } = await sb.from("progression")
           .select("resultats, reglages, collection, survie, maj").maybeSingle();
         if (!error) enLigne = ligne;
-        const p = await sb.from("profils").select("pseudo, avatar, prenom, etablissement, parcours, notions_allumees, cree_le").maybeSingle();
+        const p = await sb.from("profils").select("pseudo, avatar, prenom, etablissement, parcours, visible_classement, demandes_amis, notions_allumees, cree_le").maybeSingle();
         if (!p.error) profil = p.data;
         const q = await sb.from("parties_survie").select("score, parcours, joue_le").order("joue_le");
         if (!q.error) parties = q.data;
@@ -91,7 +91,7 @@ const Donnees = (() => {
     dialogue.replaceChildren(
       el("div", { class: "f-reglages-haut" }, el("h2", { id: "titre-donnees", tabindex: "-1" }, "Tes données"), fermer),
       el("section", { class: "f-donnees" },
-        point("Ce qu'on garde", "ton adresse e-mail, ta progression (réponses, réglages), ta collection de vinyles, le nombre de cartes jouées chaque jour (14 derniers jours), ton record, ton pseudo et ton avatar, ton prénom et ton établissement si tu les as donnés, ton parcours, tes parties de Survie (score et date), tes amis et tes demandes d'amis, et ton nombre de notions allumées. Ton pseudo, ton avatar et ton meilleur score sont visibles des autres joueurs connectés ; ton prénom et ton établissement ne sont jamais montrés ; tes amis voient en plus ton record et ton nombre de notions allumées, rien d'autre. Sans compte, rien ne quitte ton appareil."),
+        point("Ce qu'on garde", "ton adresse e-mail, ta progression (réponses, réglages), ta collection de vinyles, le nombre de cartes jouées chaque jour (14 derniers jours), ton record, ton pseudo et ton avatar, ton prénom et ton établissement si tu les as donnés, ton parcours, tes parties de Survie (score et date), tes amis et tes demandes d'amis, tes réglages de confidentialité (apparaître dans le classement, recevoir des demandes d'ami), et ton nombre de notions allumées. Ton pseudo, ton avatar et ton meilleur score sont visibles des autres joueurs connectés, sauf si tu te retires du classement ; ton prénom et ton établissement ne sont jamais montrés ; tes amis voient en plus ton record et ton nombre de notions allumées, rien d'autre. Sans compte, rien ne quitte ton appareil."),
         point("Pourquoi", "retrouver ta progression sur tous tes appareils et te classer en mode Survie. Pas de publicité, pas de mesure d'audience, pas de revente."),
         point("Où", "chez Supabase, sur des serveurs à Paris. Les codes de connexion sont envoyés par e-mail ; une vérification anti-robot de Cloudflare protège leur envoi."),
         point("Combien de temps", `tant que ton compte existe. Un compte inutilisé pendant 2${NB}ans est supprimé automatiquement.`),
