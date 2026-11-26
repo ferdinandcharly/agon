@@ -715,6 +715,10 @@ button.f-param-ligne { cursor: pointer; }
 .f-modifier-col { gap: 16px; }
 .f-modifier-enregistrer { position: sticky; bottom: max(16px, env(safe-area-inset-bottom)); justify-content: center; margin-top: 4px; font-size: 18px; }
 .f-modifier-col .f-param-note { margin-inline: 0; }
+/* Interrupteur avec une note sous son libellé (Confidentialité) */
+.f-param-nom-note { display: grid; gap: 2px; text-align: left; }
+.f-param-ligne:has(.f-param-nom-note) { height: auto; min-height: 64px; padding-block: 12px; }
+.f-param-carte .f-param-note { margin: 0; color: #5E5A52; font-size: 13px; font-weight: 500; }
 .f-modifier-col .f-portail-erreur:empty { min-height: 0; }
 .f-modifier-enregistrer:disabled { opacity: .6; }
 .f-profil-ok { color: #B9F6CA; font-weight: 700; }

@@ -442,6 +442,52 @@ try {
   assert.equal(r21.final, false, "scénario 21 : profil changé malgré l'échec");
   console.log("19-21 : Compte et confidentialité");
 
+  // 22 : rubrique Confidentialité (profil avec réglages) ; absente si le profil n'a pas ces champs
+  const parametresAvec = async (cache) => {
+    const { d } = await avecCache({ user_id: MOI, ...cache });
+    await d.evaluer("Profil.empiler('parametres')");
+    await attendre(300);
+    return d;
+  };
+  const conf = await parametresAvec({ ...ZOE, visible_classement: false, demandes_amis: true });
+  const r22 = await conf.evaluer(`({
+    groupes: [...document.querySelectorAll("#profil .f-param-groupe h2")].map((h) => h.textContent),
+    classement: document.querySelector("#profil [data-id=visible_classement]")?.getAttribute("aria-checked"),
+    demandes: document.querySelector("#profil [data-id=demandes_amis]")?.getAttribute("aria-checked"),
+    notes: [...document.querySelectorAll("#profil .f-param-confidentialite .f-param-note")].map((p) => p.textContent) })`);
+  assert.deepEqual(r22.groupes, ["Apparence", "Jeu", "Confidentialité", "Compte", "Zone sensible"], "scénario 22 : groupes");
+  assert.equal(r22.classement, "false", "scénario 22 : interrupteur classement");
+  assert.equal(r22.demandes, "true", "scénario 22 : interrupteur demandes");
+  assert.deepEqual(r22.notes, ["Tes amis te voient toujours.", "Sinon, personne ne peut te trouver par ton pseudo."], "scénario 22 : notes");
+  const sansChamps = await parametresAvec({ ...ZOE });
+  assert.equal(await sansChamps.evaluer("!!document.querySelector('#profil .f-param-confidentialite')"), false, "scénario 22 : rubrique sans réglages lus");
+  // 23 : bascule immédiate, bouton bloqué pendant l'envoi, un seul envoi
+  const r23 = await conf.evaluer(`(async () => {
+    window.__appels = [];
+    Compte.enregistrerConfidentialite = (c) => { window.__appels.push(c); return new Promise((ok) => setTimeout(ok, 150)); };
+    const b = () => document.querySelector("#profil [data-id=visible_classement]");
+    b().click();
+    const pendant = { coche: b().getAttribute("aria-checked"), bloque: b().disabled };
+    b().click();
+    await new Promise((ok) => setTimeout(ok, 400));
+    return { pendant, apres: { coche: b().getAttribute("aria-checked"), bloque: b().disabled }, appels: window.__appels };
+  })()`);
+  assert.deepEqual(r23.pendant, { coche: "true", bloque: true }, "scénario 23 : pendant l'envoi");
+  assert.deepEqual(r23.apres, { coche: "true", bloque: false }, "scénario 23 : après l'envoi");
+  assert.deepEqual(r23.appels, [{ visible_classement: true }], "scénario 23 : envois");
+  // 24 : échec → l'interrupteur revient et un message s'affiche
+  const r24 = await conf.evaluer(`(async () => {
+    Compte.enregistrerConfidentialite = async () => { throw new Error("hors ligne"); };
+    const b = () => document.querySelector("#profil [data-id=demandes_amis]");
+    b().click();
+    await new Promise((ok) => setTimeout(ok, 200));
+    return { coche: b().getAttribute("aria-checked"), message: document.querySelector("#profil .f-param-message").textContent };
+  })()`);
+  assert.equal(r24.coche, "true", "scénario 24 : interrupteur pas revenu");
+  assert.equal(r24.message, "Pas enregistré : vérifie ta connexion.", "scénario 24 : message");
+  for (const x of [conf, sansChamps]) assert.deepEqual(x.erreurs, [], "scénarios 22-24 : erreurs");
+  console.log("22-24 : rubrique Confidentialité");
+
   // 7 : captures iPhone (Profil, Paramètres) et PC (Profil)
   await p.evaluer("Profil.ouvrir()");
   await attendre(400);

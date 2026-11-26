@@ -338,7 +338,8 @@ const Compte = (() => {
     if (!idAvant || !Object.keys(ligne).length) return;
     const { error } = await sb.from("profils").update(ligne).eq("user_id", idAvant);
     if (error) throw Object.assign(error, { messageAffiche: messageErreur(error) });
-    if (utilisateur?.id === idAvant && profil) changerProfil({ ...profil, ...ligne });
+    const base = profilAffiche();   // profil lu, ou celui gardé sur l'appareil (démarrage hors ligne)
+    if (utilisateur?.id === idAvant && base) changerProfil({ ...base, ...ligne });
   }
 
   function messageErreur(err) {
