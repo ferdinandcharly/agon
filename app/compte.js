@@ -115,9 +115,15 @@ const Compte = (() => {
     } catch { return null; }
   }
 
+  const COLONNES_PROFIL = "pseudo, avatar, prenom, etablissement, parcours";
+  const COLONNES_CONFIDENTIALITE = ["visible_classement", "demandes_amis"];
   async function lireProfil() {
     const id = utilisateur?.id;
-    const { data, error } = await sb.from("profils").select("pseudo, avatar, prenom, etablissement, parcours").maybeSingle();
+    let { data, error } = await sb.from("profils").select(`${COLONNES_PROFIL}, ${COLONNES_CONFIDENTIALITE.join(", ")}`).maybeSingle();
+    // Base pas encore migrée (colonnes de confidentialité inconnues) : on relit sans elles
+    if (error && (error.code === "42703" || COLONNES_CONFIDENTIALITE.some((c) => String(error.message).includes(c)))) {
+      ({ data, error } = await sb.from("profils").select(COLONNES_PROFIL).maybeSingle());
+    }
     if (error) throw error;
     if (utilisateur?.id !== id) return;   // le compte a changé pendant la lecture : ce profil n'est plus le sien
     changerProfil(data);
@@ -320,9 +326,19 @@ const Compte = (() => {
     }
     if (error) throw Object.assign(error, { messageAffiche: messagePseudo(pseudo, error) });
     const premier = !profil;
-    if (utilisateur?.id === idAvant) changerProfil({ ...ligne });
+    if (utilisateur?.id === idAvant) changerProfil({ ...profil, ...ligne });   // garde les réglages de confidentialité
     if (premier && recordAMoi && lireRecordSurvie() > 0) publierPartie(lireRecordSurvie());
     await synchroniser();
+  }
+
+  // Réglages de confidentialité (classement, demandes d'ami) : seulement ces colonnes, sur sa propre ligne
+  async function enregistrerConfidentialite(champs) {
+    const idAvant = utilisateur?.id;
+    const ligne = Object.fromEntries(COLONNES_CONFIDENTIALITE.filter((c) => typeof champs?.[c] === "boolean").map((c) => [c, champs[c]]));
+    if (!idAvant || !Object.keys(ligne).length) return;
+    const { error } = await sb.from("profils").update(ligne).eq("user_id", idAvant);
+    if (error) throw Object.assign(error, { messageAffiche: messageErreur(error) });
+    if (utilisateur?.id === idAvant && profil) changerProfil({ ...profil, ...ligne });
   }
 
   function messageErreur(err) {
@@ -493,6 +509,7 @@ const Compte = (() => {
     synchroniser,
     afficherDans(element) { conteneur = element; if (element) dessiner(); },   // null : ne plus rien dessiner
     publierPartie,
+    enregistrerConfidentialite,
     publierNotions,
     enregistrerProfil,
     profil: () => profil,

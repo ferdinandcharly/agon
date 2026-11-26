@@ -394,6 +394,54 @@ try {
   assert.notEqual(r18.etat, "synchro", "scénario 18 : écran bloqué sur « Synchronisation… »");
   console.log("17-18 : corrections de la relecture");
 
+  // 19 : le profil lu contient les réglages de confidentialité, gardés dans le cache
+  const PROFIL_CONF = { pseudo: "Zoé", avatar: "vert-note", prenom: null, etablissement: null, parcours: "but-info-1", visible_classement: false, demandes_amis: true };
+  const r19 = await t.evaluer(`(async () => {
+    Compte.client().from = () => ({ select: (cols) => { window.__cols = cols;
+      return { maybeSingle: async () => ({ data: ${JSON.stringify(PROFIL_CONF)}, error: null }) }; } });
+    await Compte.lireProfil();
+    return { cols: window.__cols, profil: Compte.profil(), cache: JSON.parse(localStorage.getItem("agon.profil")) };
+  })()`);
+  assert.match(r19.cols, /visible_classement/, "scénario 19 : colonne visible_classement non lue");
+  assert.match(r19.cols, /demandes_amis/, "scénario 19 : colonne demandes_amis non lue");
+  assert.equal(r19.profil.visible_classement, false, "scénario 19 : réglage absent du profil");
+  assert.equal(r19.cache.visible_classement, false, "scénario 19 : réglage absent du cache");
+  assert.equal(r19.cache.demandes_amis, true, "scénario 19 : demandes_amis absent du cache");
+  // 20 : base pas encore migrée (colonne inconnue) → on relit sans les deux colonnes, le profil reste chargé
+  const r20 = await t.evaluer(`(async () => {
+    const lectures = [];
+    Compte.client().from = () => ({ select: (cols) => { lectures.push(cols);
+      return { maybeSingle: async () => /visible_classement/.test(cols)
+        ? { data: null, error: { code: "42703", message: "column profils.visible_classement does not exist" } }
+        : { data: { pseudo: "Zoé", avatar: "vert-note", prenom: null, etablissement: null, parcours: "but-info-1" }, error: null } }; } });
+    await Compte.lireProfil();
+    return { lectures: lectures.length, profil: Compte.profil() };
+  })()`);
+  assert.equal(r20.lectures, 2, "scénario 20 : pas de seconde lecture sans les colonnes");
+  assert.equal(r20.profil?.pseudo, "Zoé", "scénario 20 : profil perdu si la base n'est pas migrée");
+  assert.equal("visible_classement" in r20.profil, false, "scénario 20 : réglage inventé");
+  // 21 : Modifier mon profil garde les réglages ; enregistrerConfidentialite n'envoie que ses champs
+  const r21 = await t.evaluer(`(async () => {
+    Compte.client().from = () => ({ select: () => ({ maybeSingle: async () => ({ data: ${JSON.stringify(PROFIL_CONF)}, error: null }) }) });
+    await Compte.lireProfil();
+    Compte.client().from = () => ({ update: (ligne) => { window.__ligne = ligne; return { eq: async () => ({ error: null }) }; } });
+    Compte.enregistrerProfil({ pseudo: "Zoe2", avatar: "vert-note", prenom: "", etablissement: "", parcours: "but-info-1" }).catch(() => {});
+    await new Promise((ok) => setTimeout(ok, 300));
+    const apresModif = Compte.profil().visible_classement;
+    await Compte.enregistrerConfidentialite({ demandes_amis: false, pseudo: "pirate" });
+    const envoye = window.__ligne, apresConf = Compte.profil().demandes_amis;
+    Compte.client().from = () => ({ update: () => ({ eq: async () => ({ error: { message: "hors ligne" } }) }) });
+    let rejet = false;
+    try { await Compte.enregistrerConfidentialite({ demandes_amis: true }); } catch { rejet = true; }
+    return { apresModif, envoye, apresConf, rejet, final: Compte.profil().demandes_amis };
+  })()`);
+  assert.equal(r21.apresModif, false, "scénario 21 : Modifier mon profil efface les réglages");
+  assert.deepEqual(r21.envoye, { demandes_amis: false }, "scénario 21 : champs envoyés");
+  assert.equal(r21.apresConf, false, "scénario 21 : profil non mis à jour");
+  assert.equal(r21.rejet, true, "scénario 21 : échec non remonté");
+  assert.equal(r21.final, false, "scénario 21 : profil changé malgré l'échec");
+  console.log("19-21 : Compte et confidentialité");
+
   // 7 : captures iPhone (Profil, Paramètres) et PC (Profil)
   await p.evaluer("Profil.ouvrir()");
   await attendre(400);
