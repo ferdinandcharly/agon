@@ -15,13 +15,14 @@ const Portail = (() => {
 
   // --- Avatar : une couleur Facettes et un symbole blanc (public, comme le pseudo)
   const COULEURS = { orange: "#FF6B3D", jaune: "#FFC21A", vert: "#00C08B", bleu: "#3D5AFE", violet: "#7B4DFF", rose: "#FF5FA2", cyan: "#2FD3E0" };
+  // Symboles : icônes Phosphor (style « fill », licence MIT, phosphoricons.com), cadre 256 × 256
   const SYMBOLES = {
-    facette: '<rect x="7" y="7" width="10" height="10" rx="2.2" transform="rotate(15 12 12)"/>',
-    etoile: '<polygon points="12,3 14.6,9 21,9.3 16,13.4 17.8,20 12,16.3 6.2,20 8,13.4 3,9.3 9.4,9"/>',
-    note: '<circle cx="8.5" cy="17" r="3"/><rect x="10" y="4" width="2.2" height="13"/><path d="M12.2 4l6.8 2.2v3.2l-6.8-2.2z"/>',
-    eclair: '<polygon points="13.5,2 5,13.5 11,13.5 10,22 19,10 13,10"/>',
-    coeur: '<path d="M12 20.5s-7.5-4.6-7.5-10.3A4.2 4.2 0 0 1 12 7.6a4.2 4.2 0 0 1 7.5 2.6c0 5.7-7.5 10.3-7.5 10.3z"/>',
-    vinyle: '<circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="2.6"/><circle cx="12" cy="12" r="2.6"/>',
+    facette: '<path d="M240,128a15.85,15.85,0,0,1-4.67,11.28l-96.05,96.06a16,16,0,0,1-22.56,0h0l-96-96.06a16,16,0,0,1,0-22.56l96.05-96.06a16,16,0,0,1,22.56,0l96.05,96.06A15.85,15.85,0,0,1,240,128Z"/>',
+    etoile: '<path d="M234.29,114.85l-45,38.83L203,211.75a16.4,16.4,0,0,1-24.5,17.82L128,198.49,77.47,229.57A16.4,16.4,0,0,1,53,211.75l13.76-58.07-45-38.83A16.46,16.46,0,0,1,31.08,86l59-4.76,22.76-55.08a16.36,16.36,0,0,1,30.27,0l22.75,55.08,59,4.76a16.46,16.46,0,0,1,9.37,28.86Z"/>',
+    note: '<path d="M210.3,56.34l-80-24A8,8,0,0,0,120,40V148.26A48,48,0,1,0,136,184V98.75l69.7,20.91A8,8,0,0,0,216,112V64A8,8,0,0,0,210.3,56.34Z"/>',
+    eclair: '<path d="M213.85,125.46l-112,120a8,8,0,0,1-13.69-7l14.66-73.33L45.19,143.49a8,8,0,0,1-3-13l112-120a8,8,0,0,1,13.69,7L153.18,90.9l57.63,21.61a8,8,0,0,1,3,12.95Z"/>',
+    coeur: '<path d="M240,102c0,70-103.79,126.66-108.21,129a8,8,0,0,1-7.58,0C119.79,228.66,16,172,16,102A62.07,62.07,0,0,1,78,40c20.65,0,38.73,8.88,50,23.89C139.27,48.88,157.35,40,178,40A62.07,62.07,0,0,1,240,102Z"/>',
+    vinyle: '<path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24ZM72,128a8,8,0,0,1-16,0,72.08,72.08,0,0,1,72-72,8,8,0,0,1,0,16A56.06,56.06,0,0,0,72,128Zm32,0a24,24,0,1,1,24,24A24,24,0,0,1,104,128Zm24,72a8,8,0,0,1,0-16,56.06,56.06,0,0,0,56-56,8,8,0,0,1,16,0A72.08,72.08,0,0,1,128,200Z"/>',
   };
   const FORMAT_AVATAR = /^(orange|jaune|vert|bleu|violet|rose|cyan)-(facette|etoile|note|eclair|coeur|vinyle)$/;
   function avatar(code, taille = 40) {
@@ -30,7 +31,7 @@ const Portail = (() => {
     const a = el("span", { class: "f-avatar", "data-avatar": code, "aria-hidden": "true" });
     a.style.setProperty("--avatar", COULEURS[couleur]);
     a.style.setProperty("--taille-avatar", `${taille}px`);
-    a.innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor">${SYMBOLES[symbole]}</svg>`;
+    a.innerHTML = `<svg viewBox="0 0 256 256" fill="currentColor">${SYMBOLES[symbole]}</svg>`;
     return a;
   }
 
@@ -118,7 +119,7 @@ const Portail = (() => {
     });
     const symboles = Object.keys(SYMBOLES).map((id) => {
       const b = el("button", { class: "f-portail-symbole", type: "button", "data-symbole": id, "aria-label": `Symbole ${id}` });
-      b.innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">${SYMBOLES[id]}</svg>`;
+      b.innerHTML = `<svg viewBox="0 0 256 256" fill="currentColor" aria-hidden="true">${SYMBOLES[id]}</svg>`;
       b.addEventListener("click", () => { symbole = id; majApercu(); });
       return b;
     });

@@ -965,7 +965,7 @@ body.portail-ouvert .f-accueil:not(#portail), body.portail-ouvert .f-maj { displ
   flex: none; display: inline-grid; place-items: center; width: var(--taille-avatar, 40px); height: var(--taille-avatar, 40px);
   border: 2px solid var(--encre); border-radius: 50%; background: var(--avatar, #7B4DFF); color: #FFFFFF;
 }
-.f-avatar svg { width: 62%; height: 62%; }
+.f-avatar svg { width: 58%; height: 58%; }
 .f-portail-champ { display: grid; gap: 6px; font-weight: 700; }
 .f-portail-champ input {
   padding: 11px 12px; border: var(--trait); border-radius: 12px; background: var(--papier); color: var(--encre); font: 600 16px var(--police);
