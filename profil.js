@@ -185,6 +185,35 @@ const Profil = (() => {
       el("div", { class: `f-segment f-segment-${cle}`, role: "group", "aria-label": libelle }, ...boutons));
   }
 
+  // Confidentialité : seulement si le profil lu du serveur contient les deux réglages (base migrée)
+  const REGLAGES_CONFIDENTIALITE = [
+    ["visible_classement", "Apparaître dans le classement", "Tes amis te voient toujours."],
+    ["demandes_amis", "Recevoir des demandes d'ami", "Sinon, personne ne peut te trouver par ton pseudo."],
+  ];
+  function rendreConfidentialite(message) {
+    const p = Compte.profilAffiche();
+    if (!p || REGLAGES_CONFIDENTIALITE.some(([cle]) => typeof p[cle] !== "boolean")) return null;
+    const inters = REGLAGES_CONFIDENTIALITE.map(([cle, nom, note]) => {
+      const b = el("button", { class: "f-param-ligne f-param-inter", type: "button", role: "switch", "data-id": cle,
+        "aria-checked": String(p[cle]) },
+        el("span", { class: "f-param-nom f-param-nom-note" }, nom, el("span", { class: "f-param-note" }, note)),
+        el("span", { class: "f-param-curseur", "aria-hidden": "true" }));
+      b.addEventListener("click", async () => {
+        if (b.disabled) return;
+        const avant = b.getAttribute("aria-checked") === "true";
+        b.setAttribute("aria-checked", String(!avant));   // bascule tout de suite, annulée si l'envoi échoue
+        b.disabled = true;
+        message.textContent = "";
+        try { await Compte.enregistrerConfidentialite({ [cle]: !avant }); }
+        catch { b.setAttribute("aria-checked", String(avant)); message.textContent = "Pas enregistré : vérifie ta connexion."; }
+        finally { b.disabled = false; }
+      });
+      return b;
+    });
+    return el("section", { class: "f-param-groupe f-param-confidentialite" }, el("h2", {}, "Confidentialité"),
+      el("div", { class: "f-param-carte" }, ...inters));
+  }
+
   function rendreParametres() {
     const message = el("p", { class: "f-param-message", role: "status" });
     const nbFormats = Object.keys(NOMS_FORMATS).length;
@@ -209,6 +238,7 @@ const Profil = (() => {
       groupe("Jeu",
         ligne("matieres", "Matières", surTotal(exclusMatieres, donnees.matieres.length), () => empiler("matieres"), { chevronne: true }),
         ligne("formats", "Types de jeux", exclusFormats ? surTotal(exclusFormats, nbFormats) : "Tous", () => empiler("formats"), { chevronne: true })),
+      rendreConfidentialite(message),
       groupe("Compte",
         ligne("email", "E-mail", Compte.utilisateur()?.email || "—"),
         ligne("sync", "Synchronisation", texteEtat(), () => Compte.synchroniser()),
