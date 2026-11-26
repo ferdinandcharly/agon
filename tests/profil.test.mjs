@@ -485,7 +485,25 @@ try {
   })()`);
   assert.equal(r24.coche, "true", "scénario 24 : interrupteur pas revenu");
   assert.equal(r24.message, "Pas enregistré : vérifie ta connexion.", "scénario 24 : message");
-  for (const x of [conf, sansChamps]) assert.deepEqual(x.erreurs, [], "scénarios 22-24 : erreurs");
+  // 25 (relecture) : un enregistrement réussi (vrai chemin, profil redessiné) garde la position et le focus
+  const conf2 = await parametresAvec({ ...ZOE, visible_classement: true, demandes_amis: true });
+  const r25 = await conf2.evaluer(`(async () => {
+    Compte.client().from = () => ({ update: () => ({ eq: async () => ({ error: null }) }) });
+    const ecran = document.getElementById("profil");
+    const b = () => document.querySelector("#profil [data-id=demandes_amis]");
+    b().scrollIntoView({ block: "center" });
+    const avant = ecran.scrollTop;
+    b().focus(); b().click();
+    await new Promise((ok) => setTimeout(ok, 300));
+    return { avant, apres: ecran.scrollTop, focus: document.activeElement?.dataset?.id || null,
+             coche: b().getAttribute("aria-checked"), profil: Compte.profilAffiche().demandes_amis };
+  })()`);
+  assert.ok(r25.avant > 0, "scénario 25 : la rubrique devrait être plus bas que le haut de page");
+  assert.equal(r25.apres, r25.avant, "scénario 25 : la page remonte en haut après l'enregistrement");
+  assert.equal(r25.focus, "demandes_amis", "scénario 25 : focus perdu");
+  assert.equal(r25.coche, "false", "scénario 25 : état affiché");
+  assert.equal(r25.profil, false, "scénario 25 : profil");
+  for (const x of [conf, sansChamps, conf2]) assert.deepEqual(x.erreurs, [], "scénarios 22-25 : erreurs");
   console.log("22-24 : rubrique Confidentialité");
 
   // 7 : captures iPhone (Profil, Paramètres) et PC (Profil)

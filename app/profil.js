@@ -287,20 +287,27 @@ const Profil = (() => {
       Object.entries(NOMS_FORMATS).map(([id, nom]) => ({ id, nom })), reglages.formatsExclus),
     modifier: () => rendreModifier(),
   };
-  function rendre() {
+  // garder : même écran redessiné (synchro, réglage enregistré) → on garde la position et le focus
+  function rendre({ garder = false } = {}) {
     if (!estOuvert()) return;   // ex. un enregistrement fini après qu'on est parti ailleurs : on ne reprend pas la main
     const haut = pile[pile.length - 1];
+    const memeVue = garder && ecran.dataset.vue === haut;
+    const position = ecran.scrollTop;
+    const actif = ecran.contains(document.activeElement) ? document.activeElement.dataset : null;
+    const cleFocus = actif && (actif.id ? `[data-id="${actif.id}"]` : actif.ligne ? `[data-ligne="${actif.ligne}"]` : null);
     ecran.dataset.vue = haut;
     document.body.classList.toggle("vue-profil", haut === "profil");   // roue des Paramètres de l'en-tête
     Nav.afficher(haut === "profil" ? "profil" : null);
     ecran.replaceChildren(RENDUS[haut]());
-    ecran.scrollTo({ top: 0 });
+    if (!memeVue) { ecran.scrollTo({ top: 0 }); return; }
+    ecran.scrollTop = position;
+    if (cleFocus) ecran.querySelector(cleFocus)?.focus({ preventScroll: true });
   }
   function empiler(vue) { pile.push(vue); rendre(); }
   function depiler() { if (pile.length > 1) pile.pop(); rendre(); }
 
   // Une synchro ou un nouveau profil : on redessine, sauf le formulaire en cours de saisie
-  function rafraichir() { if (estOuvert() && donnees && pile[pile.length - 1] !== "modifier") rendre(); }
+  function rafraichir() { if (estOuvert() && donnees && pile[pile.length - 1] !== "modifier") rendre({ garder: true }); }
 
   function ouvrir() {
     if (!donnees || fil.classList.contains("verrouille")) return;

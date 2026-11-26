@@ -89,6 +89,23 @@ try {
   assert.match(colonnes, /demandes_amis/, "export : demandes_amis absent");
   console.log("5 : confidentialité dans le texte et l'export");
 
+  // 6 (relecture) : base pas encore migrée → le profil et les amis sont quand même exportés
+  const r6 = await c.evaluer(`(async () => {
+    const sb = Compte.client();
+    sb.from = (table) => ({ select: (cols) => {
+      const r = table === "profils"
+        ? (/visible_classement/.test(cols) ? { data: null, error: { code: "42703", message: "column profils.visible_classement does not exist" } }
+                                          : { data: { pseudo: "Zoe_1" }, error: null })
+        : { data: null, error: null };
+      return { maybeSingle: async () => r, order: async () => r }; } });
+    sb.rpc = async () => ({ data: [{ pseudo: "Lucas" }], error: null });
+    const x = await Donnees.exporter();
+    return { profil: x.profil, amis: x.amis };
+  })()`);
+  assert.deepEqual(r6.profil, { pseudo: "Zoe_1" }, "export sur base non migrée : profil perdu");
+  assert.deepEqual(r6.amis, [{ pseudo: "Lucas" }], "export sur base non migrée : amis perdus");
+  console.log("6 : export sur base non migrée");
+
   assert.deepEqual(a.violationsCsp, [], "violations CSP");
   assert.deepEqual(a.erreurs.filter((e) => !/Failed to fetch|NetworkError|ERR_INTERNET_DISCONNECTED/.test(e)), [], "erreurs");
   console.log("OK — Tes données (4 scénarios)");

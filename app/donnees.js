@@ -33,7 +33,12 @@ const Donnees = (() => {
         const { data: ligne, error } = await sb.from("progression")
           .select("resultats, reglages, collection, survie, maj").maybeSingle();
         if (!error) enLigne = ligne;
-        const p = await sb.from("profils").select("pseudo, avatar, prenom, etablissement, parcours, visible_classement, demandes_amis, notions_allumees, cree_le").maybeSingle();
+        const colonnes = "pseudo, avatar, prenom, etablissement, parcours, notions_allumees, cree_le";
+        let p = await sb.from("profils").select(`${colonnes}, visible_classement, demandes_amis`).maybeSingle();
+        // Base pas encore migrée (réglages de confidentialité inconnus) : on exporte le reste du profil
+        if (p.error?.code === "42703" || /visible_classement|demandes_amis/.test(p.error?.message || "")) {
+          p = await sb.from("profils").select(colonnes).maybeSingle();
+        }
         if (!p.error) profil = p.data;
         const q = await sb.from("parties_survie").select("score, parcours, joue_le").order("joue_le");
         if (!q.error) parties = q.data;
