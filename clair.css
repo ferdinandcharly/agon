@@ -55,6 +55,9 @@
 :root[data-effectif="clair"] .f-bac-points i { background: #D8D1C3; }
 :root[data-effectif="clair"] .f-bac-points i.actif { background: var(--encre); }
 :root[data-effectif="clair"] .f-mini-vinyles i { border-color: #B5AC9C; }
+:root[data-effectif="clair"] .f-objectif { color: var(--texte-2); }
+:root[data-effectif="clair"] .f-objectif-barre { background: var(--filet-clair); }
+:root[data-effectif="clair"] .f-objectif.atteint { color: #1D6A3A; }
 :root[data-effectif="clair"] .f-mini-vinyles i.plein { border-color: var(--encre); }
 :root[data-effectif="clair"] .f-amis-ligne { border-color: var(--bord-clair); background: #FFFFFF; }
 :root[data-effectif="clair"] .f-installer { border-color: #B5AC9C; }

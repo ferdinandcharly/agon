@@ -1197,6 +1197,7 @@ function remplirAccueil() {
         el("span", { class: "f-lancer-texte" },
           el("b", {}, "Lancer la session"),
           el("span", {}, `${pluriel(retenus.length, "carte")}, ${pluriel(nbMatieres, "matière")}`))),
+      jaugeObjectif(),
       el("p", { class: "f-ligne-info" }, vinyles,
         `${collection.vinyles}/${VINYLES_PAR_DISQUE} vinyles` + (collection.disquesOr ? `, ${pluriel(collection.disquesOr, "disque")} d'or` : "")),
       el("div", { class: "f-accueil-duo" },
@@ -1206,6 +1207,17 @@ function remplirAccueil() {
         el("button", { class: "f-bouton-survie f-bouton-classement", type: "button", onclick: () => Classement.ouvrir() },
           el("b", {}, "Classement"), el("span", {}, "Semaine et record"))),
       Installer.carte())));
+}
+
+// Jauge de l'objectif du jour, sous « Lancer la session » ; rien sans objectif
+function jaugeObjectif() {
+  const o = objectifDuJour();
+  if (!o) return null;
+  const barre = el("span", { class: "f-objectif-barre", "aria-hidden": "true" }, el("i"));
+  barre.style.setProperty("--part", String(Math.min(o.faites / o.objectif, 1)));
+  return el("p", { class: "f-objectif" + (o.atteint ? " atteint" : ""),
+    "aria-label": o.atteint ? "Objectif du jour atteint" : `Objectif du jour : ${o.faites} cartes sur ${o.objectif}` },
+    barre, el("span", { "aria-hidden": "true" }, o.atteint ? "Objectif atteint ✓" : `${o.faites}/${o.objectif} cartes aujourd'hui`));
 }
 
 // ---------- État d'une notion (accueil, discothèque) ----------

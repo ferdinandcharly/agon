@@ -623,6 +623,12 @@ body.vue-profil .f-parametres { display: grid; }
 .f-ligne-info { display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 14px; color: #CFC9E8; }
 .f-ligne-info.discret { font-size: 13px; color: #8A84A6; }
 .f-mini-vinyles { display: inline-flex; gap: 3px; }
+/* Objectif du jour : mini-barre sous « Lancer la session » (violette en cours, verte une fois atteint) */
+.f-objectif { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 0; font-size: 14px; color: #CFC9E8; }
+.f-objectif-barre { width: 54px; height: 7px; border-radius: 99px; background: #2A2347; overflow: hidden; }
+.f-objectif-barre i { display: block; height: 100%; width: calc(var(--part, 0) * 100%); border-radius: 99px; background: #7B4DFF; }
+.f-objectif.atteint { color: #00C08B; font-weight: 700; }
+.f-objectif.atteint .f-objectif-barre i { background: #00C08B; }
 .f-mini-vinyles i { width: 12px; height: 12px; border-radius: 50%; border: 1.5px dashed #6F6896; }
 .f-mini-vinyles i.plein { border: 1.5px solid #FFFFFF; background: radial-gradient(circle, #FF5FA2 0 30%, #16112B 32%); }
 
