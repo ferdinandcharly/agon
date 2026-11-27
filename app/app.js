@@ -1227,9 +1227,9 @@ function jaugeObjectif() {
   if (!o) return null;
   const barre = el("span", { class: "f-objectif-barre", "aria-hidden": "true" }, el("i"));
   barre.style.setProperty("--part", String(Math.min(o.faites / o.objectif, 1)));
-  return el("p", { class: "f-objectif" + (o.atteint ? " atteint" : ""),
-    "aria-label": o.atteint ? "Objectif du jour atteint" : `Objectif du jour : ${o.faites} cartes sur ${o.objectif}` },
-    barre, el("span", { "aria-hidden": "true" }, o.atteint ? "Objectif atteint ✓" : `${o.faites}/${o.objectif} cartes aujourd'hui`));
+  // Le texte visible est aussi celui lu par les lecteurs d'écran (pas d'aria-label sur un paragraphe)
+  return el("p", { class: "f-objectif" + (o.atteint ? " atteint" : "") },
+    barre, el("span", {}, o.atteint ? "Objectif atteint ✓" : `${o.faites}/${o.objectif} cartes aujourd'hui`));
 }
 
 // ---------- État d'une notion (accueil, discothèque) ----------

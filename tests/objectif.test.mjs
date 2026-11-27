@@ -64,21 +64,23 @@ try {
     const p = document.querySelector("#accueil .f-objectif");
     if (!p) return null;
     const barre = p.querySelector(".f-objectif-barre");
-    return { texte: p.textContent, atteint: p.classList.contains("atteint"), label: p.getAttribute("aria-label"),
+    const lu = [...p.querySelectorAll("span")].filter((x) => !x.closest("[aria-hidden=true]")).map((x) => x.textContent).join("");
+    return { texte: p.textContent, atteint: p.classList.contains("atteint"), label: p.getAttribute("aria-label"), lu,
              part: getComputedStyle(barre).getPropertyValue("--part").trim(),
              apresLancer: p.previousElementSibling?.classList.contains("f-lancer-session") };
   })()`);
   const enCours = await jauge(20, "{ [jourLocal()]: 12 }");
   assert.match(enCours.texte, /12\/20 cartes aujourd'hui/, "scénario 3 : texte en cours");
   assert.equal(enCours.part, "0.6", "scénario 3 : part");
-  assert.equal(enCours.label, "Objectif du jour : 12 cartes sur 20", "scénario 3 : aria-label");
+  assert.equal(enCours.label, null, "scénario 3 : aria-label sur un paragraphe (ignoré des lecteurs d'écran)");
+  assert.equal(enCours.lu, "12/20 cartes aujourd'hui", "scénario 3 : texte lu par le lecteur d'écran");
   assert.equal(enCours.atteint, false, "scénario 3 : pas encore atteint");
   assert.equal(enCours.apresLancer, true, "scénario 3 : jauge juste sous le bouton Lancer");
   const fini = await jauge(20, "{ [jourLocal()]: 25 }");
   assert.match(fini.texte, /Objectif atteint ✓/, "scénario 3 : texte atteint");
   assert.equal(fini.atteint, true, "scénario 3 : classe atteint");
   assert.equal(fini.part, "1", "scénario 3 : barre pleine");
-  assert.equal(fini.label, "Objectif du jour atteint", "scénario 3 : aria-label atteint");
+  assert.equal(fini.lu, "Objectif atteint ✓", "scénario 3 : texte atteint lu");
   assert.equal(await jauge(0, "{ [jourLocal()]: 12 }"), null, "scénario 3 : jauge sans objectif");
   const lendemain = await jauge(20, `{ "2026-01-01": 30 }`);
   assert.match(lendemain.texte, /0\/20 cartes aujourd'hui/, "scénario 3 : compteur d'un autre jour");
@@ -99,6 +101,20 @@ try {
   assert.equal((await toasts()).length, 0, "scénario 4 : message après un objectif baissé");
   await a.evaluer(`${poser(0, 19)}; enregistrerResultat("x", true)`);
   assert.equal((await toasts()).length, 0, "scénario 4 : message sans objectif");
+  const enc = await edge.nouvelAppareil({ largeur: 390, hauteur: 844, mobile: true });
+  appareils.push(enc);
+  await enc.aller(serveur.url);
+  await enc.attendreQue(pret, 8000);
+  await enc.encoche(59, 34);
+  await enc.evaluer(`montrerFil("session")`);
+  await attendre(400);
+  const r4 = await enc.evaluer(`(() => { ${poser(20, 19).slice(0, -2)}(); enregistrerResultat("x", true);
+    const t = document.querySelector(".f-objectif-toast").getBoundingClientRect();
+    const bas = Math.max(...[...document.querySelectorAll(".f-entete > *")].filter((e) => e.offsetParent)
+      .map((e) => e.getBoundingClientRect().bottom));
+    return { haut: Math.round(t.top), basEntete: Math.round(bas) };
+  })()`);
+  assert.ok(r4.haut >= r4.basEntete, `scénario 4 : message sur l'en-tête (haut ${r4.haut} < bas de l'en-tête ${r4.basEntete})`);
   console.log("4 : message au franchissement");
 
   // 5 : réglage dans Paramètres › Jeu
