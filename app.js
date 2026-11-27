@@ -96,8 +96,20 @@ function enregistrerResultat(id, reussi) {
   // Une réponse de plus aujourd'hui (pour « Cette semaine » du profil) ; ecrireCollection programme la synchro
   const collection = lireCollection();
   const jour = jourLocal();
-  collection.jours[jour] = Math.min(5000, (collection.jours[jour] || 0) + 1);
+  const avant = collection.jours[jour] || 0;
+  collection.jours[jour] = Math.min(5000, avant + 1);
   ecrireCollection(collection);
+  // Objectif du jour franchi par cette carte (une seule fois par jour, par construction)
+  const objectif = lireReglages().objectif;
+  if (objectif && avant < objectif && collection.jours[jour] >= objectif) annoncerObjectif();
+}
+
+// Petit message qui ne bloque pas le jeu, retiré après 3 s
+function annoncerObjectif() {
+  document.querySelector(".f-objectif-toast")?.remove();
+  const t = el("div", { class: "f-objectif-toast", role: "status" }, "Objectif du jour atteint ✓");
+  document.body.append(t);
+  setTimeout(() => t.remove(), 3000);
 }
 
 // Réglages : on stocke ce qui est EXCLU, pour qu'une nouvelle matière ou un nouveau jeu soit actif par défaut.
