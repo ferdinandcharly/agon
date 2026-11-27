@@ -629,6 +629,14 @@ body.vue-profil .f-parametres { display: grid; }
 .f-objectif-barre i { display: block; height: 100%; width: calc(var(--part, 0) * 100%); border-radius: 99px; background: #7B4DFF; }
 .f-objectif.atteint { color: #00C08B; font-weight: 700; }
 .f-objectif.atteint .f-objectif-barre i { background: #00C08B; }
+.f-objectif-toast {
+  position: fixed; z-index: 60; left: 50%; top: calc(env(safe-area-inset-top, 0px) + 64px); translate: -50% 0;
+  padding: 10px 18px; border: var(--trait); border-radius: 999px; background: #00C08B; color: var(--encre);
+  box-shadow: 3px 3px 0 var(--encre); font: 800 15px var(--police); white-space: nowrap; pointer-events: none;
+  animation: f-objectif-entree .35s ease-out;
+}
+@keyframes f-objectif-entree { from { opacity: 0; translate: -50% -12px; } }
+@media (prefers-reduced-motion: reduce) { .f-objectif-toast { animation: none; } }
 .f-mini-vinyles i { width: 12px; height: 12px; border-radius: 50%; border: 1.5px dashed #6F6896; }
 .f-mini-vinyles i.plein { border: 1.5px solid #FFFFFF; background: radial-gradient(circle, #FF5FA2 0 30%, #16112B 32%); }
 

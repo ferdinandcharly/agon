@@ -84,6 +84,23 @@ try {
   assert.match(lendemain.texte, /0\/20 cartes aujourd'hui/, "scénario 3 : compteur d'un autre jour");
   console.log("3 : jauge de l'accueil");
 
+  // 4 : message au franchissement (une seule fois, sans gêner le jeu)
+  const toasts = () => a.evaluer(`[...document.querySelectorAll(".f-objectif-toast")].map((t) => ({
+    texte: t.textContent, role: t.getAttribute("role"), clics: getComputedStyle(t).pointerEvents }))`);
+  await a.evaluer(`${poser(20, 19)}; enregistrerResultat("x", true)`);
+  assert.deepEqual(await toasts(), [{ texte: "Objectif du jour atteint ✓", role: "status", clics: "none" }], "scénario 4 : message au franchissement");
+  await a.evaluer(`enregistrerResultat("x", true)`);
+  assert.equal((await toasts()).length, 1, "scénario 4 : second message");
+  await attendre(3500);
+  assert.equal((await toasts()).length, 0, "scénario 4 : message resté affiché");
+  await a.evaluer(`${poser(20, 5)}; enregistrerResultat("x", true)`);
+  assert.equal((await toasts()).length, 0, "scénario 4 : message sans franchissement");
+  await a.evaluer(`${poser(40, 25)}; ${poser(20, 25)}; enregistrerResultat("x", true)`);
+  assert.equal((await toasts()).length, 0, "scénario 4 : message après un objectif baissé");
+  await a.evaluer(`${poser(0, 19)}; enregistrerResultat("x", true)`);
+  assert.equal((await toasts()).length, 0, "scénario 4 : message sans objectif");
+  console.log("4 : message au franchissement");
+
   for (const x of appareils) {
     assert.deepEqual(x.violationsCsp, [], "violations CSP");
     assert.deepEqual(x.erreurs, [], "erreurs");
