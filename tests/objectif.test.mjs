@@ -56,6 +56,34 @@ try {
   assert.deepEqual(r2, { quarante: 40, absent: 10, abime: 20 }, "scénario 2 : fusion");
   console.log("2 : fusion");
 
+  // 3 : jauge de l'accueil (version C)
+  const jauge = (objectif, jours) => a.evaluer(`(() => {
+    const r = lireReglages(); r.objectif = ${objectif}; ecrireReglages(r); reglages = lireReglages();
+    const c = lireCollection(); c.jours = ${jours}; ecrireCollection(c);
+    afficherAccueil();
+    const p = document.querySelector("#accueil .f-objectif");
+    if (!p) return null;
+    const barre = p.querySelector(".f-objectif-barre");
+    return { texte: p.textContent, atteint: p.classList.contains("atteint"), label: p.getAttribute("aria-label"),
+             part: getComputedStyle(barre).getPropertyValue("--part").trim(),
+             apresLancer: p.previousElementSibling?.classList.contains("f-lancer-session") };
+  })()`);
+  const enCours = await jauge(20, "{ [jourLocal()]: 12 }");
+  assert.match(enCours.texte, /12\/20 cartes aujourd'hui/, "scénario 3 : texte en cours");
+  assert.equal(enCours.part, "0.6", "scénario 3 : part");
+  assert.equal(enCours.label, "Objectif du jour : 12 cartes sur 20", "scénario 3 : aria-label");
+  assert.equal(enCours.atteint, false, "scénario 3 : pas encore atteint");
+  assert.equal(enCours.apresLancer, true, "scénario 3 : jauge juste sous le bouton Lancer");
+  const fini = await jauge(20, "{ [jourLocal()]: 25 }");
+  assert.match(fini.texte, /Objectif atteint ✓/, "scénario 3 : texte atteint");
+  assert.equal(fini.atteint, true, "scénario 3 : classe atteint");
+  assert.equal(fini.part, "1", "scénario 3 : barre pleine");
+  assert.equal(fini.label, "Objectif du jour atteint", "scénario 3 : aria-label atteint");
+  assert.equal(await jauge(0, "{ [jourLocal()]: 12 }"), null, "scénario 3 : jauge sans objectif");
+  const lendemain = await jauge(20, `{ "2026-01-01": 30 }`);
+  assert.match(lendemain.texte, /0\/20 cartes aujourd'hui/, "scénario 3 : compteur d'un autre jour");
+  console.log("3 : jauge de l'accueil");
+
   for (const x of appareils) {
     assert.deepEqual(x.violationsCsp, [], "violations CSP");
     assert.deepEqual(x.erreurs, [], "erreurs");

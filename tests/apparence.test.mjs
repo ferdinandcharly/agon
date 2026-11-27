@@ -99,7 +99,11 @@ try {
     }
     return echecs;
   })()`;
-  const ECRANS = { accueil: "afficherAccueil()", profil: "Profil.ouvrir()", parametres: "Profil.ouvrirParametres()",
+  const ECRANS = { accueil: "afficherAccueil()",
+    // Jauge de l'objectif du jour, en cours puis atteinte
+    objectifEnCours: `(() => { const c = lireCollection(); c.jours = { [jourLocal()]: 12 }; ecrireCollection(c); afficherAccueil(); })()`,
+    objectifAtteint: `(() => { const c = lireCollection(); c.jours = { [jourLocal()]: 25 }; ecrireCollection(c); afficherAccueil(); })()`,
+    profil: "Profil.ouvrir()", parametres: "Profil.ouvrirParametres()",
     matieres: "Profil.ouvrirParametres(); Profil.empiler('matieres')", modifier: "Profil.ouvrir(); Profil.empiler('modifier')",
     discotheque: "Discotheque.ouvrir()", classement: "Classement.ouvrir()", amis: "Amis.ouvrir()",
     // États remplis (données simulées, comme dans amis.test et classement.test)
