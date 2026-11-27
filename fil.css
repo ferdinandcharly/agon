@@ -630,7 +630,7 @@ body.vue-profil .f-parametres { display: grid; }
 .f-objectif.atteint { color: #00C08B; font-weight: 700; }
 .f-objectif.atteint .f-objectif-barre i { background: #00C08B; }
 .f-objectif-toast {
-  position: fixed; z-index: 60; left: 50%; top: calc(env(safe-area-inset-top, 0px) + 64px); translate: -50% 0;
+  position: fixed; z-index: 60; left: 50%; top: calc(var(--haut) + 64px); translate: -50% 0;   /* sous les pastilles et boutons de l'en-tête */
   padding: 10px 18px; border: var(--trait); border-radius: 999px; background: #00C08B; color: var(--encre);
   box-shadow: 3px 3px 0 var(--encre); font: 800 15px var(--police); white-space: nowrap; pointer-events: none;
   animation: f-objectif-entree .35s ease-out;
