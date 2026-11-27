@@ -50,6 +50,8 @@
 :root[data-effectif="clair"] .f-profil-barre { background: #FFFFFF; box-shadow: inset 0 0 0 1.5px var(--encre); }
 :root[data-effectif="clair"] .f-profil-pastille { border-color: var(--bord-clair); background: #FFFFFF; }
 :root[data-effectif="clair"] .f-profil-jour.joue .f-profil-pastille { border-color: var(--encre); background: #FFC21A; }
+:root[data-effectif="clair"] .f-profil-jour.objectif .f-profil-pastille { border-color: var(--encre); background: #00C08B; }
+:root[data-effectif="clair"] .f-profil-objectif { color: #1D6A3A; }
 :root[data-effectif="clair"] .f-profil-jour.aujourdhui .f-profil-pastille { border-color: var(--encre); }
 :root[data-effectif="clair"] .f-facette-boule { fill: var(--surface-2); stroke: #D8D1C3; }
 :root[data-effectif="clair"] .f-bac-points i { background: #D8D1C3; }

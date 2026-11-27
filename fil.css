@@ -702,7 +702,7 @@ body.vue-profil .f-parametres { display: grid; }
   border: 0; background: none; color: var(--encre); font: 600 17px var(--police); text-align: left;
 }
 button.f-param-ligne { cursor: pointer; }
-.f-param-ligne + .f-param-ligne { border-top: 1.5px solid #E6E3F0; }
+.f-param-ligne + .f-param-ligne, .f-param-reglage + .f-param-ligne { border-top: 1.5px solid #E6E3F0; }
 .f-param-valeur { display: flex; align-items: center; gap: 6px; min-width: 0; color: var(--gris); font-size: 15px; font-weight: 500; overflow-wrap: anywhere; text-align: right; }
 .f-param-valeur svg { flex: none; width: 18px; height: 18px; }
 .f-param-danger { color: #B42323; }
@@ -739,9 +739,11 @@ button.f-param-ligne { cursor: pointer; }
 
 /* Apparence : sélecteurs segmentés (thème, taille) */
 .f-param-apparence { gap: 12px; padding: 12px 14px; }
+/* Réglage à choix dans une carte de lignes (Objectif du jour, groupe Jeu) */
+.f-param-carte:not(.f-param-apparence) > .f-param-reglage { padding: 12px 14px 14px; }
 .f-param-reglage { display: grid; gap: 8px; }
 .f-param-reglage-nom { font-size: 15px; font-weight: 700; }
-.f-segment { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; padding: 4px; border-radius: 12px; background: #EFEAE0; }
+.f-segment { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 6px; padding: 4px; border-radius: 12px; background: #EFEAE0; }
 .f-segment button {
   min-height: 44px; border: 2px solid transparent; border-radius: 9px; background: none; color: var(--gris);
   font: 700 14px var(--police); cursor: pointer;
@@ -782,6 +784,8 @@ button.f-param-ligne { cursor: pointer; }
   color: var(--encre); font-size: 12px; font-weight: 800;
 }
 .f-profil-jour.joue .f-profil-pastille { border-color: #FFC21A; background: #FFC21A; }
+.f-profil-jour.objectif .f-profil-pastille { border-color: #00C08B; background: #00C08B; color: var(--encre); font-weight: 800; }
+.f-profil-objectif { margin: 10px 0 0; color: #00C08B; font-size: 14px; font-weight: 700; }
 .f-profil-jour.aujourdhui { color: #FFFFFF; }
 .f-profil-jour.aujourdhui .f-profil-pastille { border-color: #FFFFFF; }
 .f-profil-jour.futur { opacity: .45; }

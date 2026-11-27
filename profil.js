@@ -61,18 +61,24 @@ const Profil = (() => {
   function blocSemaine() {
     const jours = semaine(lireCollection().jours);
     const joues = jours.filter((j) => j.nb > 0).length;
+    const objectif = lireReglages().objectif;   // 0 : pas d'objectif, pas de repère
+    const atteints = objectif ? jours.filter((j) => j.nb >= objectif).length : 0;
     return el("section", { class: "f-profil-bloc", "aria-label": "Cette semaine" },
       el("div", { class: "f-profil-bloc-tete" }, el("h2", {}, "Cette semaine"),
         el("span", { class: "f-profil-resume" }, `${joues} jour${joues > 1 ? "s" : ""} sur 7`)),
       el("ol", { class: "f-profil-semaine" }, ...jours.map((j) => {
-        const pastille = el("span", { class: "f-profil-pastille" }, j.nb ? String(j.nb) : "");
-        const li = el("li", { class: "f-profil-jour", "aria-label": `${j.lettre} : ${j.nb} carte${j.nb > 1 ? "s" : ""}` },
+        const ok = objectif > 0 && j.nb >= objectif;
+        const pastille = el("span", { class: "f-profil-pastille" }, ok ? "✓" : j.nb ? String(j.nb) : "");
+        const li = el("li", { class: "f-profil-jour",
+          "aria-label": `${j.lettre} : ${j.nb} carte${j.nb > 1 ? "s" : ""}${ok ? ", objectif atteint" : ""}` },
           pastille, el("span", { "aria-hidden": "true" }, j.lettre));
         li.classList.toggle("joue", j.nb > 0);
+        li.classList.toggle("objectif", ok);
         li.classList.toggle("aujourdhui", j.aujourdhui);
         li.classList.toggle("futur", j.futur);
         return li;
-      })));
+      })),
+      objectif ? el("p", { class: "f-profil-objectif" }, `Objectif atteint ${atteints} jour${atteints > 1 ? "s" : ""} sur 7`) : null);
   }
 
   function blocMatieres(liste) {
@@ -164,16 +170,22 @@ const Profil = (() => {
   const surTotal = (exclus, total) => `${total - exclus} sur ${total}`;
 
   // Sélecteur segmenté (3 boutons) : effet immédiat, réglage synchronisé comme les autres
-  const CHOIX_APPARENCE = {
-    theme: [["auto", "Auto"], ["sombre", "Sombre"], ["clair", "Clair"]],
-    taille: [["normale", "Aa", "Normale"], ["grande", "Aa", "Grande"], ["tres-grande", "Aa", "Très grande"]],
+  // Réglages à choix (segments) : valeurs, textes, et où les lire / les écrire
+  const SEGMENTS = {
+    theme: { choix: [["auto", "Auto"], ["sombre", "Sombre"], ["clair", "Clair"]],
+      lire: () => reglages.apparence.theme, ecrire: (v) => { reglages.apparence = { ...reglages.apparence, theme: v }; } },
+    taille: { choix: [["normale", "Aa", "Normale"], ["grande", "Aa", "Grande"], ["tres-grande", "Aa", "Très grande"]],
+      lire: () => reglages.apparence.taille, ecrire: (v) => { reglages.apparence = { ...reglages.apparence, taille: v }; } },
+    objectif: { choix: [[10, "10", "10 cartes"], [20, "20", "20 cartes"], [40, "40", "40 cartes"], [0, "Aucun", "Aucun objectif"]],
+      lire: () => reglages.objectif, ecrire: (v) => { reglages.objectif = v; } },
   };
   function segment(cle, libelle) {
-    const boutons = CHOIX_APPARENCE[cle].map(([valeur, texte, nom]) => {
-      const b = el("button", { type: "button", "data-valeur": valeur, "aria-pressed": String(reglages.apparence[cle] === valeur),
+    const { choix, lire, ecrire } = SEGMENTS[cle];
+    const boutons = choix.map(([valeur, texte, nom]) => {
+      const b = el("button", { type: "button", "data-valeur": String(valeur), "aria-pressed": String(lire() === valeur),
         ...(nom ? { "aria-label": nom } : {}) }, texte);
       b.addEventListener("click", () => {
-        reglages.apparence = { ...reglages.apparence, [cle]: valeur };
+        ecrire(valeur);
         reglages.maj = new Date().toISOString();
         ecrireReglages(reglages);
         Apparence.appliquer(reglages.apparence);
@@ -236,6 +248,7 @@ const Profil = (() => {
       el("section", { class: "f-param-groupe" }, el("h2", {}, "Apparence"),
         el("div", { class: "f-param-carte f-param-apparence" }, segment("theme", "Thème"), segment("taille", "Taille de l'affichage"))),
       groupe("Jeu",
+        segment("objectif", "Objectif du jour"),
         ligne("matieres", "Matières", surTotal(exclusMatieres, donnees.matieres.length), () => empiler("matieres"), { chevronne: true }),
         ligne("formats", "Types de jeux", exclusFormats ? surTotal(exclusFormats, nbFormats) : "Tous", () => empiler("formats"), { chevronne: true })),
       rendreConfidentialite(message),
