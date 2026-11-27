@@ -112,8 +112,20 @@ function lireReglages() {
       remise: typeof v?.remise === "string" ? v.remise : null,
       notions: lireCases(v?.notions),
       apparence: Apparence.normaliser(v?.apparence),
+      objectif: normaliserObjectif(v?.objectif),
     };
-  } catch { return { matieresExclues: [], formatsExclus: [], maj: null, remise: null, notions: {}, apparence: Apparence.normaliser() }; }
+  } catch { return { matieresExclues: [], formatsExclus: [], maj: null, remise: null, notions: {}, apparence: Apparence.normaliser(), objectif: 20 }; }
+}
+
+// Objectif du jour : nombre de cartes (0 = aucun objectif). Pas de série : un jour raté ne casse rien.
+const OBJECTIFS = [0, 10, 20, 40];
+function normaliserObjectif(v) { return OBJECTIFS.includes(v) ? v : 20; }
+// { objectif, faites, atteint } d'aujourd'hui (compteur de cartes jouées par jour), ou null sans objectif
+function objectifDuJour() {
+  const objectif = lireReglages().objectif;
+  if (!objectif) return null;
+  const faites = lireCollection().jours[jourLocal()] || 0;
+  return { objectif, faites, atteint: faites >= objectif };
 }
 
 // Cases par notion : « À venir » (pas encore vue en cours) ou « DS passé ». Clé « matiere/notion ».
