@@ -101,6 +101,48 @@ try {
   assert.equal((await toasts()).length, 0, "scénario 4 : message sans objectif");
   console.log("4 : message au franchissement");
 
+  // 5 : réglage dans Paramètres › Jeu
+  await a.evaluer(`(() => { const r = lireReglages(); delete r.objectif; ecrireReglages(r); reglages = lireReglages(); })()`);
+  await a.evaluer("Profil.ouvrir(); Profil.empiler('parametres')");
+  await attendre(300);
+  const r5 = await a.evaluer(`(() => {
+    const seg = document.querySelector("#profil .f-segment-objectif");
+    const groupe = seg?.closest(".f-param-groupe")?.querySelector("h2")?.textContent;
+    const boutons = [...(seg?.querySelectorAll("button") || [])];
+    return { groupe, textes: boutons.map((b) => b.textContent),
+             presse: boutons.filter((b) => b.getAttribute("aria-pressed") === "true").map((b) => b.textContent) };
+  })()`);
+  assert.deepEqual(r5, { groupe: "Jeu", textes: ["10", "20", "40", "Aucun"], presse: ["20"] }, "scénario 5 : segment");
+  const r5b = await a.evaluer(`(() => {
+    const maj = lireReglages().maj;
+    [...document.querySelectorAll("#profil .f-segment-objectif button")].find((b) => b.textContent === "Aucun").click();
+    const apres = lireReglages();
+    afficherAccueil();
+    return { objectif: apres.objectif, majChangee: apres.maj !== maj, jauge: !!document.querySelector("#accueil .f-objectif") };
+  })()`);
+  assert.deepEqual(r5b, { objectif: 0, majChangee: true, jauge: false }, "scénario 5 : « Aucun »");
+  console.log("5 : réglage dans Paramètres");
+
+  // 6 : semaine du Profil (jours où l'objectif est atteint)
+  const semaine = (objectif) => a.evaluer(`(() => {
+    const r = lireReglages(); r.objectif = ${objectif}; ecrireReglages(r); reglages = lireReglages();
+    const lundi = new Date(); lundi.setDate(lundi.getDate() - (lundi.getDay() + 6) % 7);
+    const mardi = new Date(lundi); mardi.setDate(lundi.getDate() + 1);
+    const c = lireCollection(); c.jours = { [jourLocal(lundi)]: 25, [jourLocal(mardi)]: 5 }; ecrireCollection(c);
+    Profil.ouvrir();
+    const ok = [...document.querySelectorAll("#profil .f-profil-jour.objectif")];
+    return { nb: ok.length, pastille: ok[0]?.querySelector(".f-profil-pastille").textContent || null,
+             label: ok[0]?.getAttribute("aria-label") || null,
+             phrase: document.querySelector("#profil .f-profil-objectif")?.textContent || null };
+  })()`);
+  const s20 = await semaine(20);
+  assert.equal(s20.nb, 1, "scénario 6 : jours atteints");
+  assert.equal(s20.pastille, "✓", "scénario 6 : pastille");
+  assert.match(s20.label, /objectif atteint$/, "scénario 6 : aria-label");
+  assert.equal(s20.phrase, "Objectif atteint 1 jour sur 7", "scénario 6 : phrase");
+  assert.deepEqual(await semaine(0), { nb: 0, pastille: null, label: null, phrase: null }, "scénario 6 : sans objectif");
+  console.log("6 : semaine du Profil");
+
   for (const x of appareils) {
     assert.deepEqual(x.violationsCsp, [], "violations CSP");
     assert.deepEqual(x.erreurs, [], "erreurs");

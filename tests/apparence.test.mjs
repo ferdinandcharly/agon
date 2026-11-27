@@ -61,7 +61,7 @@ try {
   await attendre(300);
   const r3 = await a.evaluer(`(() => {
     const groupes = [...document.querySelectorAll("#profil .f-param-groupe h2")].map((h) => h.textContent);
-    const boutons = [...document.querySelectorAll("#profil .f-segment button")];
+    const boutons = [...document.querySelectorAll("#profil .f-param-apparence .f-segment button")];
     return { premier: groupes[0], n: boutons.length, petit: Math.min(...boutons.map((x) => x.getBoundingClientRect().height)),
       presses: boutons.filter((x) => x.getAttribute("aria-pressed") === "true").map((x) => x.dataset.valeur) };
   })()`);
